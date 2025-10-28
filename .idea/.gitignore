@@ -13,4 +13,9 @@ project/target/
 .metals/
 out/
 lib/*.zip
+out/
+**/*.class
+**/*.log
+lib/*
+!lib/scalaswingContrib.jar
 
