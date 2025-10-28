@@ -1,5 +1,5 @@
 package sdn
-
+//toto
 import compiler.AST.Layer
 import compiler.ASTB.{False, Uint}
 import compiler.ASTBfun.{addRedop, derivative, ltUI2, orRedop, redop}
@@ -17,7 +17,7 @@ import progOfmacros.Compute.implique
 import progOfmacros.Wrapper.{exist, inside, insideS, not, unary2Bin}
 import sdn.ForceAg.Agg
 import sdn.Globals.root4naming
-import sdn.Util.addLt
+//import sdn.Util.addLt
 
 import scala.::
 import scala.Predef._
@@ -209,7 +209,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
      val prioYes: UintV = prioRand :: yesPrioDet
      /** nullify prio if vertice is quiescent we are interested only in high prio only if move is generated
       * this priority is the one to be used when evaluationg local constraints */
-     val prioYesNotQuiescent = addLt(andLB2R(~isQuiescent, prioYes))
+     val prioYesNotQuiescent = Util.addLt(andLB2R(~isQuiescent, prioYes))
      fliprioOfMove=new PartialUI(flipOfMove, prioYesNotQuiescent)
    }
   //setFliprioOfMove() //this is now done separately
