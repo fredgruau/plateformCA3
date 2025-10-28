@@ -1,0 +1,42 @@
+<displayParam>
+        <expandedLayer>
+        <Layer>
+          homogeneizePartSf
+        </Layer><Layer>
+          homogeneizePartBve
+        </Layer><Layer>
+          homogeneizePartVor
+        </Layer><Layer>
+          homogeneize
+        </Layer><Layer>
+          homogeneizePartGc
+        </Layer><Layer>
+          homogeneizePartDg
+        </Layer><Layer>
+          homogeneizePartD
+        </Layer><Layer>
+          homogeneizePartFlipafterlocalconstrValuc
+        </Layer><Layer>
+          homogeneizePartFlipafterlocalconstr
+        </Layer><Layer>
+          homogeneizePartVorFliprioofmove
+        </Layer><Layer>
+          homogeneizePartFliprioofmove
+        </Layer><Layer>
+          homogeneizePartVorB
+        </Layer><Layer>
+          homogeneizePartB
+        </Layer><Layer>
+          homogeneizePart
+        </Layer>
+      </expandedLayer>
+        <colorOfField>
+          <layer color="0xFFC800">
+            homogeneizePartIsv
+          </layer><layer color="0xFF0000">
+            homogeneizePartVorIsv
+          </layer><layer color="0x000000">
+            homogeneizePartAllfliplocalcanceled
+          </layer>
+        </colorOfField>
+      </displayParam>

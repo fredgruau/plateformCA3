@@ -1,0 +1,201 @@
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(compile, None, None)[0m
+[0m[[0m[0mdebug[0m] [0m[0mEvaluating tasks: Compile / compile[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning task... Cancel: Signal, check cycles: false, forcegc: true[0m
+[0m[[0m[0minfo[0m] [0m[0mcompiling 99 Scala sources and 46 Java sources to /home/frederic/IdeaProjects/plateformeCA3/target/scala-2.13/classes ...[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTB.scala:770:17: non-variable type argument compiler.ASTBt[compiler.B] in type pattern compiler.AST.Read[compiler.ASTBt[compiler.B]] is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m        case r: Read[ASTBt[B]] =>[0m
+[0m[[0m[33mwarn[0m] [0m[0m                ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTB.scala:794:17: non-variable type argument compiler.ASTBt[compiler.B] in type pattern compiler.AST.Read[compiler.ASTBt[compiler.B]] is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m        case r: Read[ASTBt[B]] =>[0m
+[0m[[0m[33mwarn[0m] [0m[0m                ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTLfun.scala:90:23: fruitless type test: a value of type compiler.repr[R] cannot also be a compiler.UI[0m
+[0m[[0m[33mwarn[0m] [0m[0m    if (n.isInstanceOf[UI])[0m
+[0m[[0m[33mwarn[0m] [0m[0m                      ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTLfun.scala:138:26: fruitless type test: a value of type compiler.repr[compiler.B] cannot also be a compiler.UI[0m
+[0m[[0m[33mwarn[0m] [0m[0m    assert(n.isInstanceOf[UI]) //we never have to compare signed int, what we do is  take the sign.[0m
+[0m[[0m[33mwarn[0m] [0m[0m                         ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/Circuit.scala:217:20: the type test for pattern compiler.ASTLt[compiler.V,compiler.B] (the underlying of compiler.SpatialType.BoolV) cannot be checked at runtime because it has type parameters eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m          case ast:BoolV[0m
+[0m[[0m[33mwarn[0m] [0m[0m                   ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/Circuit.scala:220:19: non-variable type argument compiler.V in type pattern sdn.MovableAg[compiler.V] is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m          case ag:MovableAg[V] with MovableAgV[0m
+[0m[[0m[33mwarn[0m] [0m[0m                  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ProduceJava.scala:390:69: the type test for (compiler.Locus, compiler.Ring) cannot be checked at runtime because it has type parameters eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m          val namesWithLocus=names.filter(tSymbVar(_).t.isInstanceOf[(Locus, Ring)])[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                    ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ProduceJava.scala:530:93: the type test for (compiler.Locus, compiler.Ring) cannot be checked at runtime because it has type parameters eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m           val anteSpatialSigSafe=spatialParam.map(tSymbVarSafe(_).t).filter(!_.isInstanceOf[(Locus, Ring)])[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                            ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ProduceJava.scala:534:23: the type test for pattern (compiler.Locus, compiler.Ring) cannot be checked at runtime because it has type parameters eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m              {case t:(Locus, Ring)=>t[0m
+[0m[[0m[33mwarn[0m] [0m[0m                      ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:37:16: Implicit definition should have explicit type (inferred compiler.chip[compiler.V,compiler.E]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val borderVe = new chip[V, E](new ConstLayer[T[V, E], B](1, "def"))[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:38:16: Implicit definition should have explicit type (inferred compiler.chip[compiler.E,compiler.V]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val borderEv = new chip[E, V](null)[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:39:16: Implicit definition should have explicit type (inferred compiler.chip[compiler.V,compiler.F]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val borderVf = new chip[V, F](new ConstLayer[T[V, F], B](1, "def"))[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:40:16: Implicit definition should have explicit type (inferred compiler.chip[compiler.F,compiler.V]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val borderFv = new chip[F, V](null)[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:41:16: Implicit definition should have explicit type (inferred compiler.chip[compiler.F,compiler.E]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val borderFe = new chip[F, E](null)[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:42:16: Implicit definition should have explicit type (inferred compiler.chip[compiler.E,compiler.F]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val borderEf = new chip[E, F](new ConstLayer[T[E, F], B](1, "def"))[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:43:16: Implicit definition should have explicit type (inferred compiler.chips[compiler.E]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val borderE = new chips[E](new ConstLayer[E, B](1, "def"))[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:44:16: Implicit definition should have explicit type (inferred compiler.chips[compiler.F]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val borderF = new chips[F](new ConstLayer[F, B](1, "def"))[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:84:16: Implicit definition should have explicit type (inferred compiler.AntiClock[compiler.V,compiler.E,compiler.F]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val vef = new AntiClock[V, E, F];[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:85:16: Implicit definition should have explicit type (inferred compiler.AntiClock[compiler.V,compiler.F,compiler.E]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val vfe = new AntiClock[V, F, E];[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:86:16: Implicit definition should have explicit type (inferred compiler.AntiClock[compiler.E,compiler.V,compiler.F]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val evf = new AntiClock[E, V, F];[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:87:16: Implicit definition should have explicit type (inferred compiler.AntiClock[compiler.E,compiler.F,compiler.V]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val efv = new AntiClock[E, F, V];[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:88:16: Implicit definition should have explicit type (inferred compiler.AntiClock[compiler.F,compiler.V,compiler.E]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val fve = new AntiClock[F, V, E];[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/repr.scala:89:16: Implicit definition should have explicit type (inferred compiler.AntiClock[compiler.F,compiler.E,compiler.V]) [quickfixable][0m
+[0m[[0m[33mwarn[0m] [0m[0m  implicit val fev = new AntiClock[F, E, V];[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/dataStruc/Dag.scala:227:15: abstract type pattern T is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m    for (src: T <- visitedL)[0m
+[0m[[0m[33mwarn[0m] [0m[0m              ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/dataStruc/Dag.scala:228:20: abstract type pattern T is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m      for (target: T <- src.inputNeighbors)[0m
+[0m[[0m[33mwarn[0m] [0m[0m                   ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/dataStruc/DagWired.scala:50:16: abstract type pattern T is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m    for (node: T <- visitedL.reverse)[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/dataStruc/DagWired.scala:52:28: abstract type pattern T is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m      else for (inputNode: T <- node.inputNeighbors)[0m
+[0m[[0m[33mwarn[0m] [0m[0m                           ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/dataStruc/DagWired.scala:67:16: abstract type pattern T is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m    for (node: T <- visitedL)[0m
+[0m[[0m[33mwarn[0m] [0m[0m               ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/dataStruc/DagWired.scala:69:29: abstract type pattern T is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m      else for (outputNode: T <- node.outputNeighbors)[0m
+[0m[[0m[33mwarn[0m] [0m[0m                            ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/dataStruc/DagWired.scala:293:24: abstract type pattern T is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m      for (otherInput: T <- addedInstr.inputNeighbors) {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                       ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/dataStruc/DagWired.scala:434:17: abstract type pattern T is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m    for (instr: T <- visitedL.reverse) { //we iterate over each existing instructions and see which tm1Instr[0m
+[0m[[0m[33mwarn[0m] [0m[0m                ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/simulator/Medium.scala:624:15: This catches all Throwables. If this is really intended, use `case _ : Throwable` to clear this warning.[0m
+[0m[[0m[33mwarn[0m] [0m[0m         case _ => println("polygon not set")[0m
+[0m[[0m[33mwarn[0m] [0m[0m              ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/simulator/XMLutility.scala:80:76: non-variable type argument String in type scala.xml.Atom[String] is unchecked since it is eliminated by erasure[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def isSpurious(node: Node) = node.isInstanceOf[Text] || node.isInstanceOf[Atom[String]][0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                           ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/Constraint.scala:121:101: a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses[0m
+[0m[[0m[33mwarn[0m] [0m[0m    override def verified(a: Seq[Int]): Boolean = throw new Exception(" faut pas tester verfified");false[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                    ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTB.scala:228:22: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following input: ParOp()[0m
+[0m[[0m[33mwarn[0m] [0m[0m    this.asInstanceOf[ASTB[_]] match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                     ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTB.scala:335:22: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: AffBool(_, _), And(_, _), Neg(_), Or(_, _), ParOp(), Xor(_, _)[0m
+[0m[[0m[33mwarn[0m] [0m[0m    this.asInstanceOf[ASTB[_]] match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                     ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:63:61: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def neg[R <: Ring](implicit n: repr[R]): Fundef1R[R] = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                            ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:83:61: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def and[R <: Ring](implicit n: repr[R]): Fundef2R[R] = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                            ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:116:60: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def or[R <: Ring](implicit n: repr[R]): Fundef2R[R] = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                           ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:128:61: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def xor[R <: Ring](implicit n: repr[R]): Fundef2R[R] = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                            ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:151:66: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def andLBtoR[R <: Ring](implicit n: repr[R]): Fundef2R[R] = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                 ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:202:61: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), B(), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def add[R <: Ring](implicit n: repr[R]): Fundef2R[R] = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                            ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:249:63: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), B(), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def inc[R <: Ring](implicit n: repr[R]): Fundef1[R, R] = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                              ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:276:63: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), B(), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def neq[R <: Ring](implicit n: repr[R]): Fundef1[R, B] = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                              ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:290:47: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), B(), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def eq[R <: Ring](implicit n: repr[R]) = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                              ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:359:62: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def cond[R <: Ring](implicit n: repr[R]): Fundef2R[R] = (n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                             ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTBfun.scala:585:52: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: (x: compiler.Ring forSome x not in (compiler.B, compiler.I, compiler.SI, compiler.UI)), B(), I()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def addRedop[R <: Ring](implicit n: repr[R]) = n.name match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                   ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTL.scala:335:55: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following input: Binop(_, _, _, _, _)[0m
+[0m[[0m[33mwarn[0m] [0m[0m        ASTbitSize += newthis -> (newthis.asInstanceOf[ASTL[_, _]] match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                      ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/ASTLt.scala:227:28: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: ParamR(), ParamRR((x: Int forSome x not in (-1000, 0, 1))), StoredField(), Timetminus1(_), VarKind()[0m
+[0m[[0m[33mwarn[0m] [0m[0m      case Read(s) => t(s).k match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                           ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/Constraint.scala:288:12: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: S(), TT()[0m
+[0m[[0m[33mwarn[0m] [0m[0m    else c.locus match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m           ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/Locus.scala:13:20: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: S(), TT()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def tabul: Int = this match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                   ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/Locus.scala:209:51: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following input: TT()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def deploy(n: String, l: Locus): List[String] = l match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/compiler/VarKind.scala:53:26: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: ParamRR((x: Int forSome x not in (-1, -1000, 0, 1, 2, 3))), Timetminus1(_), VarKind()[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def rank(v: VarKind) = v match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                         ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/dataStruc/Util.scala:156:39: unreachable code[0m
+[0m[[0m[33mwarn[0m] [0m[0m      case e:   NoSuchMethodException =>[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                      ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/sdn/Force.scala:80:8: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following inputs: S(), TT()[0m
+[0m[[0m[33mwarn[0m] [0m[0m    ag.locus match {[0m
+[0m[[0m[33mwarn[0m] [0m[0m       ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m1 deprecation[0m
+[0m[[0m[33mwarn[0m] [0m[0m159 deprecations (since 2.13.0)[0m
+[0m[[0m[33mwarn[0m] [0m[0m1 deprecation (since 2.13.11)[0m
+[0m[[0m[33mwarn[0m] [0m[0m17 deprecations (since 2.13.3)[0m
+[0m[[0m[33mwarn[0m] [0m[0m178 deprecations in total; re-run with -deprecation for details[0m
+[0m[[0m[33mwarn[0m] [0m[0m17 feature warnings; re-run with -feature for details[0m
+[0m[[0m[33mwarn[0m] [0m[0m61 warnings found[0m
+[0m[[0m[0minfo[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/simulator/Util.java: Some input files use unchecked or unsafe operations.[0m
+[0m[[0m[0minfo[0m] [0m[0m/home/frederic/IdeaProjects/plateformeCA3/src/main/scala/simulator/Util.java: Recompile with -Xlint:unchecked for details.[0m
+[0m[[0m[0minfo[0m] [0m[0mdone compiling[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 14 s, completed 27 oct. 2025 à 20:57:45[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(idea-shell, None, None)[0m
