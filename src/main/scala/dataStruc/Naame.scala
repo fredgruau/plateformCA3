@@ -51,8 +51,11 @@ trait BranchNamed
      *
      */
     def setAllName(conteneur: Named, newName: String): Unit = {
+
     conteneur match{
       case m:HashMap[_, _]=>
+       // if(newName.startsWith("homogeneizeMerged"))
+          println(newName)
         for ((key, value) <- m) {
         val suffix: String = key match {
           case n: Named => n.name
@@ -110,8 +113,8 @@ trait BranchNamed
     import scala.reflect.runtime.universe._
 
 
-
-    def getAllFieldValues(x: Any): Seq[(String, Any)] = {
+/** suggestion alternative de chatgpt pour getAllFieldValues, quand la reflection faisait planter le debug. */
+    def getAllFieldValues34(x: Any): Seq[(String, Any)] = {
       val cl  = x.getClass.getClassLoader
 
 
@@ -138,7 +141,7 @@ trait BranchNamed
 
 
 
-      def getAllFieldValues34(instance: Any): Seq[(String, Any)] = {
+      def getAllFieldValues(instance: Any): Seq[(String, Any)] = {
         val instanceMirror = cm.reflect(instance)
         val instanceType = instanceMirror.symbol.toType
 

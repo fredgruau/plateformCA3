@@ -12,11 +12,11 @@ import progOfmacros.Wrapper
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, smoothen, smoothen2, testShrink}
 import sdn.MuStruct.{setFlipCanceled, setFliprioOfMove, showMustruct, showTrucPourDebugger}
 import sdn._
-import sdntool.{addDist, addDistGcenter}
+import sdntool.{addDist, addDistGcenter, addDistGcenterVor}
 
 /**illustrate the working of repulsion combined with exploration  */
 class Homogeneize() extends LDAG with Named with BranchNamed
-{ val part=new Convergent()
+{ val part=new Homogen()
 
 
   showMustruct
@@ -24,17 +24,20 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   showTrucPourDebugger
   setFlipCanceled()
   part.shoow(part.vor.muis) //triggers evaluation
+  //refaire. stoquer dans vor, une map ou tableau (trouvable par reflection) mprimable des mouvement par priorité, resultant d'une reduction or.
+  //part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
+ // part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
   part.shoow(part.muis)
   part.vor.showMe
-  part.vor.b.showMe
-  part.vor.bf.showMe
+   part.vor.b.showMe
+   part.vor.bf.showMe
   part.showMe
   part.bf.showMe
   part.b.showMe
   part.bve.showMe
-  part.d.showMe; part.dg.showMe
-  part.gc.showme
- part.sf.showMe
+  part.d.showMe; part.dg.showMe;part.dgv.showMe
+   part.gc.showme
+ // part.shoow(part.sf.stable2)
 
 }
 
@@ -50,14 +53,15 @@ class Flies2 extends Seed {
 }
 
 /**adds distance, gabriel center,  distance to gabriel center, and then finally repulsive force*/
-class Homogen() extends Flies2 with addDist with addGcenter with addDistGcenter with addVor
+class Homogen() extends Flies2 with addDist with addGcenter with addDistGcenter with keepOutsideForce with addVor with addDistGcenterVor
 {  /** homogeneizing priority */
   final val homogeneize=introduceNewPriority()
   force(homogeneize,"repulse",'|',dg.repulse)//specific forces applied to Flies
-  shoowText(dg.muis, List()) //showMoves
+
 }
 
-class Convergent extends Homogen // with Lead //pas besoin de leader pour le moment
+
+class Convergent extends Homogen  // with Lead //pas besoin de leader pour le moment
 {  val sf=new Attributs() { //sf==stableFields
   override val muis: ASTLg with carrySysInstr = Convergent.this.muis
   /** border of qparticle  where dg diminishes */
@@ -75,7 +79,7 @@ class Convergent extends Homogen // with Lead //pas besoin de leader pour le mom
   val stable1=Convergent.this.muis.asInstanceOf[BoolV] & insideBall(isVsmoothed2)
   val stable2=forallize(stable1) & isV
 
-  override def showMe: Unit =  shoow(stable1,stable2)
+  override def showMe: Unit = ()// shoow(isVplus) //shoow(stable1,stable2)
 }
   val stabilize=introduceNewPriority()
   val balance: Force = new Force() {

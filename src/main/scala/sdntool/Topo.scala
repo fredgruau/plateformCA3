@@ -55,8 +55,6 @@ class BlobVFields(val muis:BoolV with carrySysInstr) extends Attributs {
   val smoothen: Force = new Force() {
     override def actionV(ag: MovableAgV): MoveC = {
       /** true if >= three consecutive neighbors & ~  inside(brdVeOut) rules out singleton holes which would otherwise be filled*/
-
-
       val inE:BoolE=insideS(muis)
       /**  */
       val convex: BoolV = ~exist(shrink1(transfer(v(inE))))
@@ -103,7 +101,7 @@ class BlobVe(val muis:BoolV with carrySysInstr,brdE:BoolE, brdVe:BoolVe) extends
   val vf: BoolVf = cac(ASTBfun.delta, brdVe)/**  true if all neighbors are at equal distance which happen for a PE is encicled by an hexagon of seeds at distance 2, or a the very begining*/
   /**  make sur meetV is on initially, when dg is flat */
   val meetVinit= ~exist(transfer(v(brdE))) //todo, si ca se trouve ca coresponds a nbcc==0 qui serai plus esthetique
-  val meetV: BoolV = ((nbCc > 1)& (nbCc<3))|  meetVinit //makes an implicit conversion of nbCh from unsigned int to signed int. shoudl take into acount only nbch$1
+  val meetV: BoolV = ((nbCc > 1) & (nbCc<3)) // | meetVinit //makes an implicit conversion of nbCh from unsigned int to signed int. shoudl take into acount only nbch$1
   val upwardSelle:BoolE =inside(apexE(shrink(brdVe))) //les deux vertex lointaint du losange sont strictement plus loin
   val downwardSelle:BoolE= ~brdE //les deux vertex proches du losange sont a la meme distance
   val selle=upwardSelle&downwardSelle
@@ -127,11 +125,11 @@ trait addGcenter{
   val thismuis=muis
   val bve=new BlobVe(muis,d.voisinDiff,  d.sloplt){
     /**  silly way of avoiding superposition of agents with Gcente
-     * we just subtract muis from meet2r,
+     * we just subtract muis from meet2E,
      * we use a val for testing */
     override val meetE2: ASTLt[V, B] = (super.meetE2 )& ~ thismuis}
 
-    val gc= new DetectedAgV(bve.meetE2|bve.meetV) with keepInsideForce {
+  val gc= new DetectedAgV(bve.meetE2 | bve.meetV) with keepInsideForce {
     override def inputNeighbors = List(d)
   }
 } //todo verifier que override fonctionne

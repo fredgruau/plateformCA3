@@ -43,7 +43,7 @@ trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with addBlobVf
   self:MovableAg[V] =>
   override val isV: BoolV = muis
   //override val NisV=  ~isV
-  override def flip2next=  flipRandomlyCanceled ^muis//delayedL(xorBin(flipRandomlyCanceled,muis) )//delayed is necessary in order to get the very last update of flip
+  override def flip2next=  flipRandomlyCanceled ^ muis//delayedL(xorBin(flipRandomlyCanceled,muis) )//delayed is necessary in order to get the very last update of flip
 }
 
 

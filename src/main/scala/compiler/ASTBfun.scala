@@ -281,7 +281,7 @@ object ASTBfun {
 
   private val (eqSI, eqUI) = {
     def eqI[R <: I](implicit n: repr[R]): Fundef1[R, B] = {
-      val x12 = p[R]("xneqSI");
+      val x12 = p[R]("xneqI");
       Fundef1("notNull", ~Reduce(x12, orB, False()), x12)
     };
     (eqI[SI], eqI[UI])

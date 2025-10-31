@@ -6,7 +6,7 @@ import compiler.ASTL.{sym, transfer}
 import compiler.ASTLfun.{cond, e, v}
 import compiler.{AST, ASTB, ASTBfun, ASTBt, ASTLfun, B, E, Locus, Ring, T, V, repr}
 import compiler.SpatialType.{BoolE, BoolEv, BoolV, BoolVe}
-import dataStruc.Named
+import dataStruc.{BranchNamed, Named}
 import progOfmacros.Comm.neighborsSym
 import progOfmacros.Wrapper.{borderS, exist}
 import progOfmacros.RedT.clock2
@@ -24,7 +24,7 @@ trait rando {
  * it can  encodes a move on V-agents, but also Ve agents. For exemple, the effect of all is also
  * to move everywhere possible the agent..
  */
-abstract class MoveC extends Named {
+abstract class MoveC extends Named with BranchNamed {
   val triggered:BoolV
   /** when computing push, we selected maxprio only among the yes, we do not consider the no */
   val triggeredYes:BoolV
@@ -39,7 +39,8 @@ abstract class MoveC extends Named {
  */
 case class MoveC1 (val empty: BoolV, val push: BoolVe) extends MoveC{
   def | (that: MoveC1) = MoveC1(empty|that.empty,push|that.push)
-  /* convert push to a boolV */
+  /* convert push to a boolV, true for vertice pointed by one of the push. NB there can be several distinct push
+  * to the same single vertice, it is sufficient that there is one.  */
   val invade=exist(neighborsSym(push))
   /** true if the force has an effect*/
   val triggered=empty|invade

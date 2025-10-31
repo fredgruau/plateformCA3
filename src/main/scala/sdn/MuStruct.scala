@@ -8,6 +8,7 @@ import compiler.{AST, ASTBt, ASTL, ASTLfun, ASTLt, B, CallProc, Circuit, Locus, 
 import dataStruc.{BranchNamed, DagNode, Named}
 import dataStruc.DagNode.EmptyBag
 import sdn.ForceAg
+import sdn.ForceAg.Agg
 import sdn.MuStruct.allMuStruct
 
 import scala.Predef.->
@@ -87,6 +88,14 @@ object MuStruct{
     case a:ForceAg[_]=>      a.setFlipCancel()
     case _ =>
   }
+  /** for the moment we go reverse, and  update the synced flip of  inputAgent which is stored in the constraint itself, as a destination*/
+  def setFlipSynced()=  for(m<-allMuStruct.reverse) m match {
+    case a:Agg=>   a.setFlipSync()
+    case _ =>
+  }
+
+
+  /** ici on peut shoow, afficher des truc spécial qui vont pas */
   def showTrucPourDebugger=
   for(m<-allMuStruct) m match {
     case v:Vor => //v.tmpVe=v.moves(1).head._2.asInstanceOf[MoveC2].yes.push

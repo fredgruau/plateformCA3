@@ -410,6 +410,7 @@ trait ProduceJava[U <: InfoNbit[_]] {
           if (theDisplayed.isEmpty)
             throw (new Exception("you forgot to call show, no fields are displayed "))
           if (!sameRoot(theDisplayed)) {
+            System.out.println(theDisplayed.filter(_.startsWith("aux")))
             throw (new Exception("some fields do not encode a path" + theDisplayed))
             //val ordered=orderDisplayed(theDisplayed)
           }

@@ -106,6 +106,8 @@ object Sextexrect {
   sextex
  }
 
+
+
  def chooseMaxOf(prio: UintV,k:Int): BoolVe={
  /**  contients les 6 voisins dans l'ordre clock: east,se,sw, west, nw,ne */
  val voisins: UintVe = addSymUI(e(prio)).symUI

@@ -18,7 +18,59 @@ import progOfmacros.Wrapper.{borderS, exist, existS, inside, neqUI2L}
 import progOfmacros.RedT.cacEndomorph
 import sdn.{BlobVe, CancelFlipIf, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, One, Stratify, addGcenter, addVor, carrySysInstr}
 import sdn.Util.{addLt, addLtSI}
+
 /**
+ * code common to any distances
+ * @param n  number of bits
+ */
+abstract class Dist(val n:Int)extends MuStruct [V,SI] {
+  /** 0, +1 ot -1  we update with small delta:either increment or decrement*/
+  val incr: ASTLt[V, SI]
+  override val muis: LayerS[V, SI] = new LayerS[V, SI](n, "0") //we put 5 bits so as to obtain continuity
+  { override val next: AST[(V, SI)] = delayedL(this.pred + incr)(this.mym)  }
+  val (sloplt: BoolVe, deltag, level, gap) = Grad.slopDelta(muis.pred)
+  val slopgt= neighborsSym(sloplt)
+  val opp = -(muis.pred)
+  /** spurious vortex occurs outside chip.borderF.df, so we have to and with chip.borderF.df in order to prevent false detection of vortex bug */
+  val vortex: BoolF = chip.borderF.df & andR(transfer(cacEndomorph(xorRedop[B]._1, sloplt)))
+  def showMe={
+    shoow( gap, sloplt, level, vortex) // necessary so as to use all parameters returned by slopeDeltashoow(vortex)
+    shoowText(deltag,List())
+    shoowText(muis, List())
+    val deefV = new ConstLayer[V, B](1, "def")
+    buugif(vortex) //todo, mettre aussi un bug si y a un écart  sur la source plus grand K en valeur absolue, K reste a déterminer
+  }
+
+  /** we may have to replace muis by isV in order to obtain a force that can acts on BoolEv Agents, and not only BoolV agents */
+  val repulse: Force = new Force() {
+    override def actionV(ag: MovableAgV): MoveC = {
+      val hasNearer: BoolV = Wrapper.exist(sloplt & neighborsSym(e(ag.muis)))
+      val hasFurther = Wrapper.exist(slopgt & neighborsSym(e(ag.muis)))
+      val oui = MoveC1( ag.muis & hasFurther & ~hasNearer,
+        neighborsSym(sloplt) & ag.bf.brdVeIn) //extends towards increasing value of distances and empties everywhere possible.
+      val non = MoveC1(ag.muis & hasNearer, sloplt & ag.bf.brdVeIn  ) //falseVe
+      MoveC2(oui, non)
+    }
+  }
+  val repulseVor: Force = new Force() {
+    override def actionV(ag: MovableAgV): MoveC = {
+      /** true if a nearby vertice is filled, and nearer to the source */
+      val hasNearer: BoolV = Wrapper.exist(sloplt & ag.bf.qqnEnFace)
+      /** true if a nearby vertice is filled, and further from  the source */
+      val hasFurther = Wrapper.exist(slopgt & ag.bf.qqnEnFace)
+      /** we will empty if there is a further, and no nearer */
+      val weWantItEmpty=hasFurther & ~hasNearer
+      /** we empty if weWantItEmpty, and vertice was occupied
+       *  we fill towards increasing value of distances, if it's empty */
+      val oui = MoveC1(ag.muis & weWantItEmpty,
+        neighborsSym(sloplt) & ag.bf.brdVeIn)
+      /** negative moves takes place is weWantItEmpty, and vertice was NOT occupied
+       * if it was occupied, we should first remove nearer if it has some nearer*/
+      val non = MoveC1(cond(ag.muis,hasNearer,weWantItEmpty), e(fromBool(false))/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
+      MoveC2(oui, non)
+    }
+  }
+}/**
  * @param source
  * @param bitSize sometimes more than 3 bits are necessary
  *  * computes distance to source
@@ -46,58 +98,13 @@ class MuDist(val source: MuStruct[V, B],val bitSize:Int) extends Dist(bitSize) {
   // val deefF=new ConstLayer[F, B](1, "def")
 }
 
-/**
- * code common to any distances
- * @param n  number of bits
- */
-abstract class Dist(val n:Int)extends MuStruct [V,SI] {
- /** 0, +1 ot -1  we update with small delta:either increment or decrement*/
-  val incr: ASTLt[V, SI]
-  override val muis: LayerS[V, SI] = new LayerS[V, SI](n, "0") //we put 5 bits so as to obtain continuity
-  { override val next: AST[(V, SI)] = delayedL(this.pred + incr)(this.mym)  }
-  val (sloplt: BoolVe, deltag, level, gap) = Grad.slopDelta(muis.pred)
-  val slopgt= neighborsSym(sloplt)
-  val opp = -(muis.pred)
-  /** spurious vortex occurs outside chip.borderF.df, so we have to and with chip.borderF.df in order to prevent false detection of vortex bug */
-  val vortex: BoolF = chip.borderF.df & andR(transfer(cacEndomorph(xorRedop[B]._1, sloplt)))
-  def showMe={
-    shoow( gap, sloplt, level, vortex) // necessary so as to use all parameters returned by slopeDeltashoow(vortex)
-    shoowText(deltag,List())
-    val deefV = new ConstLayer[V, B](1, "def")
-    buugif(vortex) //todo, mettre aussi un bug si y a un écart  sur la source plus grand K en valeur absolue, K reste a déterminer
-  }
-
-  /** we may have to replace muis by isV in order to obtain a force that can acts on BoolEv Agents, and not only BoolV agents */
-  val repulse: Force = new Force() {
-    override def actionV(ag: MovableAgV): MoveC = {
-      val hasNearer: BoolV = Wrapper.exist(sloplt & neighborsSym(e(ag.muis)))
-      val hasFurther = Wrapper.exist(slopgt & neighborsSym(e(ag.muis)))
-      val oui = MoveC1( ag.muis & hasFurther & ~hasNearer,
-        neighborsSym(sloplt) & ag.bf.brdVeIn) //extends towards increasing value of distances and empties everywhere possible.
-      val non = MoveC1(ag.muis & hasNearer, sloplt & ag.bf.brdVeIn  ) //falseVe
-      MoveC2(oui, non)
-    }
-  }
-  val repulseVor: Force = new Force() {
-    override def actionV(ag: MovableAgV): MoveC = {
-      val hasNearer: BoolV = Wrapper.exist(sloplt & ag.bf.qqnEnFace)
-      val hasFurther = Wrapper.exist(slopgt & ag.bf.qqnEnFace)
-      /** positive moves takes place is weWantItEmpty, and vertice was occupied*/
-      val weWantItEmpty=hasFurther & ~hasNearer
-      val oui = MoveC1(ag.muis & weWantItEmpty ,
-        neighborsSym(sloplt) & ag.bf.brdVeIn) //extends towards increasing value of distances and empties everywhere possible.
-      /** negative moves takes place is weWantItEmpty, and vertice was NOT occupied
-       * if it was occupied, we should first remove nearer if it has some nearer*/
-      val non = MoveC1(cond(ag.muis,hasNearer,weWantItEmpty), e(fromBool(false))/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
-      MoveC2(oui, non)
-    }
-  }
-}
 /** computes distance to gabriel centers added to the distance of that gabriel center to seeds i.e, distance to nearest neighbors */
 class MuDistGcenter(val source:MovableAgV with addDist with addGcenter) extends Dist(6) {
   override def inputNeighbors = List(source.d)
   val incr: ASTLt[V, SI] = cond(delayedL(source.bve.meetE2), sign(opp+2), cond(delayedL(source.bve.meetV), sign(opp), deltag))
 }
+
+
 
 /** adds  distance to particles */
 trait addDist {
