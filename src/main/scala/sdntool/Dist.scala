@@ -52,6 +52,7 @@ abstract class Dist(val n:Int)extends MuStruct [V,SI] {
       MoveC2(oui, non)
     }
   }
+  /** repulseVor is distinct because we move something which is non quasipunctual */
   val repulseVor: Force = new Force() {
     override def actionV(ag: MovableAgV): MoveC = {
       /** true if a nearby vertice is filled, and nearer to the source */

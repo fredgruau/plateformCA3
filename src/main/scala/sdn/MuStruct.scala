@@ -80,8 +80,12 @@ object MuStruct{
   /** we can display mustruct only after DataProg has been built and names have been given using reflection */
    def showMustruct=for(m<-allMuStruct)
      System.out.println(m.toString)
+  def setFliprioOfMoveAndFlipAfterConstr()=  for(m<-allMuStruct) m match {
+    case a:ForceAg[_]=>  a.setFliprioOfMove(); a.setFlipCancel()
+    case _ =>
+  }
    def setFliprioOfMove()=  for(m<-allMuStruct) m match {
-     case a:ForceAg[_]=>  a.setFliprioOfMove()
+     case a:ForceAg[_]=>  a.setFliprioOfMove();
      case _ =>
    }
   def setFlipCanceled()=  for(m<-allMuStruct) m match {

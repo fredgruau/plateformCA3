@@ -18,10 +18,10 @@ class Vor(h:MovableAgV with addDist with addGcenter with keepOutsideForce )
   //val explore=introduceNewPriority();  force(explore, "explore",'O', bf.smoothen)
   val homogeneize=introduceNewPriority()
   force(homogeneize,"repulse",'|',h.d.repulseVor)//specific forces applied to Flies
- // val donotCoverPart=introduceNewPriority();force(donotCoverPart,"donotCoverPart",'<',h.keepOutside)
+  /** upon creation of vor, we already depand that h.keepOutside be computable, and that is not true. */
+   val donotCoverPart=introduceNewPriority();force(donotCoverPart,"donotCoverPart",'<',h.keepOutside)
  // h.addConstrSync(new ConstrSyncImply(this,h, ~ h.isV & this.isV ))
-  val containsGcenter=introduceNewPriority()
-  force(containsGcenter,"containGcenter",'>',h.gc.keepInside) //todo, this is a forced move to be supplied directly upon definition of bounded agent
+  val containsGcenter=introduceNewPriority();  force(containsGcenter,"containGcenter",'>',h.gc.keepInside) //todo, this is a forced move to be supplied directly upon definition of bounded agent
 }
 
 trait addVor {

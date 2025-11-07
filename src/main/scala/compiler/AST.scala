@@ -41,13 +41,16 @@ abstract class AST[+T]()(implicit m: repr[T]) extends DagNode[AST[_]] with Named
 
   /** Builds the set of symbols which are read
    * do not consider layer, those represent memory cells to be loaded */
-  def symbolsExcepLayers: immutable.HashSet[String] =
+  def symbolsExcepLayers: immutable.HashSet[String] = {
+   // println(this +" toto")
     this match {
       case Read(s) => if (Named.isLayer(s)) HashSet() else HashSet(s)
       case Param(s) => HashSet(s)
       case l: Layer[_] => HashSet() //HashSet(l.name)
       case _ => inputNeighbors.map(e => e.symbolsExcepLayers).foldLeft(HashSet.empty[String])((x, y) => x.union(y))
     }
+  }
+
   def symbolsIncludingLayers: immutable.HashSet[String] =
     this match {
       case Read(s) =>  HashSet(s)

@@ -98,9 +98,12 @@ abstract  class MovableAg[L <: Locus](init:String)(implicit m: repr[L]) extends 
   /** Movable Agent's support. It is memorized in a layer a movable agent is a mustruct, so it is  called muis. */
   override val muis=new Layer[(L, B)](1, init) with ASTLt[L,B]  with Stratify [L,B] with carrySysInstr   {
     override val  next: AST[(L, B)] = delayedL(flip2next.asInstanceOf[ASTLt[L,B]])   }
-  /** les moves des movable viennent directement d'une force, et ceux des bounded ? faut voir, si ca se trouve aussi. */
+  /** les moves des movable viennent directement d'une force, et ceux des bounded ? faut voir, si ca se trouve aussi.
+   *
+   * */
   def force(priority:Int, name:String,shortName:Char, force: Force) = {
-    addMoves(priority, name, shortName, force.action(this))
+   addForces(priority, name, shortName, force)
+    // addMoves(priority, name, shortName, force.action(this))
   }
 
   /** for the moment, priority is pure random.  formulation  casse gueule,

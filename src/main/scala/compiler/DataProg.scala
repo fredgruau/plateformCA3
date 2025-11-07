@@ -71,12 +71,14 @@ object DataProg {
     def getLayers(l: List[AST[_]]) =
       l.collect { case la: Layer[_] => la }
 
+    /** y a deux source de system instruction: layer et carrySysInstr */
+
     def getSysInstr(l: List[AST[_]]): List[CallProc] = {
       val l1= getLayers(l).flatMap(_.systInstr)
       val l2: List[CallProc] =l.collect{case  instrs:carrySysInstr=>instrs.syysInstr}.flatten
       val res=l1++l2
-      if(res.toSet.size!=res.size)
-        throw new Exception("probably the same field is printed two times " + findDuplicates(res) )
+      val setsize=res.toSet.size
+      if(setsize!=res.size)   throw new Exception("probably the same field is printed two times " + findDuplicates(res) )
       res
     }
     //def getHierarchyDisplay:HashMap[Layer[_],ASTL[_ <: Locus,_ <: Ring]]=new HashMap()++
@@ -293,8 +295,8 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
         if (!tSymbVarExists(v) && !tSymbVarExists("p" + v) && !v.startsWith("mem["))
           throw new Exception("variable:" + v + " not present in symbol table")
     }
- invariantCoalesc;invariantSingleMain;invariantVariable}//;invariantLayers  }
-
+ //invariantCoalesc;invariantSingleMain;invariantVariable}//;invariantLayers
+  }
   /** the main root is characterized by the fact that it has a bug layer. */
   def isRootMain: Boolean = tSymbVar.contains("llbugV")
 

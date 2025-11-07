@@ -55,6 +55,9 @@ abstract class Agent[L <: Locus] extends MuStruct[L, B] with HasIsV {
   /** also used by DetectedAg */
 
   var flipAfterConstr: BoolV=null
+  /** flipAfterConsrtr is used as a first approximation to compute next, which is neccesary to know in order to compute keepOutside
+   * however, when we build the force keepOutside, we do not have yet flipafterConstr, hence we need the delayed version */
+  val dflipAfterConstr=delayedL(flipAfterConstr)
   var flipRandomlyCanceled: BoolV=null
   /** the two boolV will be synchronized flip being progressively rarefied.
    * if an agent forces several others, then its synchronized flip will be iteratively adjuster whenever each output agents updates
@@ -100,16 +103,22 @@ trait keepInsideForce {
   trait keepOutsideForce{
     self : ForceAg[V] =>
   def keepOutside:Force=  new Force() {
-    val nouveauAfterConstr= flipAfterConstr & ~muis.pred
-    val remainThere  =  ~flipAfterConstr & muis.pred
     override def actionV(ag: MovableAgV): MoveC = {
-      /** the surrounding agent overlap with nouveau */
+      //val fliipAafterCoonstr=fliprioOfMove.defined  //on se contente du flipMove pour le moment
+      // val fliipAafterCoonstr=flipAfterLocalConstr.defined  //plus long puisqu'on fait jouer les conhtrainte locale
+      // val fliipAafterCoonstr=flipAfterMutexConstr.defined  //plus long puisqu'on fait jouer les conhtrainte locale
+        val fliipAafterCoonstr=    flipAfterConstr //le normal qui produit des millions de neouds
+      //val teeest=new Dag[AST[_]](List(fliipAafterCoonstr))  //teste la présence de cycles ??
+      // l'instruction suivante affiche un truc enorme
+
+      val nouveauAfterConstr= ~muis.pred  & fliipAafterCoonstr
+      val remainThere  =   muis.pred   & ~fliipAafterCoonstr     /** the surrounding agent overlap with nouveau */
       val nouveauToEmpty = nouveauAfterConstr & ag.muis
       /** if not null will create a emptying of  nouveau where ag is filled */
-      val oui = MoveC1(nouveauToEmpty, fromBool(false))
-      /** we must not push voronoi towards places where it will contain particles*/
+      val oui = MoveC1(nouveauToEmpty, e(fromBool(false)))
+      /** we must not push voronoi towards vertices that will contain particles */
         val willbethere=nouveauAfterConstr | remainThere
-      val non = MoveC1(fromBool(false),ag.bf.brdVeIn & neighborsSym(e(willbethere)))
+      val non = MoveC1(muis.pred & ~muis.pred ,ag.bf.brdVeIn & neighborsSym(e(willbethere)))
       MoveC2(oui,non)
     }
   }
@@ -141,50 +150,37 @@ object ForceAg{
 }
 /**  ForcedAg are Agents  udated using force */
 abstract class ForceAg[L <: Locus] extends Agent[L]
- {/** the agent's list of consrtrain. Constraints have a name, and the list is also ordered */
+ { val forces:ArrayBuffer[mutable.LinkedHashMap[String,Force]] = ArrayBuffer()
+   protected def addForces(priority:Int, name:String, shortName:Char, f:Force ) = { //we may have to store set of moves, if we need add move of same priority.
+     val ht=forces(priority)
+     assert(!(ht.contains(name)), "each force must have a distinct priority");
+     forces(priority)(shortName+name)=f
+   }
+
+   /** moves are stored in centered form, so that we can restrict them. we store one hashmap for each priority. It two moves with identical names are added, we throw an exception */
+   val moves:ArrayBuffer[mutable.LinkedHashMap[String,MoveC]] = ArrayBuffer() //empty at the beginning
+   /** we introdued a new priority use to qualify a new range of move, creating a new functionnality such  as explore, homogeneize, stabilize*/
+   def introduceNewPriority():Int={ moves+= mutable.LinkedHashMap[String,MoveC]();
+     forces+= mutable.LinkedHashMap[String,Force]();  moves.size-1 }
+   /** if move of same priority exists, signal an error */
+   protected def addMoves(priority:Int, name:String, shortName:Char, m: MoveC ) = { //we may have to store set of moves, if we need add move of same priority.
+     val ht=moves(priority)
+     assert(!(ht.contains(name)), "each force must have a distinct priority");
+     moves(priority)(shortName+name)=m
+   }
+   /** generates move from forces */
+   def applyForces = {
+     var priority=0
+     for(mapForces<-forces)
+        {for((name,f)<-mapForces)
+          addMoves(priority,name.drop(1),name(0),f.action(this.asInstanceOf[MovableAgV]))
+          priority+=1
+        }
+   }
+
+   /** the agent's list of consrtrain. Constraints have a name, and the list is also ordered */
    val constrs= new scala.collection.mutable.LinkedHashMap[String,PartialUI =>Constr]()
 
-
-   /** stores the first letter of each move's name for all priorities, This lettre is to be displayed if move is selected
-    * there can be at  most  one positive move selected
-    * if move is blocking nothing get displayed, and  isquiscent will be true */
-   def codeMove:Iterable[String] = { assert(moves.size>1,"faut au moins deux move, sinon pb entier codé par un bool")
-     moves.map(_.keys.head.charAt(0).toString) }
-
-   /** will show only move that trigger movement. Move that "block" movement are hidden,  */
-   def showPositiveMoves={
-     shoowText(yesHighestTriggered,codeMove.toList)
-   // shoowText(prioDeet,List())
-     shoowText(allBugs,codeMove.toList)
-   }
-   // /** shows also  moves that block movement */
-  // def showMoves={ shoowText(highestTriggered,codeMove.toList)}
-   /** we sometimes need to check the prio, wether it is quiescent or not */
-   def showFlip={
-     shoowText(fliprioOfMove.valuc, List() )
-     shoow(fliprioOfMove.valuc.lt)
-     shoow(fliprioOfMove.defined, isQuiescent, flipAfterConstr,flipAfterLocalConstr.defined,
-       flipAfterMutexConstr.defined)
-   }
-   /** stores the first letter of each constraint's name. This lettre is to be displayed on vertice where constraint is active
-    * there can be several active constraints*/
-   def codeConstraint(constrs:mutable.LinkedHashMap[String,PartialUI=>Constr]): Iterable[String] =constrs.keys.toList.map(_.charAt(0).toString)
-   /** shows a letter corresponding to the constraint, for all constraint which effectively contribute in reducing flip */
-   def showConstraint={
-    // shoowText(allFlipCancel,codeConstraint(constrs).toList)
-     shoowText(allFlipLocalCanceled,codeConstraint(splitConstr.locals).toList)
-     shoowText(allFlipMutexCanceled,codeConstraint(splitConstr.mutexes++splitConstr.mutApexes++splitConstr.tritexes).toList)
-    if(splitConstr.sextexes.nonEmpty)  shoowText(allFlipSextexCanceled  ,codeConstraint(splitConstr.sextexes).toList)
-
-
-
-
-   }
- /** test que les var s'affiche bien */
-   def showMe={
-     showPositiveMoves;
-     showConstraint;showFlip;
-   }
    /**
     * @param name more explicit name
     * @param shortName used for display in CApannel
@@ -199,16 +195,6 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
      constrsync(shortName+name)=c  }
 
 
-   /** moves are stored in centered form, so that we can restrict them we store one hashmap for each priority. It two moves with identical names are added, we'd have to merge those */
-   val moves:ArrayBuffer[mutable.LinkedHashMap[String,MoveC]] = ArrayBuffer() //empty at the beginning
-   /** we introdued a new priority use to qualify a new range of move, creating a new functionnality such  as explore, homogeneize, stabilize*/
-   def introduceNewPriority():Int={ moves+= mutable.LinkedHashMap[String,MoveC]();  moves.size-1 }
-   /** if move of same priority exists, signal an error */
-   protected def addMoves(priority:Int, name:String, shortName:Char, m: MoveC ) = { //we may have to store set of moves, if we need add move of same priority.
-     val ht=moves(priority)
-     assert(!(ht.contains(name)), "each force must have a distinct priority");
-     moves(priority)(shortName+name)=m
-   }
    /** not the same for  movable/bound  */
    def allTriggered:UintV;
    def allBug:UintV;
@@ -223,16 +209,15 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
     * allows to  breaking  symetry in case of tournament with equal force's priority */
    val prioRand:UintV
    var fliprioOfMove:PartialUI=null
-   val mergedMoves= new  mutable.HashMap[String,MoveC]() with Named {}
 
-   //var mmovs= immutable.HashMap[String,MoveC]()
+   val mergedMoves= new  mutable.HashMap[String,MoveC]() with Named {}
 
    /**  */
    def setFliprioOfMove() = {
+     applyForces
      /** stores all the moves in a single hashMap, with the name of the force as key, so that we can easily shoow them */
-      for (m <- moves; (k, v) <- m) mergedMoves(k.drop(1)) = v
-     //mmovs=       moves.foldLeft(immutable.HashMap.empty[String, MoveC])(_ ++ _)
-    // mmovs=HashMap.from(mergedMoves)
+    for (m <- moves; (k, v) <- m) mergedMoves(k.drop(1)) = v
+
      /** does a computation to be repeated specifically for yes moves */
      def processMoves(all:UintV):(UintV,UintV,UintV)={
        /** bouche les trous avec un orscanright */
@@ -314,4 +299,43 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
      for((_,c)<-constrsync){
        flipAfterSync=c.zoneSync & c.cancel(c.source.flipAfterSync,flipAfterSync)}
  }
+
+
+
+   /** stores the first letter of each move's name for all priorities, This lettre is to be displayed if move is selected
+    * there can be at  most  one positive move selected
+    * if move is blocking nothing get displayed, and  isquiscent will be true */
+   def codeMove:Iterable[String] = { assert(moves.size>1,"faut au moins deux move, sinon pb entier codé par un bool")
+     moves.map(_.keys.head.charAt(0).toString) }
+
+   /** will show only move that trigger movement. Move that "block" movement are hidden,  */
+   def showPositiveMoves={
+     shoowText(yesHighestTriggered,codeMove.toList)
+     // shoowText(prioDeet,List())
+     shoowText(allBugs,codeMove.toList)
+   }
+   // /** shows also  moves that block movement */
+   // def showMoves={ shoowText(highestTriggered,codeMove.toList)}
+   /** we sometimes need to check the prio, wether it is quiescent or not */
+   def showAllFlip={
+     shoowText(fliprioOfMove.valuc, List() )
+     shoow(fliprioOfMove.valuc.lt)
+     shoow(fliprioOfMove.defined, isQuiescent, flipAfterConstr,flipAfterLocalConstr.defined,
+       flipAfterMutexConstr.defined)
+   }
+   /** stores the first letter of each constraint's name. This lettre is to be displayed on vertice where constraint is active
+    * there can be several active constraints*/
+   def codeConstraint(constrs:mutable.LinkedHashMap[String,PartialUI=>Constr]): Iterable[String] =constrs.keys.toList.map(_.charAt(0).toString)
+   /** shows a letter corresponding to the constraint, for all constraint which effectively contribute in reducing flip */
+   def showConstraint={
+     // shoowText(allFlipCancel,codeConstraint(constrs).toList)
+     shoowText(allFlipLocalCanceled,codeConstraint(splitConstr.locals).toList)
+     shoowText(allFlipMutexCanceled,codeConstraint(splitConstr.mutexes++splitConstr.mutApexes++splitConstr.tritexes).toList)
+     if(splitConstr.sextexes.nonEmpty)  shoowText(allFlipSextexCanceled  ,codeConstraint(splitConstr.sextexes).toList)
+   }
+   /** test que les var s'affiche bien */
+   def showMe={
+     showPositiveMoves;
+     showConstraint;showAllFlip;
+   }
  }

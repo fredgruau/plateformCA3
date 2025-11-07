@@ -10,7 +10,7 @@ import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, smoothen, smoothen2, testShrink}
-import sdn.MuStruct.{setFlipCanceled, setFliprioOfMove, showMustruct, showTrucPourDebugger}
+import sdn.MuStruct.{setFlipCanceled, setFliprioOfMove, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
 import sdn._
 import sdntool.{addDist, addDistGcenter, addDistGcenterVor}
 
@@ -20,12 +20,12 @@ class Homogeneize() extends LDAG with Named with BranchNamed
 
 
   showMustruct
-  setFliprioOfMove()
+  setFliprioOfMoveAndFlipAfterConstr()
   showTrucPourDebugger
-  setFlipCanceled()
+ // setFlipCanceled()
   part.shoow(part.vor.muis) //triggers evaluation
   //refaire. stoquer dans vor, une map ou tableau (trouvable par reflection) mprimable des mouvement par priorité, resultant d'une reduction or.
-  //part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
+  part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
  // part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
   part.shoow(part.muis)
   part.vor.showMe

@@ -18,7 +18,9 @@ import scala.collection.{mutable, _}
 import scala.reflect.ClassTag
 import scala.language.implicitConversions
 import dataStruc.Util.{composeAll2, dupliqueOrTriplique, rot, rotPerm, rotR}
-import sdn.{Compar, Compar3,ComparApex2, ComparDiff}
+import sdn.{Compar, Compar3, ComparApex2, ComparDiff}
+
+import scala.runtime.ScalaRunTime
 /**
  * todo we must distinguish between the wrapper of the constructors, and the higher order function which can be defined in another object
  * At some point, we decided to store the type information for each distinct constructor, in order to have direct access to this info
@@ -28,6 +30,8 @@ import sdn.{Compar, Compar3,ComparApex2, ComparDiff}
  * constructors are declared private and therefore, they are associated to a wrapper which can be used to build expressions.
  */
 object ASTL {
+  private val cache = scala.collection.mutable.HashMap[ASTLg,ASTLg]()
+
   val u = 1
 
   /** delayedL reprograms delayed, in order to add the trait ASTLt[L, R] */
@@ -77,21 +81,48 @@ object ASTL {
 
   /** Unop is not final, because we can add operators < */
   private[ASTL] case class Unop[L <: Locus, R1 <: Ring, R2 <: Ring](op: Fundef1[R1, R2], arg: ASTLt[L, R1], m: repr[L], n: repr[R2])
-    extends ASTL[L, R2]()(repr.nomLR(m, n)) with Singleton[AST[_]]
+    extends ASTL[L, R2]()(repr.nomLR(m, n)) with Singleton[AST[_]]{
+    @transient private lazy val cachedHash: Int =     ScalaRunTime._hashCode(this)
+    override def hashCode(): Int = cachedHash
+    override def equals(other: Any): Boolean = other match {
+      case that: Unop[_,_,_] =>
+        if (this eq that) true
+        else if (this.cachedHash != that.cachedHash) false
+        else op == that.op && arg == that.arg
+      case _ => false
+    }
+
+  }
 
   def unop[L <: Locus, Ri <: Ring, Ro <: Ring](f: Fundef1[Ri, Ro], arg: ASTLt[L, Ri])(implicit m: repr[L], n: repr[Ro]): ASTLt[L, Ro]
   = {
-    Unop[L, Ri, Ro](f, arg, m, n)
+   val tmp= Unop[L, Ri, Ro](f, arg, m, n)
+     cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Unop[L,Ri,Ro]]
   }
 
   private[ASTL] final case class Binop[L <: Locus, R1 <: Ring, R2 <: Ring, R3 <: Ring](
              op: Fundef2[R1, R2, R3], arg: ASTLt[L, R1], arg2: ASTLt[L, R2], m: repr[L], n: repr[R3])
-    extends ASTL[L, R3]()(repr.nomLR(m, n)) with Doubleton[AST[_]]
+    extends ASTL[L, R3]()(repr.nomLR(m, n)) with Doubleton[AST[_]]{
+    @transient private lazy val cachedHash: Int =      ScalaRunTime._hashCode(this)
+   override def hashCode(): Int = cachedHash
+    override def equals(other: Any): Boolean = other match {
+      case that: Binop[_,_,_,_] =>
+        if (this eq that) true
+        else if (this.cachedHash != that.cachedHash) false
+        else op == that.op && arg == that.arg && arg2 == that.arg2
+      case _ => false
+    }
+
+  }
 
   /** factory binop */
   def binop[L <: Locus, R1 <: Ring, R2 <: Ring, R3 <: Ring](op: Fundef2[R1, R2, R3], arg: ASTLt[L, R1], arg2: ASTLt[L, R2])
                                                            (implicit m: repr[L], n3: repr[R3]): ASTLt[L, R3]
-  = new Binop[L, R1, R2, R3](op, arg, arg2, m, n3) //with ASTLt[L, R2]
+  = {
+    val tmp=new Binop[L, R1, R2, R3](op, arg, arg2, m, n3)
+    cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Binop[L,R1,R2,R3]]
+
+  } //with ASTLt[L, R2]
 
   /**
    * @tparam S1 towards wich we reduce
