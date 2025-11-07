@@ -60,6 +60,8 @@ abstract class Circuit[L <: Locus, R <: Ring](p: Param[_]*) extends AST.Fundef[(
   def compile(m: Machine):CAloops2 = {
     body = computeRoot //we pretend that the circuit is a function which returns compute Root
     val prog1: DataProg[InfoType[_]] = DataProg(this,root4naming,nameCAlowerCase);
+    //prog1.checkInvariant ca a un cout exponentiel
+    // car le calcul des used variables n'est pas mémoisé, et le dag n'est pas encore treefié.
    // print(prog1)
 
     //Now that fields have received a name, we can compute labelsOfFields
@@ -67,7 +69,7 @@ abstract class Circuit[L <: Locus, R <: Ring](p: Param[_]*) extends AST.Fundef[(
    // print(labelsOfFields)
 
 
-    val prog2 = prog1.treeIfy();
+    val prog2 = prog1.treeIfy();prog2.checkInvariant
       //print("222222222222222222222222222222222222222222222222222222222222222222222222222222222\n" + prog2);
 
     val prog3: DataProg[InfoType[_]] = prog2.procedurIfy();

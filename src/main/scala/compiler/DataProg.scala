@@ -201,7 +201,8 @@ object DataProg {
     tsb ++= layers.map(a => (Named.lify(a.name), InfoType(a, LayerField(a.nbit, a.init)))) // stores layers with bit size, in the symbol table.
     val newProg=new DataProg[InfoType[_]](new DagInstr(instrs, dag), //alreadycompiled fun will not be in subFun,
       toBeCompiled.map { case (k, v) ⇒ k -> DataProg(v,v.body,k) }, tsb, f.p.toList.map("p" + _.name), List())//compiles carefully selected subset of macros.
-    newProg.checkInvariant; newProg
+    //newProg.checkInvariant;
+    newProg
   }
 
   def bugLayers(lesInstr: List[CallProc]): List[Layer[_]] = {
@@ -295,7 +296,9 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
         if (!tSymbVarExists(v) && !tSymbVarExists("p" + v) && !v.startsWith("mem["))
           throw new Exception("variable:" + v + " not present in symbol table")
     }
- //invariantCoalesc;invariantSingleMain;invariantVariable}//;invariantLayers
+ invariantCoalesc;
+    invariantSingleMain;
+    invariantVariable//}//;invariantLayers
   }
   /** the main root is characterized by the fact that it has a bug layer. */
   def isRootMain: Boolean = tSymbVar.contains("llbugV")
