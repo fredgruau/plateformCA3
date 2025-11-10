@@ -3,7 +3,7 @@ package compiler
 import AST._
 import ASTB._
 import ASTBfun.{orRedop, _}
-import ASTL.{redop, _}
+import ASTL.{ASTLg, Structural, redop, _}
 import ASTLfun._
 import dataStruc.Align2._
 import Constraint._
@@ -42,28 +42,50 @@ object ASTL {
 
 
 
+  trait Structural extends Product {
+    @transient private lazy val cachedHash = ScalaRunTime._hashCode(this)
+    override def hashCode(): Int = cachedHash
 
-  private[ASTL] case class Coonst[L <: Locus, R <: Ring](cte: ASTBt[R], m: repr[L], n: repr[R]) extends ASTL[L, R]()(repr.nomLR(m, n)) with EmptyBag[AST[_]]
+    protected def fastEq(other: Any): Boolean = other match {
+      case that: AnyRef if that.getClass eq this.getClass =>
+        if (this.asInstanceOf[AnyRef] eq that) true
+        else if (this.hashCode != that.hashCode) false
+        else this.productIterator.sameElements(that.asInstanceOf[Product].productIterator)
+      case _ => false
+    }
+  }
 
-  def const[L <: Locus, R <: Ring](cte: ASTBt[R])(implicit m: repr[L], n: repr[R]): ASTLt[L, R] = Coonst(cte, m, n)
+  private[ASTL] case class Coonst[L <: Locus, R <: Ring](cte: ASTBt[R], m: repr[L], n: repr[R])
+    extends ASTL[L, R]()(repr.nomLR(m, n)) with EmptyBag[AST[_]] with Structural
+  {override def equals(other: Any): Boolean = fastEq(other)
+  }
+
+  def const[L <: Locus, R <: Ring](cte: ASTBt[R])(implicit m: repr[L], n: repr[R]): ASTLt[L, R] =
+    {  val tmp=Coonst(cte, m, n);
+      cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Coonst[L,R]]  }
 
   private[ASTL]
   final case class Broadcast[S1 <: S, S2 <: S, R <: Ring](arg: ASTLt[S1, R], m: repr[T[S1, S2]], n: repr[R])
-    extends ASTL[T[S1, S2], R]()(repr.nomLR(m, n)) with Singleton[AST[_]]
+    extends ASTL[T[S1, S2], R]()(repr.nomLR(m, n)) with Singleton[AST[_]] with Structural
+    {override def equals(other: Any): Boolean = fastEq(other)
+  }
 
   def broadcast[S1 <: S, S2 <: S, R <: Ring](arg: ASTLt[S1, R])(implicit m: repr[T[S1, S2]], n: repr[R]): ASTLt[T[S1, S2], R] =
-    new Broadcast[S1, S2, R](arg, m, n) //step 1 is broadcast
-
+  { val tmp =  new Broadcast[S1, S2, R](arg, m, n) //step 1 is broadcast
+  cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Broadcast[S1, S2, R]]
+  }
   /** a bit more subtle than broadcast, sends a distinct component to each of T[S1,S2]
    * size of the list is equal to fanout of locus for vertex it is 6, For edge it is 2.  */
   private[ASTL] final case class Send[S1 <: S, S2 <: S, R <: Ring](args: List[ASTLt[S1, R]])
                                                                   (implicit m: repr[T[S1, S2]], n: repr[R])
-    extends ASTL[T[S1, S2], R]() with Neton[AST[_]]
+    extends ASTL[T[S1, S2], R]() with Neton[AST[_]]with Structural {override def equals(other: Any): Boolean = fastEq(other)
+  }
 
   def send[S1 <: S, S2 <: S, R <: Ring](args: List[ASTLt[S1, R]])
                                        (implicit m: repr[T[S1, S2]], n: repr[R]): ASTLt[T[S1, S2], R] = {
     assert(args.length == 6 / args.head.locus.density); // check that the number of args is correct
-    Send[S1, S2, R](args);
+   val tmp= Send[S1, S2, R](args);
+    cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Send[S1, S2, R]]
   }
   /*  def sendv[S1 <: S, R <: Ring](args: List[ASTLt[S1, R]])(implicit m: repr[T[S1, V]], n: repr[R]): Send[S1, V, R] = {
       assert(args.length == 6 / args.head.locus.density);
@@ -74,23 +96,26 @@ object ASTL {
       Send[S1, E, R](args);*/
 
   private[ASTL] final case class Transfer[S1 <: S, S2 <: S, R <: Ring](arg: ASTLt[T[S1, S2], R], m: repr[T[S2, S1]], n: repr[R])
-    extends ASTL[T[S2, S1], R]()(repr.nomLR(m, n)) with Singleton[AST[_]]
+    extends ASTL[T[S2, S1], R]()(repr.nomLR(m, n)) with Singleton[AST[_]] with Structural
+{override def equals(other: Any): Boolean = fastEq(other)
+}
 
-  def transfer[S1 <: S, S2 <: S, R <: Ring](arg: ASTLt[T[S1, S2], R])(implicit m: repr[T[S2, S1]], n: repr[R]):
-  ASTLt[T[S2, S1], R] = Transfer(arg, m, n)
+  def transfer[S1 <: S, S2 <: S, R <: Ring](arg: ASTLt[T[S1, S2], R])(implicit m: repr[T[S2, S1]], n: repr[R]):  ASTLt[T[S2, S1], R] =
+  {val tmp= Transfer(arg, m, n)
+    cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[ASTLt[T[S2, S1], R]]
+
+  }
+
+
+  import scala.runtime.ScalaRunTime
+
+
 
   /** Unop is not final, because we can add operators < */
   private[ASTL] case class Unop[L <: Locus, R1 <: Ring, R2 <: Ring](op: Fundef1[R1, R2], arg: ASTLt[L, R1], m: repr[L], n: repr[R2])
-    extends ASTL[L, R2]()(repr.nomLR(m, n)) with Singleton[AST[_]]{
-    @transient private lazy val cachedHash: Int =     ScalaRunTime._hashCode(this)
-    override def hashCode(): Int = cachedHash
-    override def equals(other: Any): Boolean = other match {
-      case that: Unop[_,_,_] =>
-        if (this eq that) true
-        else if (this.cachedHash != that.cachedHash) false
-        else op == that.op && arg == that.arg
-      case _ => false
-    }
+    extends ASTL[L, R2]()(repr.nomLR(m, n)) with Singleton[AST[_]] with Structural {
+     override def equals(other: Any): Boolean = fastEq(other)
+
 
   }
 
@@ -102,17 +127,8 @@ object ASTL {
 
   private[ASTL] final case class Binop[L <: Locus, R1 <: Ring, R2 <: Ring, R3 <: Ring](
              op: Fundef2[R1, R2, R3], arg: ASTLt[L, R1], arg2: ASTLt[L, R2], m: repr[L], n: repr[R3])
-    extends ASTL[L, R3]()(repr.nomLR(m, n)) with Doubleton[AST[_]]{
-    @transient private lazy val cachedHash: Int =      ScalaRunTime._hashCode(this)
-   override def hashCode(): Int = cachedHash
-    override def equals(other: Any): Boolean = other match {
-      case that: Binop[_,_,_,_] =>
-        if (this eq that) true
-        else if (this.cachedHash != that.cachedHash) false
-        else op == that.op && arg == that.arg && arg2 == that.arg2
-      case _ => false
-    }
-
+    extends ASTL[L, R3]()(repr.nomLR(m, n)) with Doubleton[AST[_]] with Structural {
+      override def equals(other: Any): Boolean =fastEq(other)
   }
 
   /** factory binop */
@@ -128,54 +144,72 @@ object ASTL {
    * @tparam S1 towards wich we reduce
    */
   private[ASTL] final case class Redop[S1 <: S, S2 <: S, R <: Ring](op: redop[R], arg: ASTLt[T[S1, S2], R], m: repr[S1], n: repr[R])
-    extends ASTL[S1, R]()(repr.nomLR(m, n)) with Singleton[AST[_]] {
+    extends ASTL[S1, R]()(repr.nomLR(m, n)) with Singleton[AST[_]] with Structural {
+    override def equals(other: Any): Boolean = fastEq(other)
     /** used to compute the expression being reduced.  */
     override def redExpr: List[AST[_]] = List(arg)
   }
 
   def redop[S1 <: S, S2 <: S, R <: Ring](op: redop[R], arg: ASTLt[T[S1, S2], R])(implicit m: repr[S1], n: repr[R]): ASTLt[S1, R]
-  = Redop[S1, S2, R](op, arg, m, n)
+  = {val tmp =Redop[S1, S2, R](op, arg, m, n)
+    cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Redop[S1, S2, R]]
+
+  }
 
 /** We can apply a binop on two Ev or two Ef */
   private[ASTL] final case class BinopEdge[ S2 <: S, R <: Ring, P<: Ring](op: Fundef2RP[R,P], arg: ASTLt[T[E, S2], R], m: repr[E], n: repr[R], n2: repr[P])
-    extends ASTL[E, P]()(repr.nomLR(m, n2)) with Singleton[AST[_]] {
+    extends ASTL[E, P]()(repr.nomLR(m, n2)) with Singleton[AST[_]] with Structural {
+  override def equals(other: Any): Boolean = fastEq(other)
   override def binopEdgeExpr: List[AST[_]] = List(arg)
     /** used to compute the expression being reduced.  */
    // override def redExpr: List[AST[_]] = List(arg)
   }
 
   def binopEdge[S2 <: S, R <: Ring, P <: Ring](op:  Fundef2RP[R,P], arg: ASTLt[T[E,S2], R])(implicit m: repr[E], n: repr[R], n2: repr[P]): ASTLt[E, P]
-  = BinopEdge[ S2, R, P](op, arg, m, n, n2)
+  = {val tmp=BinopEdge[ S2, R, P](op, arg, m, n, n2)
+    cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[BinopEdge[ S2, R, P]]
 
-
+  }
 
 
   /** @param dir true if rotation is clockwise */
   private[ASTL] final case class Clock[S1 <: S, S2 <: S, S3 <: S, R <: Ring](
                                                                               arg: ASTLt[T[S1, S2], R], dir: Boolean, t: AntiClock[S1, S2, S3], m: repr[T[S1, S3]], n: repr[R])
-    extends ASTL[T[S1, S3], R]()(repr.nomLR(m, n)) with Singleton[AST[_]]
+    extends ASTL[T[S1, S3], R]()(repr.nomLR(m, n)) with Singleton[AST[_]]with Structural {
+    override def equals(other: Any): Boolean = fastEq(other)}
 
   def clock[S1 <: S, S2 <: S, S3 <: S, R <: Ring](arg: ASTLt[T[S1, S2], R])
                                                  (implicit t: AntiClock[S1, S2, S3], m: repr[T[S1, S3]], n: repr[R]): ASTLt[T[S1, S3], R] =
-    Clock[S1, S2, S3, R](arg, dir = true, t, m, n)
+    {val tmp=Clock[S1, S2, S3, R](arg, dir = true, t, m, n)
+      cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Clock[S1, S2, S3, R]]}
 
-  def anticlock[S1 <: S, S2 <: S, S3 <: S, R <: Ring](arg: ASTLt[T[S1, S2], R])
+
+      def anticlock[S1 <: S, S2 <: S, S3 <: S, R <: Ring](arg: ASTLt[T[S1, S2], R])
                                                      (implicit t: AntiClock[S1, S2, S3], m: repr[T[S1, S3]], n: repr[R]): ASTLt[T[S1, S3], R] =
-    Clock[S1, S2, S3, R](arg, dir = false, t, m, n)
+   { val tmp= Clock[S1, S2, S3, R](arg, dir = false, t, m, n)
+     cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Clock[S1, S2, S3, R]]}
+
+
 
   /** central symmetry, used on vertices */
   private[ASTL] final case class Sym[S1 <: S, S2 <: S, S2new <: S, R <: Ring]
   (arg: ASTLt[T[S1, S2], R], m: repr[T[S1, S2new]], t: CentralSym[S2, S1, S2new], n: repr[R])
-    extends ASTL[T[S1, S2new], R]()(repr.nomLR(m, n)) with Singleton[AST[_]]
+    extends ASTL[T[S1, S2new], R]()(repr.nomLR(m, n)) with Singleton[AST[_]] with Structural
+ {override def equals(other: Any): Boolean = fastEq(other)
+ }
 
   def sym[S1 <: S, S2 <: S, S3 <: S, R <: Ring](arg: ASTLt[T[S1, S2], R])
-               (implicit t: CentralSym[S2, S1, S3], m: repr[T[S1, S3]], n: repr[R]): ASTLt[T[S1, S3], R] = Sym(arg, m, t, n)
+               (implicit t: CentralSym[S2, S1, S3], m: repr[T[S1, S3]], n: repr[R]): ASTLt[T[S1, S3], R] = {
+    val tmp=Sym(arg, m, t, n)
+    cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[ASTLt[T[S1, S3], R]]
+  }
 
 
-  /** the concat reduction takes a bool transfer, and produces an unsigned int. n=UI */
+  /** the concat reduction takes a bool transfer, and produces an unsigned int. n=UI , I am not so sure I've used it*/
   private[ASTL] final case class RedopConcat[S1 <: S, S2 <: S](arg: ASTLt[T[S1, S2], B], m: repr[S1], n: repr[UI])
-    extends ASTL[S1, UI]()(repr.nomLR(m, n)) with Singleton[AST[_]] {
-    /** used to compute the expression being reduced. */
+    extends ASTL[S1, UI]()(repr.nomLR(m, n)) with Singleton[AST[_]] with Structural
+  {override def equals(other: Any): Boolean = fastEq(other)
+  /** used to compute the expression being reduced. */
     override def redExpr: List[AST[_]] = List(arg)
   }
 
@@ -249,6 +283,7 @@ object SpatialType {
  *          I've put the type locus + ring as part of  the case construct's fields, so that it becomes very easy to copy
  */
 sealed abstract class ASTL[L <: Locus, R <: Ring]()(implicit m: repr[(L, R)]) extends ASTLt[L, R] {
+
   override def isRedop =
     this.asInstanceOf[ASTL[_, _]] match {
       case Redop(_, _, _, _) => true
