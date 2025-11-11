@@ -26,7 +26,9 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoow(part.vor.muis) //triggers evaluation
   //refaire. stoquer dans vor, une map ou tableau (trouvable par reflection) mprimable des mouvement par priorité, resultant d'une reduction or.
   part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
- // part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
+  part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
+  part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
+  part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
   part.shoow(part.muis)
   part.vor.showMe
    part.vor.b.showMe
@@ -35,7 +37,14 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.bf.showMe
   part.b.showMe
   part.bve.showMe
-  part.d.showMe; part.dg.showMe;part.dgv.showMe
+  part.d.showMe;
+  part.shoow( part.dgv.gap, part.dgv.sloplt, part.dgv.level, part.dgv.vortex) // necessary so as to use all parameters returned by slopeDeltashoow(vortex)
+  part.shoowText(part.dgv.deltag,List())
+  part.shoowText(part.dgv.muis, List())
+  part.shoow( part.dg.gap, part.dg.sloplt, part.dg.level, part.dg.vortex) // necessary so as to use all parameters returned by slopeDeltashoow(vortex)
+  part.shoowText(part.dg.deltag,List())
+  part.shoowText(part.dg.muis, List())
+  //part.dg.showMe;part.dgv.showMe
    part.gc.showme
  // part.shoow(part.sf.stable2)
 
@@ -56,8 +65,9 @@ class Flies2 extends Seed {
 class Homogen() extends Flies2 with addDist with addGcenter with addDistGcenter with keepOutsideForce with addVor with addDistGcenterVor
 {  /** homogeneizing priority */
   final val homogeneize=introduceNewPriority()
-  force(homogeneize,"repulse",'|',dg.repulse)//specific forces applied to Flies
-
+  force(homogeneize,"repulse",'|',dgv.repulse)//specific forces applied to Flies
+  val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
+  addConstraint("avoidgc",'g',avoidGc)
 }
 
 

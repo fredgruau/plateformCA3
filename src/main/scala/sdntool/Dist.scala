@@ -102,7 +102,7 @@ class MuDist(val source: MuStruct[V, B],val bitSize:Int) extends Dist(bitSize) {
 /** computes distance to gabriel centers added to the distance of that gabriel center to seeds i.e, distance to nearest neighbors */
 class MuDistGcenter(val source:MovableAgV with addDist with addGcenter) extends Dist(6) {
   override def inputNeighbors = List(source.d)
-  val incr: ASTLt[V, SI] = cond(delayedL(source.bve.meetE2), sign(opp+2), cond(delayedL(source.bve.meetV), sign(opp), deltag))
+  val incr: ASTLt[V, SI] = cond(delayedL(source.bve.meetE2), sign(opp/*+2*/), cond(delayedL(source.bve.meetV), sign(opp), deltag))
 }
 
 
@@ -128,7 +128,8 @@ trait addDistGcenter {
  * caused by the fact that gabriel centers are discontinuous*/
 class MuDistGcenterVor(val source:MovableAgV with addDist with addVor with addGcenter) extends Dist(6) {
   override def inputNeighbors = List(source.vor,source.gc)
-  val incr: ASTLt[V, SI] = cond(delayedL(source.bve.meetV), sign(opp), cond(delayedL(source.bve.meetE2), sign(opp+2), deltag))
+ // val incr: ASTLt[V, SI] = cond(delayedL(source.bve.meetV), sign(opp), cond(delayedL(source.bve.meetE2), sign(opp/*+2*/), deltag))
+  val incr: ASTLt[V, SI] = cond(delayedL(source.bve.meetV) | delayedL(source.bve.meetE2) |source.vor.muis , sign(opp), deltag)
 }
 
 /** adds distance to gcentern corrected by voronoi*/

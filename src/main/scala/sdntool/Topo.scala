@@ -84,6 +84,7 @@ override def showMe=shoow(meetV,meetE,nbCc,meet)}
 class BlobV(val muis:BoolV with carrySysInstr,f:BlobVFields) extends Blob  {
   val nbCc=nbccV(f.brdE)
   val meetV=nbCc>1
+  val nbcc0= ~neq(nbCc)
   val twoAdjBlob: BoolE = insideS[V, E](f.brdV) //third use of brdE, check that there is two adjacent blobs next to the empty rhombus
   val emptyRhomb: BoolE = ~rhombusExist(f.brdE) // true if center of a NON-totally empty rhombus
   val meetE=twoAdjBlob & emptyRhomb
@@ -139,7 +140,7 @@ trait blobConstrTrou{
 trait  blobConstrain   {
   self: MovableAgV with addBloobV=>
   /** meetV points cannot flip */
-  val vmeet: PartialUI => Constr =  CancelFlipIf(this,Both(),b.meetV) _
+  val vmeet: PartialUI => Constr =  CancelFlipIf(this,Both(),b.meetV | b.nbcc0) _
   addConstraint("vmeet",'_',vmeet)
   /**a doubleton cannot flip both vertices*/
   val emeet = MutKeepFlipIf(this,Both(),b.meetE) _ ;  addConstraint("emeet",'=',emeet);}

@@ -53,6 +53,7 @@ val notIsV :BoolV= ~(delayedL(isV))
   */
 abstract class Agent[L <: Locus] extends MuStruct[L, B] with HasIsV {
   /** also used by DetectedAg */
+    val agthis=this
 
   var flipAfterConstr: BoolV=null
   /** flipAfterConsrtr is used as a first approximation to compute next, which is neccesary to know in order to compute keepOutside
@@ -104,21 +105,16 @@ trait keepInsideForce {
     self : ForceAg[V] =>
   def keepOutside:Force=  new Force() {
     override def actionV(ag: MovableAgV): MoveC = {
-      //val fliipAafterCoonstr=fliprioOfMove.defined  //on se contente du flipMove pour le moment
-      // val fliipAafterCoonstr=flipAfterLocalConstr.defined  //plus long puisqu'on fait jouer les conhtrainte locale
-      // val fliipAafterCoonstr=flipAfterMutexConstr.defined  //plus long puisqu'on fait jouer les conhtrainte locale
-        val fliipAafterCoonstr=    flipAfterConstr //le normal qui produit des millions de neouds
-      //val teeest=new Dag[AST[_]](List(fliipAafterCoonstr))  //teste la présence de cycles ??
-      // l'instruction suivante affiche un truc enorme
+      val fliipAafterCoonstr=    flipAfterConstr //le normal qui produit des millions de neouds
+      val nouveauAfterConstr= ~muis.pred  & fliipAafterCoonstr //true if the particle agent fills
+        val nouveauToEmpty = nouveauAfterConstr & ag.muis   // and if there was a voronoi it should therefore empties
+      val remainThere  =   muis.pred   & ~fliipAafterCoonstr    //particle was there and remain there, voronoi should not come
 
-      val nouveauAfterConstr= ~muis.pred  & fliipAafterCoonstr
-      val remainThere  =   muis.pred   & ~fliipAafterCoonstr     /** the surrounding agent overlap with nouveau */
-      val nouveauToEmpty = nouveauAfterConstr & ag.muis
       /** if not null will create a emptying of  nouveau where ag is filled */
       val oui = MoveC1(nouveauToEmpty, e(fromBool(false)))
       /** we must not push voronoi towards vertices that will contain particles */
         val willbethere=nouveauAfterConstr | remainThere
-      val non = MoveC1(muis.pred & ~muis.pred ,ag.bf.brdVeIn & neighborsSym(e(willbethere)))
+      val non = MoveC1(muis.pred & ~muis.pred ,ag.bf.brdVeIn & neighborsSym(e(willbethere)))  //particle was there and remain there, voronoi should not come
       MoveC2(oui,non)
     }
   }
@@ -210,7 +206,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    val prioRand:UintV
    var fliprioOfMove:PartialUI=null
 
-   val mergedMoves= new  mutable.HashMap[String,MoveC]() with Named {}
+   val mergedMoves= new  mutable.HashMap[String,MoveC]() with Named with BranchNamed{}
 
    /**  */
    def setFliprioOfMove() = {

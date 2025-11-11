@@ -3,6 +3,8 @@
         <Layer>
           homogeneizePartVorFlipafterlocalconstr
         </Layer><Layer>
+          homogeneizePartBve
+        </Layer><Layer>
           homogeneizePartVor
         </Layer><Layer>
           homogeneizePartVorFlipaftermutexconstr
@@ -15,17 +17,23 @@
         </Layer><Layer>
           homogeneizePartGc
         </Layer><Layer>
+          homogeneizePartMergedmovesyyyrepulseNo
+        </Layer><Layer>
           homogeneizePartD
         </Layer><Layer>
-          homogeneizePartVorBf
+          homogeneizePartMergedmovesyyyrepulse
+        </Layer><Layer>
+          homogeneizePartVorMergedmovesyyyrepulse
         </Layer><Layer>
           homogeneizePartFlipafterlocalconstr
         </Layer><Layer>
           homogeneizePartVorFliprioofmove
         </Layer><Layer>
+          homogeneizePartVorMergedmovesyyyrepulseNo
+        </Layer><Layer>
           homogeneizePartFliprioofmove
         </Layer><Layer>
-          homogeneizePartVorB
+          homogeneizePartVorMergedmovesyyyrepulseYes
         </Layer><Layer>
           homogeneizePartFlipaftermutexconstr
         </Layer><Layer>
@@ -33,10 +41,14 @@
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0xFFC800">
+          <layer color="0x0080FF">
+            homogeneizePartBveMeet
+          </layer><layer color="0xFFC800">
             homogeneizePartIsv
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
+          </layer><layer color="0x000000">
+            homogeneizePartDgvMuis
           </layer>
         </colorOfField>
       </displayParam>
