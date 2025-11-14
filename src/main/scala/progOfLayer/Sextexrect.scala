@@ -6,7 +6,7 @@ import compiler.ASTLt.ConstLayer
 import compiler.SpatialType.{BoolV, BoolVe, SintV, UintV, UintVe, UintVx}
 import compiler.{ASTLt, B, UI, V}
 import dataStruc.BranchNamed
-import progOfLayer.Sextexrect.{chooseMaxOf, sharpCmpNoMin, weakCmpProdZero, weakCmpProdtwo}
+import progOfLayer.Sextexrect.chooseMaxOf
 import progOfmacros.Compute.concat3V
 import progOfmacros.Wrapper.{condL, ltUI2L, neqUI2L, not}
 import sdn.Globals.root4naming
@@ -49,6 +49,7 @@ class   Sextexrect() extends ConstLayer[V, B](1, "global")  with BranchNamed{
  show(voisins,nasI,prioRand,east,se,sw,west,nw,ne)
  show(sextex, southmin)//,eqeSe)*/
 } //root classe compilable
+
 object Sextexrect {
  def weakCmpProdtwo(arg1: UintV, arg2: UintV): (ASTLt[V, UI], ASTLt[V, B], ASTLt[V, B]) = {
   val lt = ltUI2L(arg1, arg2)
@@ -107,15 +108,21 @@ object Sextexrect {
  }
 
 
-
+ /**
+  *  fonction that we are finally using. Elect the direction of max priority.
+  * @param prio  priority
+  * @param k number of bits. for exemple two  bits of priority plus two random bits, make four bits
+  * @return
+  */
  def chooseMaxOf(prio: UintV,k:Int): BoolVe={
  /**  contients les 6 voisins dans l'ordre clock: east,se,sw, west, nw,ne */
  val voisins: UintVe = addSymUI(e(prio)).symUI
   /**  récupére tout les bits de tout ces voisins, reste ensuite a  les regrouper en paquet, un par voisin*/
- val nasI: UintV = concatR(voisins) //on récupére 18 bits a la suite pour 6 voisins, chacun 3 bits,
+ val nasI: UintV = concatR(voisins) //si k = 4, on récupére 24 bits a la suite pour 6 voisins, chacun 4 bits,
 
 
-/*  val (n0, n1, n2, n3, n4, n5) = (elt(0, nasI), elt(1, nasI), elt(2, nasI), elt(3, nasI), elt(4, nasI), elt(5, nasI)) // aprés on les numérote
+/* former fomulation awkward because dependant on the number of bits
+ val (n0, n1, n2, n3, n4, n5) = (elt(0, nasI), elt(1, nasI), elt(2, nasI), elt(3, nasI), elt(4, nasI), elt(5, nasI)) // aprés on les numérote
  val (n6, n7, n8, n9, n10, n11) = (elt(6, nasI), elt(7, nasI), elt(8, nasI), elt(9, nasI), elt(10, nasI), elt(11, nasI)) //aprés on les numérote
  val (n12, n13, n14, n15, n16, n17) = (elt(12, nasI), elt(13, nasI), elt(14, nasI), elt(15, nasI), elt(16, nasI), elt(17, nasI)) // aprés on les numérote
  val (east, se, sw) = (concat3V(n0, n1, n2), concat3V(n3, n4, n5), concat3V(n6, n7, n8))
@@ -125,12 +132,12 @@ object Sextexrect {
 
  val Array(east,se,sw, west,nwest,neast)=splitInto6(nasI, k)
 
- /** Two here means that if arg1 = arg2 we expand in both directions, going from a singleton to a tripleton */
+ /** Two in weakCmpProdtwo  means that if arg1 = arg2 we expand in both directions, going from a singleton to a tripleton */
  val (northmin, nwnw, nene) = weakCmpProdtwo(nwest, neast)
  //  shoow(northmin,nwnw,nene)
  val (southmin, swsw, sese) = weakCmpProdtwo(sw, se)
- val (horizMin, heast, hwest) = weakCmpProdZero(east, west)
- val (vertmin, nn, ss) = weakCmpProdZero(northmin, southmin)
+ val (horizMin, heast, hwest) = weakCmpProdZero(east, west) //here we cannot expand both east and west
+   val (vertmin, nn, ss) = weakCmpProdZero(northmin, southmin)
  //shoow(nn,ss)
  val (toto, vert, horiz) = weakCmpProdZero(vertmin, horizMin)
 
@@ -149,6 +156,8 @@ object Sextexrect {
  val sextex: BoolVe = send(sextexInt)
  sextex
 }
+
+ /** same but going for min instead of max*/
  def chooseMinOfOld(prio:UintV):BoolVe={
   val voisins: UintVe =addSymUI(e(prio)).symUI  // symUI est un boolVe qui  va contenir les voisins
   val nasI: UintV =  concatR(voisins) //on récupére 18 bits a la suite pour 6 voisins, chacun 3 bits,

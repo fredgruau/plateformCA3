@@ -99,4 +99,23 @@ for (int i = 1; i < pngh$e.length -1; i++) {
   ;
 p.prepareBit(commneighbors)
  ;
+  }
+public static int neighborsUI_3_3GateCount=0;
+ public static void neighborsUI_3_3(PrShift p,int [][] pngh,int [][] ver){
+ int[] ver$e$0=ver[0],ver$e$1=ver[1],ver$e$2=ver[2],ver$se$0=ver[3],ver$se$1=ver[4],ver$se$2=ver[5],ver$sw$0=ver[6],ver$sw$1=ver[7],ver$sw$2=ver[8],ver$w$0=ver[9],ver$w$1=ver[10],ver$w$2=ver[11],ver$nw$0=ver[12],ver$nw$1=ver[13],ver$nw$2=ver[14],ver$ne$0=ver[15],ver$ne$1=ver[16],ver$ne$2=ver[17],pngh$e$0=pngh[0],pngh$e$1=pngh[1],pngh$e$2=pngh[2],pngh$se$0=pngh[3],pngh$se$1=pngh[4],pngh$se$2=pngh[5],pngh$sw$0=pngh[6],pngh$sw$1=pngh[7],pngh$sw$2=pngh[8],pngh$w$0=pngh[9],pngh$w$1=pngh[10],pngh$w$2=pngh[11],pngh$nw$0=pngh[12],pngh$nw$1=pngh[13],pngh$nw$2=pngh[14],pngh$ne$0=pngh[15],pngh$ne$1=pngh[16],pngh$ne$2=pngh[17];
+
+// initialisation 
+ int tmun00$0=0,tmun00$1=0,tmun00$2=0,tmun01$0=0,tmun01$1=0,tmun01$2=0,tmun02$0=0,tmun02$1=0,tmun02$2=0;
+for (int i = 1; i < pngh$e$0.length -1; i++) {
+ ver$e$0[i]=( pngh$w$0[i]  <<  1 );ver$e$1[i]=( pngh$w$1[i]  <<  1 );ver$e$2[i]=( pngh$w$2[i]  <<  1 );ver$se$0[i-1]= pngh$nw$0[i] ;
+ ver$se$1[i-1]= pngh$nw$1[i] ;ver$se$2[i-1]= pngh$nw$2[i] ;ver$sw$0[i-1]=( pngh$ne$0[i]  >>>  1 );ver$sw$1[i-1]=( pngh$ne$1[i]  >>>  1 );
+ ver$sw$2[i-1]=( pngh$ne$2[i]  >>>  1 );ver$w$0[i-1]=( tmun00$0  >>>  1 );ver$w$1[i-1]=( tmun00$1  >>>  1 );ver$w$2[i-1]=( tmun00$2  >>>  1 );
+ tmun00$0= pngh$e$0[i] ;tmun00$1= pngh$e$1[i] ;tmun00$2= pngh$e$2[i] ;ver$nw$0[i]= tmun01$0 ;
+ ver$nw$1[i]= tmun01$1 ;ver$nw$2[i]= tmun01$2 ;tmun01$0= pngh$se$0[i] ;tmun01$1= pngh$se$1[i] ;
+ tmun01$2= pngh$se$2[i] ;ver$ne$0[i]=( tmun02$0  <<  1 );ver$ne$1[i]=( tmun02$1  <<  1 );ver$ne$2[i]=( tmun02$2  <<  1 );
+ tmun02$0= pngh$sw$0[i] ;tmun02$1= pngh$sw$1[i] ;tmun02$2= pngh$sw$2[i] ;
+  }
+  ;
+p.prepareBit(ver)
+ ;
   }}

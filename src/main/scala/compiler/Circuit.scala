@@ -103,7 +103,7 @@ abstract class Circuit[L <: Locus, R <: Ring](p: Param[_]*) extends AST.Fundef[(
     // print("loopify1010101010101010101010101010101010101010" + prog10)
 
     val prog11: DataProgLoop[InfoNbit[_]] = prog10.unfoldInt()
-    // print("unfold int 111111111111111111111111111111111111111111111111111111111111\n" + prog11)
+     print("unfold int 111111111111111111111111111111111111111111111111111111111111\n" + prog11)
     val prog12: DataProgLoop[InfoNbit[_]] = prog11.coaalesc() //allocates memory
     //System.out.println(prog12.allLayers)
     //  print("\ncoalesccoalesccoalesccoalesccoalesccoalesccoalesc121212121212121212121212121212121212121212121212\n" + prog12)

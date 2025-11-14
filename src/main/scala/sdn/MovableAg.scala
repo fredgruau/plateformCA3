@@ -70,23 +70,7 @@ abstract  class MovableAg[L <: Locus](init:String)(implicit m: repr[L]) extends 
       moves.map(_.values.map(_.bug).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
     }
 
-/*
 
-  var tmp:(UintVx,BoolV)=null
-  override def flipAndPrioCreatedByMoves:(UintV,BoolV,UintV)={
-    /** todo: when reducing with |, we must verify that a single move is triggered, among those of equal priority */
-    val triggered: UintV =moves.map(_.values.map(_.triggered).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
-    val filledTriggered=orScanRight(triggered)
-    /** all false except for highest priority move*/
-    val highgestTriggered=unop(derivative, filledTriggered)
-    /** flips for all priorities */
-    val allFlip: UintV =moves.map(_.values.map(_.move2flip(isV)).reduce(_ | _).asInstanceOf[UintV]).toArray.reduce(_ :: _)
-    /** selectionne le flip parmis les flip des mouvement proposés */
-    ( unary2Bin(filledTriggered ),neq(highgestTriggered&allFlip),highgestTriggered)
-    //we consider only a single move
-    //move2flip(moves(10).asInstanceOf[MoveC1]) //on sait qu'on a mis 9 sur repulse, todo: mettre cela d'aplomb
-  }
-*/
 
   /** a random priority is needed to help finalize tournament, in case of equality */
   override val prioRand= {

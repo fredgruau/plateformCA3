@@ -486,8 +486,9 @@ trait ProduceJava[U <: InfoNbit[_]] {
             radicalOfVarIntComp(paramsD(0))
           else radicalOfVar(paramsD(0))
           val locuspR = tSymbVarSafe(pR).locus
-          val copiedConst=tSymbVarSafe(pD).t==B() //verifier
-          val locuspD = if(copiedConst) V() else  tSymbVarSafe(pD).locus
+          //val copiedConst=tSymbVarSafe(pD).t==B() //verifier
+          val copiedConst=tSymbVarSafe(paramsD(0)).t==B() //verifier
+          val locuspD = if(copiedConst) V() else  tSymbVarSafe(paramsD(0)).locus //evite de consulter pd qui contient des crochet
 
               //here we have scalar used for constant, of type B, which we can assume to be Vertex
           //si on utilise Elt i, y aura un #i a la fin de paramD et pas de # a la fin de paramR
@@ -501,7 +502,8 @@ trait ProduceJava[U <: InfoNbit[_]] {
             callCode = (if(copiedConst)  "broadcaast1("  else "broadcaast(" )+ 6 / locuspD.density + ","
           } //6 copy from 1D array to 1Darray are turned into a call to broaadcast from 1D arrau to 2D array
           //val l: mutable.LinkedHashSet[String] = mutable.LinkedHashSet(pR, pD)
-          callCode += pD + specifComponent + "," + pR
+         // callCode += pD  + "," + pR  // bizarrement j'ai eu plus besoin de spécifier la component, c'est déja fait
+          callCode += pD + specifComponent + "," + pR // mais cela compilait n'importe quoi sur homogeneize, donc je l'ai remis.
         case "memo" => val l: mutable.LinkedHashSet[String] = mutable.LinkedHashSet() ++ params.map(radicalOfVar(_)) //copy and memo have the same effect
           callCode += l.toList.mkString(",")
         case "bug" => val nameBug = radicalOfVar(call.exps.head.asInstanceOf[Read[_]].which) //on apelle bug avec un read, c'est obligé

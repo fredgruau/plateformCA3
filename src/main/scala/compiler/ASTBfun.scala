@@ -166,7 +166,8 @@ object ASTBfun {
   val uI2SI: Fundef1[UI, SI] = { //to be coherent with the other fundef declared as val, we call it uitosi insted uitosidef
     val xui = p[UI]("xuiToSi")
     Fundef1("uI2SI", Concat2( xui,False()), xui)
-  }  /** the rand layers used to build an integer are stored in a hashMap, so as to be found by the naming algo */
+  }
+  /** the rand layers used to build an integer are stored in a hashMap, so as to be found by the naming algo */
   val b2SI: Fundef1[B,SI] = {
     val xb = p[B]("xBtoSi")
     Fundef1("b2SI", Concat2(xb,False()), xb)
@@ -191,13 +192,24 @@ object ASTBfun {
 
   //------------------------Arithmetic operation------------------------//
 
-  /** could be done in a symetric way using xor, but takes more gates and more registers. */
+  /** could be done in a symetric way using xor, but takes more gates and more registers.
+   * this addition consider two numbers with the same number of bits. It does not add bits.
+   * it operates modulo */
   private val (addSI, addUI) = {
     def addI[R <: I](implicit n: repr[R]): Fundef2R[R] = {
       val (xsi, ysi) = (p[R]("xaddI"), p[R]("yaddI"));
       Fundef2("addI", Scan2(xsi, ysi, carry, False(), Left(), initUsed = true) ^ xsi ^ ysi, xsi, ysi)
     };
     (addI[SI], addI[UI])
+  }
+  //add3UI etant buggé je l'ai reprogrammé en op logique pour me simplifier la vie.
+  val addtwo2to3UI : Fundef2R[UI] = {
+      val (xsi, ysi) = (p[UI]("xaddI"), p[UI]("yaddI"));
+      val extend3: Fundef1[UI, UI] = extend[UI](3) //rajoute un 0 en bit de poids fort pour faire l'addition sur 3 bit au lieu de 2 bit
+      val xxsi =   new Call1[UI, UI](extend3, xsi)with ASTBt[UI]
+      val yysi= new Call1[UI,UI](extend3,ysi) with ASTBt[UI]
+      Fundef2("add3UI",
+        (Scan2[UI](xxsi, yysi, carry, False(), Left(), initUsed = true) ^ xxsi) ^ yysi, xsi, ysi)
   }
   def add[R <: Ring](implicit n: repr[R]): Fundef2R[R] = (n.name match {
     case SI() => addSI

@@ -10,7 +10,6 @@ import compiler.repr.nomE
 import compiler.{AST, ASTLfun, ASTLt, B, E, F, Locus, SI, T, UI, V, chip, repr}
 import dataStruc.{BranchNamed, Named}
 import progOfCA._
-import progOfLayer.Sextexrect.chooseMaxOf
 import progOfmacros.Comm.{apexE, apexV, neighborsSym}
 import progOfmacros.{Compute, Grad, Wrapper}
 import progOfmacros.Compute.implique
@@ -58,7 +57,7 @@ abstract class Agent[L <: Locus] extends MuStruct[L, B] with HasIsV {
   var flipAfterConstr: BoolV=null
   /** flipAfterConsrtr is used as a first approximation to compute next, which is neccesary to know in order to compute keepOutside
    * however, when we build the force keepOutside, we do not have yet flipafterConstr, hence we need the delayed version */
-  val dflipAfterConstr=delayedL(flipAfterConstr)
+  //val dflipAfterConstr=delayedL(flipAfterConstr)
   var flipRandomlyCanceled: BoolV=null
   /** the two boolV will be synchronized flip being progressively rarefied.
    * if an agent forces several others, then its synchronized flip will be iteratively adjuster whenever each output agents updates
@@ -271,6 +270,10 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
 
    def setFlipCancel()= {
      //we separate local  then  mutex, mutapex, tritex and then sextex
+     // it increases movement, mutex  will be more selective, since they come after
+     // local constraints have been applied
+     // also sextex will choose a direction among those remaining valid.
+     // in order to be able to spot progressive narrowing of flip, in case of bugs
       splitConstr = SplitHashMapTyped.splitConstrs(constrs)
      //new staged computation more precise.
       allFlipLocalCanceled=allFlipCancel(fliprioOfMove, splitConstr.locals)

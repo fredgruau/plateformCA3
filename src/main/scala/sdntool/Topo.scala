@@ -16,7 +16,6 @@ import compiler.Circuit.hexagon
 import compiler._
 import compiler.ASTLt.ConstLayer
 import dataStruc.{BranchNamed, Named}
-import progOfLayer.Sextexrect.chooseMaxOf
 import progOfStaticAgent.Convergent
 import progOfmacros.Comm.{apexE, apexV, insideBall, neighborsSym, symEv}
 import sdn.MovableAgV
@@ -47,7 +46,7 @@ class BlobVFields(val muis:BoolV with carrySysInstr) extends Attributs {
   val qqnEnFace:BoolVe=neighborsSym(isVe)
   val notVe= ~isVe
   /** Ve edges leaving the support , we know we may take a sym so we prepare for it, to get a meaningfull name brdVe.sym*/
-  val brdVeIn=transfer(v(brdE)) & isVe//addSym introduit un delayed et compromet le nommage automatique par reflection. addSym( transfer(v(brdE)) & isVe)
+  val brdVeIn: BoolVe =transfer(v(brdE)) & isVe//addSym introduit un delayed et compromet le nommage automatique par reflection. addSym( transfer(v(brdE)) & isVe)
   val brdVeOut=transfer(v(brdE)) & e(~muis)//todo bien possible qu'on puisse travailler juste avec un seul brdVe
   val rand= root4naming.addRandBit().asInstanceOf[BoolV]
   val lightConcave=( exist(shrink3(brdVeOut)) | (exist(shrink2(brdVeOut)) & rand) ) & ~  inside(brdVeOut)

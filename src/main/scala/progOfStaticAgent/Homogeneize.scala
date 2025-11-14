@@ -1,22 +1,26 @@
 package progOfStaticAgent
 
 import compiler.ASTL.{ASTLg, anticlock, clock, delayedL, sym, transfer}
-import compiler.ASTLfun.{cond, e, imply}
+import compiler.ASTLfun.{cond, e, fromInt, imply}
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf}
 import compiler.{AST, ASTBfun, ASTLt, B, E, Locus, Ring, SI, T, V, chip}
 import dataStruc.DagNode.EmptyBag
 import dataStruc.{BranchNamed, Named}
 import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
+import progOfmacros.Compute.countNeighbors
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, smoothen, smoothen2, testShrink}
 import sdn.MuStruct.{setFlipCanceled, setFliprioOfMove, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
+import sdn.Util.{addLt, addSym}
 import sdn._
 import sdntool.{addDist, addDistGcenter, addDistGcenterVor}
 
 /**illustrate the working of repulsion combined with exploration  */
 class Homogeneize() extends LDAG with Named with BranchNamed
-{ val part=new Homogen()
+{
+  //val part=new Homogen()
+  val part=new SpreadOnSummit()
 
 
   showMustruct
@@ -25,10 +29,10 @@ class Homogeneize() extends LDAG with Named with BranchNamed
  // setFlipCanceled()
   part.shoow(part.vor.muis) //triggers evaluation
   //refaire. stoquer dans vor, une map ou tableau (trouvable par reflection) mprimable des mouvement par priorité, resultant d'une reduction or.
-  part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
+/*  part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
   part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
   part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
-  part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
+  part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)*/
   part.shoow(part.muis)
   part.vor.showMe
    part.vor.b.showMe
@@ -46,7 +50,10 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoowText(part.dg.muis, List())
   //part.dg.showMe;part.dgv.showMe
    part.gc.showme
- // part.shoow(part.sf.stable2)
+  part.shoow(part.sf.isSummit)
+  part.shoowText( part.sf.density,List())
+ // part.shoow(part.sf.stableSimple);  part.shoow(part.sf.stableSimple2)
+  // part.shoow(part.sf.stable2)
 
 }
 
@@ -64,13 +71,40 @@ class Flies2 extends Seed {
 /**adds distance, gabriel center,  distance to gabriel center, and then finally repulsive force*/
 class Homogen() extends Flies2 with addDist with addGcenter with addDistGcenter with keepOutsideForce with addVor with addDistGcenterVor
 {  /** homogeneizing priority */
-  final val homogeneize=introduceNewPriority()
-  force(homogeneize,"repulse",'|',dgv.repulse)//specific forces applied to Flies
-  val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
+   val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
   addConstraint("avoidgc",'g',avoidGc)
 }
 
+class SpreadOnSummit extends Homogen{
+  val sf=new Attributs() { //sf==stableFields
+    override val muis: ASTLg with carrySysInstr = SpreadOnSummit.this.muis
+    override def showMe: Unit =  shoow(isSummit)
+    val isSummit:BoolV=  ~exist(dgv.slopgt) & adjacentBall(isV)
+    val density=addLt(countNeighbors( addSym(e(isSummit)).sym))
+    val notDense= density < fromInt(3)
+    val notDenseN=addSym(e(notDense))
+    val seizeSummit=new Force{
+       override def actionV(ag:MovableAgV): MoveC= {
+        val hasNearer: BoolV = Wrapper.exist(transfer( density.lt) & neighborsSym(e(ag.muis)))
+        val hasFurther = Wrapper.exist(transfer( density.gt) & neighborsSym(e(ag.muis)))
+        val oui=MoveC1( ag.muis & hasFurther & ~hasNearer & notDense, //on vide si y a des plus loin, pas de plus pres,
+                                                       // et on n'est pas dense
+          transfer(density.gt)) //on envahit des voisines plus dense OK
+         //on va toujours remplir un vertice dont la densité est plus grande
+         //pour cibler des particules tripleton,
+         // on peut ou on peut ne pas autoriser  de vider si nombre de voisin est   3
 
+         val non = MoveC1(ag.muis & ~hasFurther,  //on interdit de vider si y a pas de plus dense a coté
+              transfer( density.lt)  & ag.bf.brdVeIn & notDenseN.sym ) //on interdit d'envahir des moins dense qui de plus ne sont pas dense
+         //on ne vas pas non plus chercher a remplir un vertice sommet voisin de dentisté pluc petite, si celle ci est  <3
+        MoveC2(oui, non)
+      }
+    }
+  }
+  force(introduceNewPriority(),"seize",'z',sf.seizeSummit)//specific forces applied to Flies
+  force(introduceNewPriority(),"repulse",'|',dgv.repulse)//go away from gcenter,
+
+}
 class Convergent extends Homogen  // with Lead //pas besoin de leader pour le moment
 {  val sf=new Attributs() { //sf==stableFields
   override val muis: ASTLg with carrySysInstr = Convergent.this.muis
@@ -85,7 +119,8 @@ class Convergent extends Homogen  // with Lead //pas besoin de leader pour le mo
   /** add vertex  if four neighbors are on, bugs, more restrictive therefore, than smoothen */
   val isVsmoothed2: BoolV =isVplus| exist(isVtest)
   // shoow(isVplus,isVsmoothed,isVsmoothed2,isVtest)  /** true for one seed if on its whole border dg diminishes */
-  //val stable1Old=muis & inside(imply(brdVe,dg.sloplt))
+  val stableSimple: ASTLt[V, B] =isV & inside(imply(bf.brdVeIn,dgv.sloplt))
+  val stableSimple2=forallize(stableSimple) & isV
   val stable1=Convergent.this.muis.asInstanceOf[BoolV] & insideBall(isVsmoothed2)
   val stable2=forallize(stable1) & isV
 
@@ -97,7 +132,7 @@ class Convergent extends Homogen  // with Lead //pas besoin de leader pour le mo
     override def actionV(ag: MovableAgV): MoveC = {
       val yes=MoveC1(false,false) //force is pure negative
       /** if stable2 , this will cancel movement of lower priority, */
-      val no = MoveC1(sf.stable2, e(sf.stable2)& bf.brdVeIn) // negative  forces
+      val no = MoveC1(sf.stableSimple2, e(sf.stableSimple2)& bf.brdVeIn) // negative  forces
       MoveC2(yes,no)
     }
   }
