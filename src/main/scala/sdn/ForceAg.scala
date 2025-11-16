@@ -4,7 +4,7 @@ import compiler.AST.Layer
 import compiler.ASTB.{False, Uint}
 import compiler.ASTBfun.{addRedop, derivative, ltUI2, orRedop, redop}
 import compiler.ASTL.{delayedL, send, transfer, unop}
-import compiler.ASTLfun.{allOne, andLB2R, b2SIL, e, eq0, f, fromBool, imply, lt2, ltSI, neighbors, neq, orScanRight, reduce, uI2SIL, v}
+import compiler.ASTLfun.{allOne, andLB2R, b2SIL, cond, e, eq0, f, fromBool, fromInt, imply, lt2, ltSI, neighbors, neq, orScanRight, reduce, uI2SIL, v}
 import compiler.SpatialType.{BoolE, BoolEv, BoolF, BoolV, BoolVe, BoolVf, IntE, IntEv, IntV, IntVe, UintV, UintVx}
 import compiler.repr.nomE
 import compiler.{AST, ASTLfun, ASTLt, B, E, F, Locus, SI, T, UI, V, chip, repr}
@@ -145,7 +145,8 @@ object ForceAg{
 }
 /**  ForcedAg are Agents  udated using force */
 abstract class ForceAg[L <: Locus] extends Agent[L]
- { val forces:ArrayBuffer[mutable.LinkedHashMap[String,Force]] = ArrayBuffer()
+ { val priorityObliged:Int
+   val forces:ArrayBuffer[mutable.LinkedHashMap[String,Force]] = ArrayBuffer()
    protected def addForces(priority:Int, name:String, shortName:Char, f:Force ) = { //we may have to store set of moves, if we need add move of same priority.
      val ht=forces(priority)
      assert(!(ht.contains(name)), "each force must have a distinct priority");
@@ -267,7 +268,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
      val allFlipCancel: Array[UintV] = flipCancel.values.toArray.map(_.asInstanceOf[UintV])
      allFlipCancel.reduce(_ :: _)
    }
-
+var isForced:BoolV=fromBool(false)
    def setFlipCancel()= {
      //we separate local  then  mutex, mutapex, tritex and then sextex
      // it increases movement, mutex  will be more selective, since they come after
@@ -288,7 +289,12 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
      //former global computation.    allFlipCancel=allFlipCancel2(fliprioOfMove,constrs);   val noFlipCancel=eq0(allFlipCancel)
      val noFlipCancel=flipAfterSextexConstr.defined
      flipAfterConstr = noFlipCancel  & fliprioOfMove.defined
-     flipRandomlyCanceled=flipAfterConstr //& highproba //decommenter pour annuler au hasard, utilise pour casser les cycles
+     //we will randomly cancel only if not obliged flip
+     if(priorityObliged > -1)
+         isForced=yesHighestTriggered>fromInt(priorityObliged)
+     flipRandomlyCanceled=
+       if(priorityObliged == -1) flipAfterConstr & highproba
+       else  cond(isForced, flipAfterConstr,flipAfterConstr & highproba)//& highproba //decommenter pour annuler au hasard, utilise pour casser les cycles
      //flipRandomlyCanceled=flipAfterLocalConstr.defined
    }
    var flipAfterSync:BoolV=null

@@ -1,11 +1,11 @@
 <fixed>
-    <machine nbCol="14" nbLine="12" arch="christal"/>
+    <machine arch="christal" nbLine="12" nbCol="14"/>
     //default CA size and architecture
-    <display nbCol="2" CAwidth="820" CAheight="780" iter="CAsize"/>
-    <simul darkness="45" density="12" randomRoot="7" isPlaying="false"/>
+    <display iter="CAsize" CAheight="780" CAwidth="820" nbCol="2"/>
+    <simul darkness="45" density="15" randomRoot="7" isPlaying="false"/>
     <sizes>
-        <size nbLine="20" nbCol="30" t0="0"/>
-        <size nbLine="12" nbCol="14" t0="0"/>
-        <size nbLine="6" nbCol="8" t0="0"/>
+        <size t0="0" nbCol="30" nbLine="20"/>
+        <size t0="0" nbCol="14" nbLine="12"/>
+        <size t0="0" nbCol="8" nbLine="6"/>
     </sizes>
 </fixed>

@@ -50,19 +50,20 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoowText(part.dg.muis, List())
   //part.dg.showMe;part.dgv.showMe
    part.gc.showme
-  part.shoow(part.sf.isSummit)
-  part.shoowText( part.sf.density,List())
+  //part.shoow(part.sf.isSummit)
+ // part.shoowText( part.sf.density,List())
+ // part.shoow(part.vor.isForced)
  // part.shoow(part.sf.stableSimple);  part.shoow(part.sf.stableSimple2)
   // part.shoow(part.sf.stable2)
 
 }
 
 /** basic quasiparticle with blob and qpoint constraints */
-class Seed extends MovableAg[V]("global") with MovableAgV  with addBloobV with blobConstrain with addQpointFields with QpointConstrain
+abstract class Seed extends MovableAg[V]("global") with MovableAgV  with addBloobV with blobConstrain with addQpointFields with QpointConstrain
   with EmptyBag[sdn.MuStruct[_<: Locus,_<:Ring]]
 
 /** moves as much as possible */
-class Flies2 extends Seed {
+abstract class Flies2 extends Seed {
   /** exploring priority */  final val explore=introduceNewPriority()
   force(explore, "explore",'O', Force.total)
   //final val explore2=introduceNewPriority() // force(explore2, "toto",'P', Force.total)
@@ -70,9 +71,10 @@ class Flies2 extends Seed {
 
 /**adds distance, gabriel center,  distance to gabriel center, and then finally repulsive force*/
 class Homogen() extends Flies2 with addDist with addGcenter with addDistGcenter with keepOutsideForce with addVor with addDistGcenterVor
-{  /** homogeneizing priority */
+{  /** seed should not overlap gCenters */
    val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
   addConstraint("avoidgc",'g',avoidGc)
+  override val priorityObliged = -1 //means there are no obliged forces
 }
 
 class SpreadOnSummit extends Homogen{
@@ -101,10 +103,12 @@ class SpreadOnSummit extends Homogen{
       }
     }
   }
-  force(introduceNewPriority(),"seize",'z',sf.seizeSummit)//specific forces applied to Flies
-  force(introduceNewPriority(),"repulse",'|',dgv.repulse)//go away from gcenter,
-
+ // force(introduceNewPriority(),"seize",'z',sf.seizeSummit)//allows final convergence
+  force(introduceNewPriority(),"repulse",'|',dgv.repulse)//go away from voronoi, but in fact from gcenter,
+  // because it is allowed to overlap voronoi, which should thereafter withdraw.
+  // This overlapping is the key for ensuring uniformization of the radius.
 }
+/** obsolete */
 class Convergent extends Homogen  // with Lead //pas besoin de leader pour le moment
 {  val sf=new Attributs() { //sf==stableFields
   override val muis: ASTLg with carrySysInstr = Convergent.this.muis
