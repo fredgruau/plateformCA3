@@ -8,7 +8,7 @@ import compiler.{AST, ASTBt, ASTL, ASTLfun, ASTLt, B, CallProc, Circuit, Locus, 
 import dataStruc.{BranchNamed, DagNode, Named}
 import dataStruc.DagNode.EmptyBag
 import sdn.ForceAg
-import sdn.ForceAg.Agg
+import sdn.ForceAg.{Agg, Aggg}
 import sdn.MuStruct.allMuStruct
 
 import scala.Predef.->
@@ -84,17 +84,10 @@ object MuStruct{
     case a:ForceAg[_]=>  a.setFliprioOfMove(); a.setFlipCancel()
     case _ =>
   }
-   def setFliprioOfMove()=  for(m<-allMuStruct) m match {
-     case a:ForceAg[_]=>  a.setFliprioOfMove();
-     case _ =>
-   }
-  def setFlipCanceled()=  for(m<-allMuStruct) m match {
-    case a:ForceAg[_]=>      a.setFlipCancel()
-    case _ =>
-  }
   /** for the moment we go reverse, and  update the synced flip of  inputAgent which is stored in the constraint itself, as a destination*/
   def setFlipSynced()=  for(m<-allMuStruct.reverse) m match {
-    case a:Agg=>   a.setFlipSync()
+    case a:Aggg=>
+      a.setFlipSync()
     case _ =>
   }
 

@@ -20,23 +20,15 @@
           homogeneizePart
         </Layer><Layer>
           homogeneizePartGc
-        </Layer><Layer>
-          homogeneizePartD
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0x000000">
-            homogeneizePartVorYeshighesttriggered
-          </layer><layer color="0xFF00FF">
-            homogeneizePartVorFlipafterconstr
-          </layer><layer color="0x000000">
-            homogeneizePartYeshighesttriggered
+          <layer color="0xFFC800">
+            homogeneizePartIsv
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
-          </layer><layer color="0xFFC800">
-            homogeneizePartIsv
-          </layer><layer color="0x00FF80">
-            homogeneizePartGcDetected
+          </layer><layer color="0xFFFF00">
+            homogeneizePartGcDeflipsync
           </layer>
         </colorOfField>
       </displayParam>

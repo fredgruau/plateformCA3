@@ -8,7 +8,7 @@ import progOfLayer.Sextexrect.chooseMaxOf
 import progOfmacros.Comm.{apexE, apexV, neighborsSym}
 import progOfmacros.Compute.implique
 import progOfmacros.Wrapper.{inside, insideS}
-import sdn.ForceAg.Agg
+import sdn.ForceAg.{Agg, Aggg}
 import sdn.SplitHashMapTyped.Split
 
 import scala.collection.immutable.{HashSet, ListMap}
@@ -40,13 +40,28 @@ class CancelFlipIf(a:Agg,i: Impact, l:BoolV,fliprio:PartialUI) extends KeepFlipI
 object CancelFlipIf{def apply(a:Agg,i: Impact, l:BoolV)(fliprio:PartialUI): CancelFlipIf = new CancelFlipIf(a,i,l,fliprio)   }
 
 
-abstract class ConstrSync(val source:Agg,val dest:Agg,val zoneSync:BoolV){
+abstract class ConstrSync(val bounding:Aggg, val bounded:BoundedAgV, val zoneSync:BoolV){
   /** computes where flip is further canceled */
   val cancel: (BoolV,BoolV) => BoolV
 }
-/** imply syncConstraint */
-class ConstrSyncImply(source:Agg,dest:Agg,zoneSync:BoolV){
-  /**flip is further canceled if implication source => dest is false*/
+
+/**
+ *
+ * @param bounded bounded agent
+ * @param bounding bounding agent
+ * @param zoneSync zone where moves of bounding transmits to move of bounded
+ */
+class ConstrSyncImply(override val bounding:Aggg,  override val bounded:BoundedAgV, override val zoneSync:BoolV)
+  extends ConstrSync (bounding, bounded, zoneSync){
+  /** if forced move does not happen on bounded .. flip of bounding which caused the forced move is also canceled
+   * we must have bounding.flip => bounded.flip on zoneSync=not gcenter and not vor (apparition of gcenter cause apparition of vor
+   * on gcenter and vor,
+   *
+   *
+   * flip is further canceled if implication bounding.flipSYnc => bounded.flipSync is false on zone sync
+   * for example, in the case of voronoi, zoneSync=not gabrielcenter, on this zone, if bounding=gabrielcenter flips, it implies
+   * that also voronoi should also flip.
+   * */
   val cancel:(BoolV,BoolV)=>BoolV = ~ implique(_,_)
 }
 

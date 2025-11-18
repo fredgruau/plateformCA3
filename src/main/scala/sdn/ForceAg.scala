@@ -53,17 +53,34 @@ val notIsV :BoolV= ~(delayedL(isV))
 abstract class Agent[L <: Locus] extends MuStruct[L, B] with HasIsV {
   /** also used by DetectedAg */
     val agthis=this
-
   var flipAfterConstr: BoolV=null
+  var flipAfterSync:BoolV=null
+  var deflipSync:BoolV=null
+  // each constrsync contributes a deflipsync that reduces flipAfter Constr
+  def setFlipSync()={
+    deflipSync= isV & ~isV
+    //les contraintes sont  stoquée chez l'agent contraint.
+    //on va visiter tout les agent borné par l'agent courant, pour calculer le deflipSync de l'agent courant
+    for((_,c)<-constrsync)    deflipSync=deflipSync | c.zoneSync & c.cancel(flipAfterConstr,c.bounded.flipAfterSync)
+    //to do, faudrait faire évoluer flipAfterConstr on se rends compte déja la que il faut considérer des chemins.
+    flipAfterSync=flipAfterConstr & ~ deflipSync
+    /** we can verify  deflipSync is false, for detected agents such as gcenter */
+    //deflipSync=flipAfterSync ^ flipAfterConstr
+   // if( constrsync.nonEmpty)   { val (_,c)=constrsync.head;   deflipSync=c.zoneSync & c.cancel(c.bounding.flipAfterSync,c.bounded.flipAfterSync)   }
+
+  }
   /** flipAfterConsrtr is used as a first approximation to compute next, which is neccesary to know in order to compute keepOutside
    * however, when we build the force keepOutside, we do not have yet flipafterConstr, hence we need the delayed version */
   //val dflipAfterConstr=delayedL(flipAfterConstr)
-  var flipRandomlyCanceled: BoolV=null
+  //var flipRandomlyCanceled: BoolV=null
   /** the two boolV will be synchronized flip being progressively rarefied.
    * if an agent forces several others, then its synchronized flip will be iteratively adjuster whenever each output agents updates
    * we will likely have to iterate over path of increasing lenght on a graphe where edges corresponds to synchronized agents,
    * and check intersection of constraints on intersection on synchronized zone,  */
   val constrsync= new scala.collection.mutable.LinkedHashMap[String,ConstrSync]()
+  def addConstrSync(name:String, shortName:Char, c: ConstrSync) = {
+    if(constrsync.contains(shortName+name))    throw new Exception("une contrainte sync du nom "+name+" exite déja, changez le nom siou plait")
+    constrsync(shortName+name)=c  }
   /**  */
 }
 
@@ -73,7 +90,7 @@ trait keepInsideForce {
   /** place where new self appears , available for agent which are detected agents */
   val nouveau= muis.munext & ~muis.pred
   val alreadyThere=muis.munext & muis.pred
-
+  val willBeThere=muis.munext
   /** if there is an ag present next to nouveau , it will be pushed to fill the nouveau
    * noneed to empty whatever, so empty remains false.  */
   def keepInside:Force=  new Force() {
@@ -84,9 +101,9 @@ trait keepInsideForce {
       val push=neighbors(nouveauToFill) & e(ag.muis)
       val coveredByPush=exist(neighborsSym(push))
       /** should be true everywhere */
-       val oui = MoveC1(fromBool(false), push)
+       val oui = MoveC1(~ag.muis & ag.muis, push)
       /** we must not empty voronoi in places where it will contain gcenters*/
-      val non = MoveC1(alreadyThere&ag.muis,e(fromBool(false)))
+      val non = MoveC1(willBeThere & ag.muis,e(fromBool(false)))
       MoveC2(oui,non)
     }
   }}
@@ -127,13 +144,11 @@ trait keepInsideForce {
 abstract class DetectedAgV ( val detected: BoolV )  extends Agent[V] {
   /** support of agent, implemented as a layer. we also use it to store a list  of system instructions */
   override val muis=new Layer[(V, B)](1, "globalInv") with ASTLt[V,B]  with Stratify [V,B] with carrySysInstr   {
-
-
     override val  next = detected  }
   override val isV: BoolV = muis
   /** artificially reconstructed, we will be able to watch if it happens to be canceled by simult constraint */
    flipAfterConstr=muis ^ muis.next
-  def showme={shoow(detected)}
+  def showme={shoow(detected,muis,deflipSync)}
 }
 
 //class Gcenter(arg: ) extends DetectedAgV
@@ -141,12 +156,14 @@ abstract class DetectedAgV ( val detected: BoolV )  extends Agent[V] {
 object ForceAg{
   /** standard generic agent */
   type Agg = ForceAg[_ <: Locus]
-
+  type Aggg = Agent[_ <: Locus]
 }
-/**  ForcedAg are Agents  udated using force */
+/**  ForcedAg are Agents  udated using force as opposed to pure detection (gcenter) */
 abstract class ForceAg[L <: Locus] extends Agent[L]
- { val priorityObliged:Int
+ { //val priorityObliged:Int
    val forces:ArrayBuffer[mutable.LinkedHashMap[String,Force]] = ArrayBuffer()
+   /** will include also structuring forces, for bounding agent */
+   def allForces=forces
    protected def addForces(priority:Int, name:String, shortName:Char, f:Force ) = { //we may have to store set of moves, if we need add move of same priority.
      val ht=forces(priority)
      assert(!(ht.contains(name)), "each force must have a distinct priority");
@@ -156,8 +173,10 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    /** moves are stored in centered form, so that we can restrict them. we store one hashmap for each priority. It two moves with identical names are added, we throw an exception */
    val moves:ArrayBuffer[mutable.LinkedHashMap[String,MoveC]] = ArrayBuffer() //empty at the beginning
    /** we introdued a new priority use to qualify a new range of move, creating a new functionnality such  as explore, homogeneize, stabilize*/
-   def introduceNewPriority():Int={ moves+= mutable.LinkedHashMap[String,MoveC]();
-     forces+= mutable.LinkedHashMap[String,Force]();  moves.size-1 }
+   def introduceNewPriority():Int={
+     moves+= mutable.LinkedHashMap[String,MoveC]();
+     forces+= mutable.LinkedHashMap[String,Force]();
+     moves.size-1 }
    /** if move of same priority exists, signal an error */
    protected def addMoves(priority:Int, name:String, shortName:Char, m: MoveC ) = { //we may have to store set of moves, if we need add move of same priority.
      val ht=moves(priority)
@@ -167,14 +186,14 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    /** generates move from forces */
    def applyForces = {
      var priority=0
-     for(mapForces<-forces)
+     for(mapForces<-allForces)
         {for((name,f)<-mapForces)
           addMoves(priority,name.drop(1),name(0),f.action(this.asInstanceOf[MovableAgV]))
           priority+=1
         }
    }
 
-   /** the agent's list of consrtrain. Constraints have a name, and the list is also ordered */
+   /** the agent's list of constrain. Constraints have a name, and the list is also ordered */
    val constrs= new scala.collection.mutable.LinkedHashMap[String,PartialUI =>Constr]()
 
    /**
@@ -186,9 +205,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    def addConstraint(name:String, shortName:Char, c: PartialUI=>Constr) = {
    if(constrs.contains(shortName+name))    throw new Exception("une contrainte du nom "+name+" exite déja, changez le nom siou plait")
    constrs(shortName+name)=c  }
-   def addConstrSync(name:String, shortName:Char, c: ConstrSync) = {
-     if(constrsync.contains(shortName+name))    throw new Exception("une contrainte sync du nom "+name+" exite déja, changez le nom siou plait")
-     constrsync(shortName+name)=c  }
+
 
 
    /** not the same for  movable/bound  */
@@ -268,7 +285,6 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
      val allFlipCancel: Array[UintV] = flipCancel.values.toArray.map(_.asInstanceOf[UintV])
      allFlipCancel.reduce(_ :: _)
    }
-var isForced:BoolV=fromBool(false)
    def setFlipCancel()= {
      //we separate local  then  mutex, mutapex, tritex and then sextex
      // it increases movement, mutex  will be more selective, since they come after
@@ -290,21 +306,9 @@ var isForced:BoolV=fromBool(false)
      val noFlipCancel=flipAfterSextexConstr.defined
      flipAfterConstr = noFlipCancel  & fliprioOfMove.defined
      //we will randomly cancel only if not obliged flip
-     if(priorityObliged > -1)
-         isForced=yesHighestTriggered>fromInt(priorityObliged)
-     flipRandomlyCanceled=
-       if(priorityObliged == -1) flipAfterConstr & highproba
-       else  cond(isForced, flipAfterConstr,flipAfterConstr & highproba)//& highproba //decommenter pour annuler au hasard, utilise pour casser les cycles
-     //flipRandomlyCanceled=flipAfterLocalConstr.defined
    }
-   var flipAfterSync:BoolV=null
-   def setFlipSync()={
-     flipAfterSync=flipAfterConstr //les contraintes sont a stoquée chez l'agent contraint.
 
-     for((_,c)<-constrsync){
-       flipAfterSync=c.zoneSync & c.cancel(c.source.flipAfterSync,flipAfterSync)}
- }
-
+   def flipRandomlyCanceled=flipAfterSync & highproba
 
 
    /** stores the first letter of each move's name for all priorities, This lettre is to be displayed if move is selected

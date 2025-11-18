@@ -11,7 +11,7 @@ import progOfmacros.Compute.countNeighbors
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, smoothen, smoothen2, testShrink}
-import sdn.MuStruct.{setFlipCanceled, setFliprioOfMove, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
+import sdn.MuStruct.{ setFlipSynced, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
 import sdn.Util.{addLt, addSym}
 import sdn._
 import sdntool.{addDist, addDistGcenter, addDistGcenterVor}
@@ -25,14 +25,18 @@ class Homogeneize() extends LDAG with Named with BranchNamed
 
   showMustruct
   setFliprioOfMoveAndFlipAfterConstr()
+  setFlipSynced()
+  //part.shoow(part.gc.flipAfterSync,part.gc.flipAfterConstr)
   showTrucPourDebugger
  // setFlipCanceled()
   part.shoow(part.vor.muis) //triggers evaluation
+  part.shoow(part.gc.alreadyThere)
   //refaire. stoquer dans vor, une map ou tableau (trouvable par reflection) mprimable des mouvement par priorité, resultant d'une reduction or.
 /*  part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
   part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
   part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
   part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)*/
+//  part.shoow(part.vor.mergedMoves("containGcenter").asInstanceOf[MoveC2].yes.push)
   part.shoow(part.muis)
   part.vor.showMe
    part.vor.b.showMe
@@ -47,12 +51,14 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoowText(part.dgv.muis, List())
   part.shoow( part.dg.gap, part.dg.sloplt, part.dg.level, part.dg.vortex) // necessary so as to use all parameters returned by slopeDeltashoow(vortex)
   part.shoowText(part.dg.deltag,List())
-  part.shoowText(part.dg.muis, List())
+//  part.shoowText(part.dg.muis, List())
   //part.dg.showMe;part.dgv.showMe
-   part.gc.showme
+ part.gc.showme
+
   //part.shoow(part.sf.isSummit)
  // part.shoowText( part.sf.density,List())
- // part.shoow(part.vor.isForced)
+ part.shoow( part.vor.isForced)
+
  // part.shoow(part.sf.stableSimple);  part.shoow(part.sf.stableSimple2)
   // part.shoow(part.sf.stable2)
 
@@ -74,7 +80,6 @@ class Homogen() extends Flies2 with addDist with addGcenter with addDistGcenter 
 {  /** seed should not overlap gCenters */
    val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
   addConstraint("avoidgc",'g',avoidGc)
-  override val priorityObliged = -1 //means there are no obliged forces
 }
 
 class SpreadOnSummit extends Homogen{
