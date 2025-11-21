@@ -53,6 +53,30 @@ object Grad {
     (e1, e2, e3, e4)
   }
 
+
+  /*val propagateRadiusDef: Fundef1[(V, SI), ((T[V, E], B), ((V, SI), ((E, B), (E, B))))] =  {
+    val d = pL[V, SI]("dis")
+    val dopp = -d
+    val se: IntVe = send(List(d, d, d, dopp, dopp, dopp)) //we  apply an opp on distances comming from the center.
+    val grad3: IntE = reduce(addRedop[SI].asInstanceOf[redop[SI]], transfer(se)) //the trick here is to do the expensive operation (add) only on the three edges locus, instead of the 6 Ve transfer
+    val gap: BoolE = eq0(grad3 + 4) //  gap is true iff the two neighbors cannot be compared
+    val grad6: IntEv = send(List(-grad3, grad3))
+
+
+    val slopEv: BoolEv = ltSI(grad6) //when sending back the result to EV, we have to invert again towards the center
+    val slopgt: BoolVe = cond(chip.borderVe.df, transfer(slopEv), false) //faut definir ckispasse au bord. we put zero if undefined
+    val level: BoolE = ~reduce(orRedop[B], slopEv) //its equal if it is neither lt nor gt
+    //val delta: IntV = reduce(minSignRedop, sign(extend(4, transfer(grad6)) + 2)) //we need to add 2, using one more bit, in order to add modulo 16 and not 8
+    val delta: IntV = reduce(minSignRedop, sign(extend(7, transfer(grad6)) + 2)) //we need to add 2, using one more bit, in order to add modulo 16 and not 8
+    //show(opp) //breaks a cycle
+    level.setName("level"); //vortex.setName("vortex")
+    grad3.setName("grad");
+    slopgt.setName("slop");
+    delta.setName("delta");
+    Fundef1("grad.slopDelta", Cons(slopgt, Cons(delta, Cons(level, gap))), d)
+  }*/
+
+
   /** former way of computing together both lt and eq, may be not so bad, but eq has to be used, which is prone to error
    * because quite often we are only interested by lt
    * */

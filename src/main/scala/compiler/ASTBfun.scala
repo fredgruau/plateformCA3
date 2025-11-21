@@ -346,10 +346,23 @@ object ASTBfun {
   val minSign: Fundef2R[SI] = {
     val (xsi, ysi) = (p[SI]("xminSign"), p[SI]("yminSign"))
     Fundef2("minSign", {
-      val bitsign: Bool = Elt(1, xsi) | Elt(1, ysi)
+      val bitsign: Bool = Elt(1, xsi) | Elt(1, ysi) //for result to be -1 it takes only one of x and y must be -1
       val bit0: Bool = bitsign | ((~bitsign) & //si le bit de signe est négatif ca doit etre 11
         //sinon pour que le bit 0 soit 1, il faut que les deux bit O soit 1. car le min est soit zero soit 1
         ((Elt(0, xsi) & Elt(0, ysi)))
+        )
+      Concat2[B, B, SI](bit0, bitsign) //we concat the two bits
+    },
+      xsi, ysi)
+  }  /** return the maximum of two signs, which is easier to compute than the maximum of two 2 bits integers, due to the fact that only three values are possible */
+  val maxSign: Fundef2R[SI] = {
+    val (xsi, ysi) = (p[SI]("xmaxSign"), p[SI]("ymaxSign"))
+    Fundef2("maxSign", {
+      val bitsign: Bool = Elt(1, xsi) & Elt(1, ysi) //for result to be -1 both x and y must be -1
+      val xisUn= ~Elt(1, xsi) & Elt(0, xsi)
+      val yisUn= ~Elt(1, ysi) & Elt(0, ysi)
+      val bit0: Bool = bitsign | ((~bitsign) & (xisUn| yisUn)//si le bit de signe est négatif ca doit etre 11
+        //sinon pour que le bit 0 soit 1, il suffit que un des deux soit 1 sinon c'est zero
         )
       Concat2[B, B, SI](bit0, bitsign) //we concat the two bits
     },
@@ -529,7 +542,7 @@ object ASTBfun {
   // def notNull[R <: I](x: ASTB[R]) = FoldLeft1(x, Or[B])
 
   //(orI.asInstanceOf[Fundef2[R, R, R]], False[R]
-  /** a reduction operator is a function taking two arguement of the same type R, and returning a result also of type R. plus a neutral value */
+//  /** a reduction operator is a function taking two arguement of the same type R, and returning a result also of type R. plus a neutral value */
   type redop[R <: Ring] = (Fundef2R[R], ASTBt[R])
   //type fakeRedop[R <: Ring] = (Fundef2RB[R], False)
 
@@ -590,6 +603,8 @@ object ASTBfun {
   }
   /** 1 is the greatest value for sign, which can only be -1, 0, 1 */
   val minSignRedop: redop[SI] = (minSign, Intof[SI](1))
+  /** 1 is the greatest value for sign, which can only be -1, 0, 1 */
+  val maxSignRedop: redop[SI] = (maxSign, Intof[SI](-1))
   //todo definir un addRedop,
   val addRedopSI: redop[SI] = (addSI, Intof[SI](0))
   val addRedopUI: redop[UI] = (addUI, Intof[UI](0))

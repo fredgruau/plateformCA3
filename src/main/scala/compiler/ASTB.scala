@@ -88,7 +88,7 @@ sealed abstract class ASTB[R <: Ring]()(implicit m: repr[R]) extends ASTBt[R] {
       case Mapp2(x, y, _) => x.sameIntBitSize().union(y.sameIntBitSize())
       case sc@Scan1(x, _, _, _, _) => x.sameIntBitSize()
       case sc@Scan2(x, y, _, _, _, _) => x.sameIntBitSize().union(y.sameIntBitSize())
-
+      case concat2@ Concat2(_,_) => HashSet()
       case _ =>
         throw new Exception("lets look closer, may be a case is missing but I do not think so")
     }

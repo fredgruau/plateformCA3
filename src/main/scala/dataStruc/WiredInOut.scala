@@ -92,7 +92,7 @@ object WiredInOut {
      * heap memory, for each integer adress, stores which variable is stored or wether it is empty
      */
     var memory: ArrayBuffer[String] = //new mutable.ArrayBuffer[String](20) //I minimize the proba that it will not be enough
-      mutable.ArrayBuffer.fill(20)(null)
+      mutable.ArrayBuffer.fill(40)(null)
 
     /**
      * @param valu new variables to be stored in memory

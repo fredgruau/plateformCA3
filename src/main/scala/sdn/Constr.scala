@@ -39,7 +39,12 @@ object KeepFlipIf{def apply(a:Agg,i: Impact, l:BoolV)(fliprio:PartialUI): KeepFl
 class CancelFlipIf(a:Agg,i: Impact, l:BoolV,fliprio:PartialUI) extends KeepFlipIf(a,i,~l,fliprio)
 object CancelFlipIf{def apply(a:Agg,i: Impact, l:BoolV)(fliprio:PartialUI): CancelFlipIf = new CancelFlipIf(a,i,l,fliprio)   }
 
-
+/**
+ *
+ * @param bounded bounded agent
+ * @param bounding bounding agent
+ * @param zoneSync zone where moves of bounding transmits to move of bounded
+ */
 abstract class ConstrSync(val bounding:Aggg, val bounded:BoundedAgV, val zoneSync:BoolV){
   /** computes where flip is further canceled */
   val cancel: (BoolV,BoolV) => BoolV

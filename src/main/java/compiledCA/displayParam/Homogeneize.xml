@@ -5,8 +5,6 @@
         </Layer><Layer>
           homogeneizePartBve
         </Layer><Layer>
-          homogeneizePartVor
-        </Layer><Layer>
           homogeneizePartVorFlipaftermutexconstr
         </Layer><Layer>
           homogeneizePartVorFliprioofmove
@@ -20,15 +18,23 @@
           homogeneizePart
         </Layer><Layer>
           homogeneizePartGc
+        </Layer><Layer>
+          homogeneizePartD
+        </Layer><Layer>
+          homogeneizePartVor
+        </Layer><Layer>
+          homogeneizePartRi
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0xFFC800">
+          <layer color="0x0080FF">
+            homogeneizePartBveMeet
+          </layer><layer color="0x000000">
+            homogeneizePartRiMuis
+          </layer><layer color="0xFFC800">
             homogeneizePartIsv
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
-          </layer><layer color="0xFFFF00">
-            homogeneizePartGcDeflipsync
           </layer>
         </colorOfField>
       </displayParam>

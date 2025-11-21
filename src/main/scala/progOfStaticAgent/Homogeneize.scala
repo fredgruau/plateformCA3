@@ -11,18 +11,16 @@ import progOfmacros.Compute.countNeighbors
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, smoothen, smoothen2, testShrink}
-import sdn.MuStruct.{ setFlipSynced, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
+import sdn.MuStruct.{setFlipSynced, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
 import sdn.Util.{addLt, addSym}
 import sdn._
-import sdntool.{addDist, addDistGcenter, addDistGcenterVor}
+import sdntool.{addDist, addDistGcenter, addDistGcenterVor, addRadius}
 
 /**illustrate the working of repulsion combined with exploration  */
 class Homogeneize() extends LDAG with Named with BranchNamed
 {
   //val part=new Homogen()
   val part=new SpreadOnSummit()
-
-
   showMustruct
   setFliprioOfMoveAndFlipAfterConstr()
   setFlipSynced()
@@ -61,7 +59,12 @@ class Homogeneize() extends LDAG with Named with BranchNamed
 
  // part.shoow(part.sf.stableSimple);  part.shoow(part.sf.stableSimple2)
   // part.shoow(part.sf.stable2)
-
+    part.shoowText(part.ri.muis,List())
+  part.shoowText(part.ri.sgnMaxVor,List())
+  part.shoowText(part.ri.sgnMinLt,List())
+  part.shoowText(part.ri.maxltgt,List())
+  part.shoow(part.ri.sgngradm2)
+ // part.shoow(part.ri.sgnGt)
 }
 
 /** basic quasiparticle with blob and qpoint constraints */
@@ -82,7 +85,7 @@ class Homogen() extends Flies2 with addDist with addGcenter with addDistGcenter 
   addConstraint("avoidgc",'g',avoidGc)
 }
 
-class SpreadOnSummit extends Homogen{
+class SpreadOnSummit extends Homogen with addRadius{
   val sf=new Attributs() { //sf==stableFields
     override val muis: ASTLg with carrySysInstr = SpreadOnSummit.this.muis
     override def showMe: Unit =  shoow(isSummit)

@@ -55,11 +55,13 @@ abstract class Agent[L <: Locus] extends MuStruct[L, B] with HasIsV {
     val agthis=this
   var flipAfterConstr: BoolV=null
   var flipAfterSync:BoolV=null
+  //Invariantles contraintes sont  stoquée chez l'agent contraint qui est moi meme, mais aussi c.bounding.
+  def checkInvariantSync=for((_,c)<-constrsync) assert(c.bounding==this)
   var deflipSync:BoolV=null
   // each constrsync contributes a deflipsync that reduces flipAfter Constr
   def setFlipSync()={
-    deflipSync= isV & ~isV
-    //les contraintes sont  stoquée chez l'agent contraint.
+    deflipSync= isV & ~isV  //on part de falseV
+    checkInvariantSync
     //on va visiter tout les agent borné par l'agent courant, pour calculer le deflipSync de l'agent courant
     for((_,c)<-constrsync)    deflipSync=deflipSync | c.zoneSync & c.cancel(flipAfterConstr,c.bounded.flipAfterSync)
     //to do, faudrait faire évoluer flipAfterConstr on se rends compte déja la que il faut considérer des chemins.
@@ -74,8 +76,9 @@ abstract class Agent[L <: Locus] extends MuStruct[L, B] with HasIsV {
   //val dflipAfterConstr=delayedL(flipAfterConstr)
   //var flipRandomlyCanceled: BoolV=null
   /** the two boolV will be synchronized flip being progressively rarefied.
-   * if an agent forces several others, then its synchronized flip will be iteratively adjuster whenever each output agents updates
-   * we will likely have to iterate over path of increasing lenght on a graphe where edges corresponds to synchronized agents,
+   * if an agent forces several others, then its synchronized flip will be iteratively adjusted.
+   * Whenever each output agents updates,    * we will likely have to iterate over path of increasing lenght
+   * on a graphe where edges corresponds to synchronized agents,
    * and check intersection of constraints on intersection on synchronized zone,  */
   val constrsync= new scala.collection.mutable.LinkedHashMap[String,ConstrSync]()
   def addConstrSync(name:String, shortName:Char, c: ConstrSync) = {
@@ -149,6 +152,10 @@ abstract class DetectedAgV ( val detected: BoolV )  extends Agent[V] {
   /** artificially reconstructed, we will be able to watch if it happens to be canceled by simult constraint */
    flipAfterConstr=muis ^ muis.next
   def showme={shoow(detected,muis,deflipSync)}
+  override def checkInvariantSync: Unit = {
+    super.checkInvariantSync
+    buugif(deflipSync) //synchronisation should not disturb the completely deterministic movement of a detected agent.
+  }
 }
 
 //class Gcenter(arg: ) extends DetectedAgV
