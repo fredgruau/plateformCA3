@@ -120,6 +120,7 @@ object Circuit {
   /** global variable which gather labels of Int field, for printing text */
   var labelsOfFields:Map[String,List[String]] = immutable.HashMap()
   var labelsOfFieldsBeforeName:Map[AST[_],List[String]] = immutable.HashMap()
+  var theStatified: Map[String,String] = HashMap()
 
 
   /** global variable storing the scala file of the CA, without the extension*/

@@ -432,7 +432,7 @@ case class CallProc(var procName: String, names: List[String], exps: List[AST[_]
   override def codeGenInstr(heap: Vector[String], funs: iTabSymb[DataProgLoop[_]], occupied: Int, allCoalesc: iTabSymb[String]):
   List[CallProc] =
     procName match { //specific processing of the system calls
-      case "memo" | "bug" | "show" | "copy" =>
+      case "memo" | "bug" | "show" | "copy"| "stat" =>
         val l = List(this.coalesc(allCoalesc).asInstanceOf[CallProc])
         l
       case _ =>
@@ -462,7 +462,7 @@ case class CallProc(var procName: String, names: List[String], exps: List[AST[_]
   def codeGenInstrOld(heap: Vector[String], funs: iTabSymb[DataProgLoop[_]], occupied: Int, allCoalesc: iTabSymb[String]):
   List[CallProc] =
     procName match { //specific processing of the system calls
-      case "memo" | "bug" | "show" | "copy" =>
+      case "memo" | "bug" | "show" | "copy" | "stat" =>
         val l = List(this.coalesc(allCoalesc).asInstanceOf[CallProc])
         l
       case _ => val fun: DataProgLoop[_] = funs(procName) //we get the dataProgLoop
@@ -809,7 +809,7 @@ object Instr {
   val isBoolean = (r: Instr) => a(r).exp.asInstanceOf[ASTBg].ring == B()
 
   /** used to identify system instructions show, bugif, memo... */
-  val sysInstr = HashSet("ret", "bug", "sho", "mem")
+  val sysInstr = HashSet("ret", "bug", "sho", "mem","sta")
 
   /**
    * @return true for callProc that will not need to store their result in storedField, but instead are executed directly

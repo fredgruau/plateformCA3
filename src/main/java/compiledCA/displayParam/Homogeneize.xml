@@ -1,8 +1,6 @@
 <displayParam>
         <expandedLayer>
         <Layer>
-          homogeneizePartVorFlipafterlocalconstr
-        </Layer><Layer>
           homogeneizePartBve
         </Layer><Layer>
           homogeneizePartVorFlipaftermutexconstr
@@ -17,9 +15,11 @@
         </Layer><Layer>
           homogeneizePart
         </Layer><Layer>
-          homogeneizePartGc
-        </Layer><Layer>
           homogeneizePartD
+        </Layer><Layer>
+          homogeneizePartVorFlipafterlocalconstr
+        </Layer><Layer>
+          homogeneizePartSf
         </Layer><Layer>
           homogeneizePartVor
         </Layer><Layer>
@@ -27,12 +27,12 @@
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0x0080FF">
-            homogeneizePartBveMeet
-          </layer><layer color="0x000000">
-            homogeneizePartRiMuis
+          <layer color="0x000000">
+            homogeneizePartDMuis
           </layer><layer color="0xFFC800">
             homogeneizePartIsv
+          </layer><layer color="0x8000FF">
+            homogeneizePartSfStablesimple2
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
           </layer>

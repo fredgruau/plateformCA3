@@ -174,7 +174,7 @@ object SplitHashMapTyped {
 */
   /** Résultat fortement typé. */
   //q leqQuatre diseapearSingle diseapearDouble diseaperTripletaon _vmeet =hmeet  ;videplein sloW
-  val localsInitials="qs_wg"
+  val localsInitials="qs_vwg"
   val mutexesInitials="d;="
   val mutapexInitials="a"
   val tritexInitials="t"

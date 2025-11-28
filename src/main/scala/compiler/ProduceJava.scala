@@ -2,7 +2,7 @@ package compiler
 
 import compiler.AST.Read
 import compiler.ASTB.{False, True, nbitExpAndParam}
-import compiler.Circuit.{TabSymb, compiledCA, iTabSymb, labelsOfFields, naameCA, pkgCA}
+import compiler.Circuit.{TabSymb, compiledCA, iTabSymb, labelsOfFields, naameCA, pkgCA, theStatified}
 import compiler.DataProg.{allLayerFromCompiledMacro, nameDirCompilLoops}
 import compiler.Instr.deployInt2
 import compiler.Locus.{all2DLocus, allLocus}
@@ -363,6 +363,17 @@ trait ProduceJava[U <: InfoNbit[_]] {
         fieldOffset(spatialOfffsetsInt2)
       },
 
+      "FIELDSTAT"-> {
+        def fieldStat(stats: Map[String, String]): String = {
+        def processOneStat(oneVar: (String, String)):String = {
+           "map.put(\"" + oneVar._1 +  "\""+ "," +  "\"" +  oneVar._2 + "\");"
+        }
+        stats.map(processOneStat(_)).mkString("\n")
+      }
+        //val labelsOfFields2 = spatialOfffsetsInt.filter(x => !x._1.startsWith("def"))
+        fieldStat(theStatified)
+      },
+
       "FIELDLABEL" -> {
         def fieldLabel(labels: Map[String, List[String]]): String = {
           def labelsOneVar(oneVar: (String, List[String])) = {
@@ -460,7 +471,7 @@ trait ProduceJava[U <: InfoNbit[_]] {
       val paramsR: List[String] = call.names;
       val params = paramsD ::: paramsR;
 
-      var callCode = call.procName + "(" //we always put the called procedure name. we now need to add the params
+      var callCode: String = call.procName + "(" //we always put the called procedure name. we now need to add the params
       var i = 0 //counter of scalar parameter
       var paramCode: List[String] = List() //code of the param for the current considered call
       var gateCountOfCall = 0
@@ -471,15 +482,15 @@ trait ProduceJava[U <: InfoNbit[_]] {
           val result=0
         case "show" =>
           val toto=(call.usedVarsIncludingLayers().toList)
-           if (toto.isEmpty) {
-             val u=0
-             print("jojioioiioj")
-           }
-
-
           val callCodeArg = radicalOfVar(toto.head) //we take the radical for diminishing the number of parameters
           theDisplayed += callCodeArg //sideeffect, update theDisplayed. display has allways a single arg which is the field to be displayed
           callCode += callCodeArg //in fact we could supress calls to show. We still leave them, just so that we can check those in the compiled java.
+        case "stat" =>
+          val twoNames=call.usedVarsIncludingLayers().toList.map(radicalOfVar(_)).distinct //si y a trois bits, ca produit 4 element de base, s
+          val List(isDef,values)=twoNames
+           theStatified += (isDef -> values) //sideeffect, update theDisplayed. display has allways a single arg which is the field to be displayed
+          callCode += twoNames.mkString(",") //in fact we could supress calls to show. We still leave them, just so that we can check those in the compiled java.
+
         case "copy" => assert(paramsD.size == 1 && paramsR.size == 1) //we copy bit by bit, hence int by int.
           val pR: String = radicalOfVar(paramsR(0))
           val pD: String = if (tSymbVarSafe(paramsR(0)).t == (V(), B()))

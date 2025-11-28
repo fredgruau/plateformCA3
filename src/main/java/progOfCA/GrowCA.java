@@ -11,6 +11,7 @@ import java.util.HashMap;
 import static simulator.Util.*;
 
 public final class GrowCA implements CAloops2 {
+ public HashMap<String, String> partial() {return null;}
  public static void _fun2(PrShift p,int [][] auxC01,int [][] growNBEmptyrhomb){
  int[] growNBEmptyrhomb$h=growNBEmptyrhomb[0],growNBEmptyrhomb$d=growNBEmptyrhomb[1],growNBEmptyrhomb$ad=growNBEmptyrhomb[2],auxC01$h=auxC01[0],auxC01$d=auxC01[1],auxC01$ad=auxC01[2];
 

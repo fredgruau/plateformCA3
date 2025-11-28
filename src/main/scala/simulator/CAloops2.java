@@ -39,6 +39,8 @@ public interface CAloops2 {
 
     public HashMap<String, List<Integer>> fieldOffset();
 
+     public HashMap<String, String> partial() ;
+
     public HashMap<String, List<String>> textOfFields();
 
 

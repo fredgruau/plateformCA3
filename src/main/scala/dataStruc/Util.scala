@@ -45,6 +45,27 @@ import java.net.URLClassLoader
 
 object Util {
   import scala.reflect.ClassTag
+  def lastSegment(s:String) = s.split("(?=[A-Z])").last
+  def stats(l: Seq[Int]): (Double, Double, Int, Int) = {
+    require(l.nonEmpty, "Liste vide")
+
+    val n = l.length
+    val mean = l.sum.toDouble / n
+
+    // Variance et écart-type
+    val variance = l.map(x => math.pow(x - mean, 2)).sum / n
+    val std = math.sqrt(variance)
+
+    // Écart-type normalisé
+    val stdNorm = if (mean != 0) std / mean else Double.PositiveInfinity
+
+    val minVal = l.min
+    val maxVal = l.max
+
+    (mean, stdNorm, minVal, maxVal)
+  }
+
+
 
   def printMatScala(mat: Array[Int]): Unit = {
     for (i <- 0 until mat.length) {

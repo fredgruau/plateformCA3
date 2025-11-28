@@ -70,11 +70,11 @@ object CApannel{
  * @param env contains all what's needed to draw
  * @param width with of the cellular automaton
  */
-class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) extends Panel {
+abstract class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) extends Panel {
   background = Color.black
   preferredSize = (width, height)
   focusable = true
-
+  def updateStat(mean:Double,stdNorm:Double, minVal:Int, maxVal:Int)
 
   /** when zooming on a sub part we need to draw only a small portion */
   private val subca: Dimension = null

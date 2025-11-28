@@ -1,7 +1,8 @@
 package simulator
 
 import compiler.Locus.allLocus
-import compiler.{Locus, V}
+import compiler.{Circuit, Locus, V}
+import dataStruc.Util.{lastPathPart, lastSegment}
 import dataStruc.{Coord2D, Named, PlanarGraph}
 import simulator.Controller.disableBinding
 import simulator.CAtype._
@@ -18,6 +19,7 @@ import java.io.FileNotFoundException
 import java.util
 import javax.swing.{InputMap, JComponent, KeyStroke}
 import scala.collection.JavaConverters._
+import scala.collection.convert.ImplicitConversions.`map AsScala`
 import scala.collection.immutable
 import scala.collection.immutable.{HashMap, HashSet}
 import scala.swing._
@@ -38,6 +40,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   /** sometimes we try different random root, so as to explore different possible runs. */
   var randomRoot: Int = xInt(simulParam, "simul", "@randomRoot")
   var density: Int = xInt(simulParam, "simul", "@density")
+  var paramStat: Int = xInt(simulParam, "simul", "@paramStat")
   var darkness:Int= xInt(simulParam, "simul", "@darkness")
   //var t:Int=xInt(simulParam, "simul", "@t0")
   /** we need to know the locus of fields which are either displayed or initialized */
@@ -48,6 +51,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   val initName: util.HashMap[String, String] = progCA.init() //fromXMLasHashMap(displayParam, "inits", "@init")
   /** labels used to show fields which need text, such as  constraint, moves, or instructions */
   val textOfFields: Map[String, List[String]] = progCA.textOfFields().asScala.toMap
+  val partial:Map[String, String]=progCA.partial().asScala.toMap
   /**  fields displayed as text*/
   val displayedAsText: Set[String]=textOfFields.keySet
 
@@ -61,7 +65,8 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   val randomInitNames: Array[Int] = (0 to 9).toArray
   val densityInitNames: Array[Int] = (0 to 99).toArray
   val darknessInitNames: Array[Int] = (0 to 99 by  5).toArray
-
+  val statInitNames: Array[String] = progCA.partial().map{case(k,v)=>lastSegment(k)+lastSegment(v)}.toArray
+    //Circuit.theStatified
   /** check that global variables (layer and shown) do not share offset. */
   def invariantFieldOffset = {
     val h: String = progCA.displayableLayerHierarchy()
@@ -236,13 +241,16 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   val densityInitList = new ComboBox[Int](densityInitNames) {
     selection.item = density
   }
-  val darknessInitList = new ComboBox[Int](darknessInitNames) {
+    val darknessInitList = new ComboBox[Int](darknessInitNames) {
     selection.item = darkness
   }
 
+  val statInitList = new ComboBox(statInitNames) {
+    selection.index=paramStat }
   //val randomRootField = new TextField("" + randomRoot, 2)
-  contents += (globalInitList, randomInitList,densityInitList,darknessInitList) //, randomRootField)
-  listenTo(globalInitList.selection, randomInitList.selection,densityInitList.selection,darknessInitList.selection)
+  contents += (globalInitList, randomInitList,densityInitList,darknessInitList,statInitList) //, randomRootField)
+
+  listenTo(globalInitList.selection, randomInitList.selection,densityInitList.selection,darknessInitList.selection,statInitList.selection)
   //todo add a jcombo to select a number between 0 and 9
   /** When we switch mode between pause and play, the icon of the PlayPause button toggles */
   private def togglePlayPauseIcon(): Unit = {
@@ -409,7 +417,9 @@ case SelectionChanged(`globalInitList`) =>
    */
  private def playEnv(fwd:Boolean): Unit =
    for (env <- envList)
-     env.play(fwd)
+     {env.play(fwd)
+
+     }
 
 
  //2^speedSlider.value

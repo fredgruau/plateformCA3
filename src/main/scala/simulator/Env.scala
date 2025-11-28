@@ -3,7 +3,8 @@ package simulator
 import compiler.ASTB.False
 import compiler.Locus.locusV
 import compiler.{Locus, V}
-import dataStruc.Util.{deepCopyArray, isEqualto, isMiror, printMat}
+import dataStruc.Util.{deepCopyArray, isEqualto, isMiror, printMat, stats}
+import simulator.CAtype.pointLines
 import simulator.Medium.christal
 import simulator.Util.copyBasic
 import triangulation.Utility.halve
@@ -62,8 +63,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     val toto=controller.progCA.init().keys
     for (layerName: String <- controller.progCA.init().keys) { //iterate over the layers to be initalized
       /** fields layerName's components */
-        if(layerName.startsWith("llhomogeneizePartGcIsv"))
-          println("coucou")
+        //if(layerName.startsWith("llhomogeneizePartGcIsv"))
+
       val memFields2Init: Seq[Array[Int]] = memFields(layerName) //gets the memory plane
       val initNameFinal = initName.getOrElse(layerName, controller.initName(layerName)) //either it is the root layer or we find it in env
       val finalInitMethodName: String = if (initNameFinal.startsWith(  "global")) controller.globalInitList.selection.item //currently selected init method
@@ -108,6 +109,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     }
   }
   def init(): Unit = {
+    println("coucooooooou")
     medium.initRandom(controller.randomRoot) //we reinitialize the random number in order to reproduce exactly the same random sequence
    // medium.middleClosure(controller.currentProximityLocus)  //alternative way of building quickly voronoi.
      //controller.progCA.copyLayer(mem) plus besoin pisque je fais un forward
@@ -122,6 +124,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     for (_ <- 1 until t0) //forward till to
       forward()
     medium.resetColorTextVoronoi(controller.displayedLocus)
+    computeStatistics()
     computeVoronoirColors() // for the initial painting
     //computeVoronoirInt32() // for the initial painting
     repaint() //  cannot be called now, because the associated pannel has not been created yet.
@@ -140,6 +143,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
 
   /** we create that array once and forall to decode memory bit planes */
   private val bitPlaneBuffer: Array[Array[Boolean]] = Array.ofDim[Boolean](nbLine, nbCol)
+  private val bitPlaneBufferIsDef: Array[Array[Boolean]] = Array.ofDim[Boolean](nbLine, nbCol)
 
 
   /**
@@ -158,10 +162,26 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       medium.sumColorVoronoi(color,bitPlaneBuffer, points, controller.darkness)
     }
   }
+  /** computes the index of the text that should be displayed  if defined*/
+  private def sumInt32VoronoiPartial(locus: Locus, bitPlanesIsdefined: List[Array[Int]], bitPlanesValue: List[Array[Int]]): Unit = {
+    assert (bitPlanesValue.size == medium.locusPlane(locus).length, "number of bit planes for values should be locus density")
+    assert (bitPlanesIsdefined.size == medium.locusPlane(locus).length, "number of bit planes for is defined should be locus density")
+      bitPlanesIsdefined.zip (bitPlanesValue). zip (medium.locusPlane(locus)) .foreach{
+        case((isDefinedPlane,valuePlane),points)=>
+        //we do a dot iteration simultaneously on pointsPlane, and bitPlane
+      //   decodeInterleavRot(nbLineCA, nbColCA, plane, sandBox) //we convert the compact encoding on Int32, into simple booleans
+      medium.decode(valuePlane, bitPlaneBuffer) //we convert the compact encoding on Int32, into simple booleans
+           medium.decode(isDefinedPlane, bitPlaneBufferIsDef)
+          medium.sumBitVoronoiPartial(bitPlaneBufferIsDef,bitPlaneBuffer, points)
+    }
+  }
+
+
+
   /** computes the index of the text that should be displayed */
   private def sumInt32Voronoi(locus: Locus, bitPlanes: List[Array[Int]]): Unit = {
     assert (bitPlanes.size == medium.locusPlane(locus).length, "number of bit planes should be locus density")
-    for ((plane, points) <- bitPlanes zip medium.locusPlane(locus)) { //we do a dot iteration simultaneously on pointsPlane, and bitPlane
+    for ((plane: Array[Int], points: pointLines) <- bitPlanes zip medium.locusPlane(locus)) { //we do a dot iteration simultaneously on pointsPlane, and bitPlane
       //   decodeInterleavRot(nbLineCA, nbColCA, plane, sandBox) //we convert the compact encoding on Int32, into simple booleans
       medium.decode(plane, bitPlaneBuffer) //we convert the compact encoding on Int32, into simple booleans
       medium.sumBitVoronoi(bitPlaneBuffer, points)
@@ -175,7 +195,6 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
 
   /** iterate through all the layers to be displayed */
   private def computeVoronoirColors(): Unit = {
-
     medium.resetColorTextVoronoi(controller.displayedLocus) //hyper important, poil au dents
     for ((layerName, color) <- controller.colorDisplayedField) { //process fiedls to be displayed, one by one
       val locus: Locus = controller.locusOfDisplayedOrDirectInitField(layerName)
@@ -191,14 +210,71 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
         /** bitiof locus's arity is locus density */
         val bitiOfLocus: List[Array[Int]] = (0 until locus.density).map(j => bitPlane(i + j * bitSize)).toList
 
-        if(controller.displayedAsText.contains(layerName))   sumInt32Voronoi(locus,  bitiOfLocus)
+        if(controller.displayedAsText.contains(layerName))   sumInt32Voronoi(locus,  bitiOfLocus) //genere and int 32 bits on each voronoi
         else sumColorVoronoi(locus, colorAjusted, bitiOfLocus) // on est ramené au cas d'afficher un  boolV
         colorAjusted = halve(colorAjusted)// on divise par deux pour arriver au bit de point moins fort.
       }
       //for text we have to compute a string on each voronoi, the default case uses a list of string
       if(controller.textOfFields.contains(layerName))
-            textify(locus,controller.textOfFields(layerName))
+        textify(locus,controller.textOfFields(layerName))
     }
+  }
+
+
+  private def statistics(locus: Locus, bitPlanesIsdefined: List[Array[Int]]):List[Int] = {
+    var result:List[Int]=List()
+    assert (bitPlanesIsdefined.size == medium.locusPlane(locus).length, "number of bit planes for is defined should be locus density")
+    bitPlanesIsdefined.zip (medium.locusPlane(locus)).foreach{
+      case(isDefinedPlane,points)=>
+        //we do a dot iteration simultaneously on pointsPlane, and bitPlane
+        //   decodeInterleavRot(nbLineCA, nbColCA, plane, sandBox) //we convert the compact encoding on Int32, into simple booleans
+        medium.decode(isDefinedPlane, bitPlaneBufferIsDef)
+        result=medium.statistics(bitPlaneBufferIsDef, points):::result
+    }
+    result
+  }
+  /** iterate through all the layers for which we should compute statistics */
+  def computeStatistics(): Unit = {
+
+    medium.resetColorTextVoronoi(controller.displayedLocus) //chui pas sur
+    for (isDefined <- controller.partial.keys) { //process fiedls to be displayed, one by one
+
+      val valueDefined=controller.partial(isDefined)
+      val locusDefined: Locus = controller.locusOfDisplayedOrDirectInitField(isDefined)
+      val locusValue : Locus = controller.locusOfDisplayedOrDirectInitField(valueDefined)
+      assert(locusValue==locusDefined)
+      val bitSizeInt: Int = controller.bitSizeDisplayedOrDirectInitField.getOrElse(valueDefined, 1) //default bitsize is one, for boolean
+      /** 1D array of  integers reprensenting the fields */
+      val bitPlaneIsDefined: Array[Array[Int]] = memFields(isDefined).toArray
+      val bitPlaneValue: Array[Array[Int]] = memFields(valueDefined).toArray
+      val density = locusDefined.density * bitSizeInt
+      /** if we display an int, then color associated to the field shoudl be halved */
+      //var colorAjusted: Color = if (bitSize > 1) halve(color) else color //if we print int, we have to make a sum of colors, so we first take halve
+      assert(density == bitPlaneValue.size, "the number of bit plane should be equal to the field's density")
+      val bitIsDefined: List[Array[Int]]= (0 until locusDefined.density).map(j => bitPlaneIsDefined(j )).toList
+      for (i <- (0 until bitSizeInt).reverse) { //loops over the bits of integers reverse so that bit 0 gets smallest color
+        //we decompose an int into its  bits, first bit are strongest bit
+        /** bitiof locus's arity is locus density */
+        val bitiOfValue: List[Array[Int]] = (0 until locusDefined.density).map(j => bitPlaneValue(i + j * bitSizeInt)).toList
+          //we generate an int32, but only if defined
+          sumInt32VoronoiPartial(locusDefined,bitIsDefined,  bitiOfValue) //genere and int 32 bits on each voronoi if defined
+       }
+      /** computes the text associated to an int32 on each voronoi */
+        val integers=statistics(locusDefined, bitIsDefined)
+      println(integers)
+        if(integers.nonEmpty)
+      {val (mean, stdNorm, minVal, maxVal)=stats(integers)
+         caPannel.updateStat(mean,10*stdNorm, minVal, maxVal)
+
+        //
+      //aprés je calcule les stats pour de vrai, ecart type patin coufin
+       // for (points <- medium.locusPlane(locusDefined))          medium.statistics( bitIsDefined, points)
+      }}
+
+
+       //at this stage, the int32 where is defined is true, are set we can collect the values in a list, and then compute statistics
+
+
   }
 
 
@@ -216,6 +292,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
               controller.isPlaying = false;
           }
           repaint(); sleep(50);
+
           // // slows down the loop  a bit
         }
 
@@ -233,6 +310,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     //  controller.progCA.anchorFieldInMem(mem) //todo a refaire seulement si meme change (quand on display ou qu'on display plus)
     bugs = controller.progCA.theLoops(medium.propagate4Shift, mem).asScala //we retrieve wether there was a bug
     t += 1
+    computeStatistics()
     if (bugs.nonEmpty) {  //we set the locus of bugs
       for(bugName<-bugs) {
        val  locusBug=controller.progCA.fieldLocus.asScala(bugName)
@@ -276,7 +354,6 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     computeVoronoirColors()
     caPannel.revalidate()
     caPannel.repaint()
-
   }
 
 }

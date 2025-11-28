@@ -20,11 +20,13 @@ class Voroonoi(val center: Vector2D) {
   var color: Color = Color.black; //on initialise a zero
   /** text to be displayed */
   var text:String = null
+  /** letter is a string consisting of a single letter */
   def addText(letter:String)={text=if(text==null) letter else text+letter}
   var int32Code:Int=0
   def addBit(bit:Boolean)={
     val newbit=if(bit) 1 else 0
       int32Code=int32Code<<1 | newbit} //multiplie par 2 et ajoute le nouveau bit.
+  /** the presence of each bit i  is tested one by one, and if set, the ith char of ls is added to the text */
   def textifyBits(ls:List[String])=
    {
      if(ls.nonEmpty)  for(s<-ls) {

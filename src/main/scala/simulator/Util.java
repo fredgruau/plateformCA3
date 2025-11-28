@@ -86,6 +86,8 @@ public class Util {
     }
     public static void show(int[][] src) {
     }
+    public static void stat(int [] isDef, int[][] values) {
+    }
 
 
     /**

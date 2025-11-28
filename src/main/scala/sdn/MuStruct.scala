@@ -4,7 +4,7 @@ import compiler.AST.{Layer, delayed}
 import compiler.ASTL.{ASTLg, delayedL}
 import compiler.SpatialType.BoolV
 import compiler.repr.{nomB, nomV}
-import compiler.{AST, ASTBt, ASTL, ASTLfun, ASTLt, B, CallProc, Circuit, Locus, Ring, SI, V, repr}
+import compiler.{AST, ASTBt, ASTL, ASTLfun, ASTLt, B, CallProc, Circuit, I, Locus, Ring, SI, UI, V, repr}
 import dataStruc.{BranchNamed, DagNode, Named}
 import dataStruc.DagNode.EmptyBag
 import sdn.ForceAg
@@ -28,6 +28,7 @@ trait hasMuisSysInstr{
 trait shoow{
   self:hasMuisSysInstr=>
   def buugif(v: AST[_]) = {muis.syysInstr ::= CallProc("bug", List(), List(v))  }
+  def staat[L<:Locus,R<:I](isDef:ASTLt[L,B],value:ASTLt[L,R]) = {  muis.syysInstr ::= CallProc("stat", List(), List(isDef,value)) }
   def shoow(vs: AST[_]*) = {for (v <- vs)   muis.syysInstr ::= CallProc("show", List(), List(v)) }
   def shoowText(v: AST[_],ls:List[String])={
     muis.syysInstr ::= CallProc("show", List(), List(v))

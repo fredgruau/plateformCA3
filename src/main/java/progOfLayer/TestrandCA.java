@@ -11,6 +11,7 @@ import java.util.HashMap;
 import static simulator.Util.*;
 
 public final class TestrandCA implements CAloops2 {
+ public HashMap<String, String> partial() {return null;}
  @Override public HashMap<String, List<String>> textOfFields() {HashMap<String, List<String>> map = new HashMap<>();
   return (map); }
 public int CAmemWidth() {return 5;}

@@ -21,6 +21,7 @@ class Homogeneize() extends LDAG with Named with BranchNamed
 {
   //val part=new Homogen()
   val part=new SpreadOnSummit()
+  //val part=new Convergent()
   showMustruct
   setFliprioOfMoveAndFlipAfterConstr()
   setFlipSynced()
@@ -57,14 +58,18 @@ class Homogeneize() extends LDAG with Named with BranchNamed
  // part.shoowText( part.sf.density,List())
  part.shoow( part.vor.isForced)
 
- // part.shoow(part.sf.stableSimple);  part.shoow(part.sf.stableSimple2)
+  part.shoow(part.sf.stableSimple);  part.shoow(part.sf.stableSimple2)
   // part.shoow(part.sf.stable2)
-    part.shoowText(part.ri.muis,List())
+    part.shoow(part.ri.muis)
   part.shoowText(part.ri.sgnMaxVor,List())
   part.shoowText(part.ri.sgnMinLt,List())
   part.shoowText(part.ri.maxltgt,List())
   part.shoow(part.ri.sgngradm2)
- // part.shoow(part.ri.sgnGt)
+  part.shoow(part.ri.nearer)
+  part.shoow(part.ri.existNearer)
+  part.shoow(part.ri.gap)
+  part.shoow(part.ri.gapV)
+  part.staat(part.bve.meetV, part.d.muis)
 }
 
 /** basic quasiparticle with blob and qpoint constraints */
@@ -93,6 +98,16 @@ class SpreadOnSummit extends Homogen with addRadius{
     val density=addLt(countNeighbors( addSym(e(isSummit)).sym))
     val notDense= density < fromInt(3)
     val notDenseN=addSym(e(notDense))
+    val stableSimple: ASTLt[V, B] =isV & inside(imply(bf.brdVeIn,dgv.sloplt))
+    val stableSimple2=forallize(stableSimple) & isV
+    val balance: Force = new Force() {
+      import compiler.ASTLfun.fromBool
+      override def actionV(ag: MovableAgV): MoveC = {
+        val yes=MoveC1(false,false) //force is pure negative
+        /** if stable2 , this will cancel movement of lower priority, */
+        val no = MoveC1(stableSimple2, e(stableSimple2)& bf.brdVeIn) // negative  forces
+        MoveC2(yes,no)
+      }}
     val seizeSummit=new Force{
        override def actionV(ag:MovableAgV): MoveC= {
         val hasNearer: BoolV = Wrapper.exist(transfer( density.lt) & neighborsSym(e(ag.muis)))
@@ -115,9 +130,10 @@ class SpreadOnSummit extends Homogen with addRadius{
   force(introduceNewPriority(),"repulse",'|',dgv.repulse)//go away from voronoi, but in fact from gcenter,
   // because it is allowed to overlap voronoi, which should thereafter withdraw.
   // This overlapping is the key for ensuring uniformization of the radius.
+    force(introduceNewPriority(),"balance",'_',sf.balance)
 }
 /** obsolete */
-class Convergent extends Homogen  // with Lead //pas besoin de leader pour le moment
+class Convergent extends Homogen with addRadius // with Lead //pas besoin de leader pour le moment
 {  val sf=new Attributs() { //sf==stableFields
   override val muis: ASTLg with carrySysInstr = Convergent.this.muis
   /** border of qparticle  where dg diminishes */

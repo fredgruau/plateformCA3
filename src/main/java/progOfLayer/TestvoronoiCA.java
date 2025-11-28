@@ -11,6 +11,7 @@ import java.util.HashMap;
 import static simulator.Util.*;
 
 public final class TestvoronoiCA implements CAloops2 {
+ public HashMap<String, String> partial() {return null;}
  public static void _fun0(PrShift p,int [][] testvoronoiN,int [][] testvoronoiNTestconst,int [][] testvoronoiNOtheruse){
  int[] testvoronoiNOtheruse$e=testvoronoiNOtheruse[0],testvoronoiNOtheruse$se=testvoronoiNOtheruse[1],testvoronoiNOtheruse$sw=testvoronoiNOtheruse[2],testvoronoiNOtheruse$w=testvoronoiNOtheruse[3],testvoronoiNOtheruse$nw=testvoronoiNOtheruse[4],testvoronoiNOtheruse$ne=testvoronoiNOtheruse[5],testvoronoiN$e=testvoronoiN[0],testvoronoiN$se=testvoronoiN[1],testvoronoiN$sw=testvoronoiN[2],testvoronoiN$w=testvoronoiN[3],testvoronoiN$nw=testvoronoiN[4],testvoronoiN$ne=testvoronoiN[5],testvoronoiNTestconst$e=testvoronoiNTestconst[0],testvoronoiNTestconst$se=testvoronoiNTestconst[1],testvoronoiNTestconst$sw=testvoronoiNTestconst[2],testvoronoiNTestconst$w=testvoronoiNTestconst[3],testvoronoiNTestconst$nw=testvoronoiNTestconst[4],testvoronoiNTestconst$ne=testvoronoiNTestconst[5];
 

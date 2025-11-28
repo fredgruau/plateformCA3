@@ -514,20 +514,49 @@ abstract class Medium(val nbLine: Int, val nbCol: Int, val boundingBox: Dimensio
       val point = points(i)(j) //corresponding point in 2D space
       // assert(point!=None,"we should have defined the color of non existing points")
       if (point.isDefined)
-        theVoronois(Coord2D(point.get.x, point.get.y)).addBit(bitPlane(i)(j)) //updating voronoi's polygon color
+        theVoronois(Coord2D(point.get.x, point.get.y)).addBit(bitPlane(i)(j)) //updating voronoi's int32
+    }
+  }
+  /** we have an extra bitplane which tells, if the value is indeed defined.  */
+  def sumBitVoronoiPartial( bitPlaneIsDef:Array[Array[Boolean]],bitPlane:Array[Array[Boolean]], points:pointLines): Unit =
+  { assert (points.size == nbLine, "pointlines should match CA")
+    assert (bitPlane.size == nbLine, "number of  lines should match CA")
+    for (i <- 0 until nbLine)  for (j <- 0 until nbCol) {
+      val point = points(i)(j) //corresponding point in 2D space
+      // assert(point!=None,"we should have defined the color of non existing points")
+      if (point.isDefined && bitPlaneIsDef(i)(j)) //we start gathering value only if isDefined, that is clean.
+        theVoronois(Coord2D(point.get.x, point.get.y)).addBit(bitPlane(i)(j)) //updating voronoi's int32
     }
   }
 
   def textify(  points:pointLines,ls:List[String]): Unit =
-     for (i <- 0 until nbLine)  for (j <- 0 until nbCol) {
+    for (i <- 0 until nbLine)  for (j <- 0 until nbCol) {
       val point = points(i)(j) //corresponding point in 2D space
       // assert(point!=None,"we should have defined the color of non existing points")
       if (point.isDefined)
-        theVoronois(Coord2D(point.get.x, point.get.y)).textifyBits(ls) //updating voronoi's polygon color
+        theVoronois(Coord2D(point.get.x, point.get.y)).textifyBits(ls) //updating voronoi's polygon text
     }
 
+  /**
+   * Searches a pointlines called "points" in order to collect integer when is defined is true. Integers have already been computed
+   * and are stored in a fiedl of each voronoi, called "int32"
+   * @param isdefined
+   * @param points
+   * @return
+   */
+  def statistics( isdefined: Array[Array[Boolean]],points:pointLines): List[Int]= {
+    var result:List[Int]=List()
+    for (i <- 0 until nbLine)  for (j <- 0 until nbCol) {
+      val point = points(i)(j) //corresponding point in 2D space
+      // assert(point!=None,"we should have defined the color of non existing points")
+      if (point.isDefined  && isdefined(i)(j) )
+       result=theVoronois(Coord2D(point.get.x, point.get.y)).int32Code :: result//updating voronoi's polygon text
+    }
+    result
+  }
 
-/** test that there is no two points very near by building the set associated to the displayed points.  */
+
+  /** test that there is no two points very near by building the set associated to the displayed points.  */
   private def ensureUniqueDisplayedPoint(): Unit = {
     case class caseVector2D(x: Int, y: Int) {}
     val big: Int = 1000000

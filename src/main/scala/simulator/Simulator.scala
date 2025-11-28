@@ -169,14 +169,25 @@ object Simulator extends SimpleSwingApplication {
         controller.envList = controller.envList :+ env //we will need to acess the list of env, from the controler
        /** height of the pannel of displaying the CA */
         val CaHeight=env.medium.boundingBox.height
+        val stat = new Label("stat : 0")
         env.caPannel = new CApannel(controller.CAwidth,CaHeight /*controller.CAheight*/, env, progCA) // the number of CAlines is 1/ sqrt(2) the number of CA colomns.
-          /** allows to add widjet for each CA, such as the time */
+          /** allows to add widjet for each CA, such as the time */ {
+
+
+          def updateStat(mean:Double,stdNorm:Double, minVal:Int, maxVal:Int) = {
+            stat.text = " stat "+f"$mean%.1f" + "_"+ f"$stdNorm%.1f"+ " " +minVal+"<"+maxVal
+            //  s"stat:%.1f${mean}-${stdNorm}"
+          }
+
+        }
+          val numberPannel=new BoxPanel(Orientation.Horizontal) {
+            contents += (env.iterationLabel,stat)
+          }
           val envPanel = new BoxPanel(Orientation.Vertical) {
-            contents += env.iterationLabel
-            contents += env.caPannel
+            contents += (numberPannel,env.caPannel)
           }
             if (env.medium.nbCol >= 30) { // if the CA has too many columns, it get displayed on multiple columns
-          assert(numCell % nbColPannel == 0, "you must garantee that CA whose number of columns is >=30 are displayed on multiple of nbColPannel")
+          assert(numCell % nbColPannel == 0, "we must garantee that CA whose number of columns is >=30 are displayed on multiple of nbColPannel")
           add(envPanel, constraints(numCell % nbColPannel, numCell / nbColPannel, nbColPannel, GridBagPanel.Fill.Horizontal)) //adds the pannel using the Grid layout (GridBagPnnel)
           numCell += nbColPannel
         }

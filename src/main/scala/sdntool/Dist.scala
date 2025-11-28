@@ -19,18 +19,41 @@ import progOfmacros.RedT.cacEndomorph
 import sdn.{BlobVe, CancelFlipIf, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, One, Stratify, addGcenter, addVor, carrySysInstr}
 import sdn.Util.{addLt, addLtSI}
 
+object InnerRadius{
+  /** we use the same number of bits for radius, as for distance to gcenter and voronoi.  */
+  val nbit=MuDistGcenterVor.nbit
+}
 /**
  *
  * @param n number of bitss
  *  @param mu distance to voronoi
  * @param source particle where distance is sampled to compute radius, which is thereafter braodcasted.
  */
-class InnerRadius (val n:Int, val source:MuStruct [V,B], val d:Dist,val dgv:Dist) extends MuStruct [V,SI]{
+class InnerRadius ( val source:MuStruct [V,B], val d:Dist,val dgv:Dist) extends MuStruct [V,SI]{
   override def inputNeighbors: List[MuStruct[_ <: Locus, _ <: Ring]] = List(source,d,dgv)
-  override val muis: LayerS[V, SI] = new LayerS[V, SI](n, "0") //we put 5 bits so as to obtain continuity
+  val nearer=d.sloplt |  neighborsSym(e(source.muis))
+  val existNearer=exist(nearer)
+  var gapV:BoolV=null
+  override val muis: LayerS[V, SI] = new LayerS[V, SI](MuDistGcenterVor.nbit, "0") //we first put 5 bits so as to obtain continuity but 3 bits suffice at the end
   { val zero:SintV=fromInt(0)
-    override val next: AST[(V, SI)] = delayedL(cond(source.muis, dgv.muis + (-2), cond(d.existNearer,this.pred + incr, zero) ))
-     }
+    val diffRdgv= (dgv.muis + (-2)) - pred
+    /** si gapV devient vrai ca merde */
+    gapV=eq0(diffRdgv + 4)|eq0(diffRdgv + 3)
+    val sgndiffRdgv=sign(diffRdgv)
+    //on met zero si il n'existe pas encore de nearer. sauf que nearer considére aussi les voisin particule
+   // override val next: AST[(V, SI)] = delayedL(cond(source.muis, this.pred + sgndiffRdgv, cond(/*d.*/existNearer,this.pred + incr, zero) ))
+    val incr2=delayedL(cond(source.muis,sgndiffRdgv, incr))
+    override val next: AST[(V, SI)] = cond(existNearer|source.muis, this.pred +  incr2, zero)
+  }
+  source match{
+    case ag: sdn.ForceAg[V]=> //adds a slow constraint to avoid vortex creation
+      /** moving to forbidden would cause rin to decrease instead of increasing */
+      val forbidden:BoolV= gapV
+      val  slow=CancelFlipIf(ag,One(false),forbidden ) _// agents should not invade cells where distance is negative
+      ag.addConstraint("slov",'v',slow)
+    case _ =>
+  }
+
   /** 0, +1 ot -1  we update with small delta:either increment or decrement*/
    val rri = muis
     val rriopp = -rri
@@ -38,8 +61,9 @@ class InnerRadius (val n:Int, val source:MuStruct [V,B], val d:Dist,val dgv:Dist
     val grad3: IntE = reduce(addRedop[SI].asInstanceOf[redop[SI]], transfer(se)) //the trick here is to do the expensive operation (add) only on the three edges locus, instead of the 6 Ve transfer
     val gap: BoolE = eq0(grad3 + 4) //  gap is true iff the two neighbors cannot be compared
     val grad6: IntEv = send(List(-grad3, grad3))
+
   /** 1 is neutral for min*/
-  val sgnLt:IntVe= cond(d.sloplt,sign(transfer(grad6)),extend(2,fromInt(1))) // on regarde les voisins plus proche de particule
+  val sgnLt:IntVe= cond(/*d.sloplt*/nearer,sign(transfer(grad6)),extend(2,fromInt(1))) // on regarde les voisins plus proche de particule
   val sgnMinLt: IntV = reduce(minSignRedop, sgnLt) //we need to add 2, using one more bit, in order to add modulo 16 and not 8
   /** -1 is neutral for max */
     val sgngradm2=sign(extend(7, transfer(grad6)) + (-2) )//on regarde tous  les voisin qui sont a un delta au moins de 2 voir 3
@@ -53,14 +77,15 @@ val sgnMaxVor: IntV = reduce(maxSignRedop, sgngradm2) //on regarde tous  les voi
 
  // val maxltgt=binop(maxSign,sgnMax,sgnMinLt)
   val maxltgt=binop(maxSign,sgnMaxVor,sgnMinLt)
-  val incr=extend(4,maxltgt)  //on  ajoute un signe sur deux bit, a un int sur 3 bits.
+  //val incr=extend(4,maxltgt)  //on  ajoute un signe sur deux bit, a un int sur 3 bits.
+  val incr=maxltgt //on  ajoute un signe sur deux bit, a un int sur 3 bits.
   // val incr=maxltgt  //on  ajoute un signe sur deux bit, a un int sur 3 bits.
   /** support of agent, implemented as a layer. we also use it to store a list  of system instructions */
 }
 /** adds  inner Radius to particles */
 trait addRadius {
   self: MovableAgV with  addDist with addDistGcenterVor=> //adds a distance to a LayerV , also limit its movement so as to avoid vortices
-  val ri = new InnerRadius(self.dgv.nbitdgv,self,self.d,self.dgv);
+  val ri = new InnerRadius(self,self.d,self.dgv);
   //show(d); les show doivent etre fait dans le main
 }
 
@@ -115,12 +140,17 @@ abstract class Dist(val n:Int)extends MuStruct [V,SI] {
       MoveC2(oui, non)
     }
   }
-}/**
+}
+
+object MuDist{
+  val nbitSize=4
+}
+/**
  * @param source
  * @param bitSize sometimes more than 3 bits are necessary
  *  * computes distance to source
  */
-class MuDist(val source: MuStruct[V, B],val bitSize:Int) extends Dist(bitSize) {
+class MuDist(val source: MuStruct[V, B], val bitSize:Int) extends Dist(bitSize) {
   override def inputNeighbors: List[MuStruct[_ <: Locus, _ <: Ring]] = List(source)
   /** calcul directement a partir de la distance
    *  si y a une différence de valeur entre deux Vertex adjacent d'un edge donné,
@@ -144,7 +174,7 @@ class MuDist(val source: MuStruct[V, B],val bitSize:Int) extends Dist(bitSize) {
 }
 
 /** computes distance to gabriel centers added to the distance of that gabriel center to seeds i.e, distance to nearest neighbors */
-class MuDistGcenter(val source:MovableAgV with addDist with addGcenter) extends Dist(4) {
+class MuDistGcenter(val source:MovableAgV with addDist with addGcenter) extends Dist(3) {
   override def inputNeighbors = List(source.d)
   val incr: ASTLt[V, SI] = cond(delayedL(source.bve.meetE2), sign(opp/*+2*/), cond(delayedL(source.bve.meetV), sign(opp), deltag))
 }
@@ -154,7 +184,7 @@ class MuDistGcenter(val source:MovableAgV with addDist with addGcenter) extends 
 /** adds  distance to particles */
 trait addDist {
   self: MuStruct[V, B] => //adds a distance to a LayerV , also limit its movement so as to avoid vortices
-  val d = new MuDist(self,3);
+  val d = new MuDist(self,MuDist.nbitSize);
   //show(d); les show doivent etre fait dans le main
 }
 
@@ -167,21 +197,24 @@ trait addDistGcenter {
   val dg = new MuDistGcenter(this)
   //show(d); les show doivent etre fait dans le main
 }
-
+object MuDistGcenterVor{
+  val nbit=3
+}
 /** computes distance to gabriel centers also taking into account distance to voronoi, in order to avoid vibration
  * caused by the fact that gabriel centers are discontinuous*/
-class MuDistGcenterVor(val source:MovableAgV with addDist with addVor with addGcenter,val nbitdgv:Int) extends Dist(nbitdgv) {
+class MuDistGcenterVor(val source:MovableAgV with addDist with addVor with addGcenter) extends Dist(MuDistGcenterVor.nbit) {
   override def inputNeighbors = List(source.vor,source.gc)
  // val incr: ASTLt[V, SI] = cond(delayedL(source.bve.meetV), sign(opp), cond(delayedL(source.bve.meetE2), sign(opp/*+2*/), deltag))
   val incr: ASTLt[V, SI] = cond(delayedL(source.bve.meetV) | delayedL(source.bve.meetE2) |source.vor.muis , sign(opp), deltag)
 }
+
 
 /** adds distance to gcentern corrected by voronoi*/
 trait addDistGcenterVor {
 
   self: MovableAgV with addDist with addVor with addGcenter=>
 
-  val dgv = new MuDistGcenterVor(this,4)
+  val dgv = new MuDistGcenterVor(this)  //totoal
   //show(d); les show doivent etre fait dans le main
 }
 

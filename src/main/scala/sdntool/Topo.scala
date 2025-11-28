@@ -104,12 +104,14 @@ class BlobVe(val muis:BoolV with carrySysInstr,brdE:BoolE, brdVe:BoolVe) extends
   val meetV: BoolV = ((nbCc > 1) & (nbCc<3)) // | meetVinit //makes an implicit conversion of nbCh from unsigned int to signed int. shoudl take into acount only nbch$1
   val upwardSelle:BoolE =inside(apexE(shrink(brdVe))) //les deux vertex lointaint du losange sont strictement plus loin
   val downwardSelle:BoolE= ~brdE //les deux vertex proches du losange sont a la meme distance
-  val selle=upwardSelle&downwardSelle
+  val brdEsrc=exist(transfer(e(muis)))
+  val selle=upwardSelle&downwardSelle & ~brdEsrc //selle cannot hapen next to seed. (it could if we did not explicitely forbid it, due to a specific artefact of simultaneously extening and diminishin a dougleton seed, fuck.
    val emptyRhomb:BoolE= ~rhombusExist(brdE) //il y a un gros plateau de distance sur tout le rhombus
   val meetE= selle | emptyRhomb //ca n'est pas un vrai gcenter avec emptyrhomb
 
   override def showMe: Unit = {
     super.showMe
+    shoow(upwardSelle,downwardSelle,emptyRhomb)
     //;shoow(emptyRhomb);shoow(meetE2)
   }
 }
@@ -127,12 +129,13 @@ trait addGcenter{
     /**  silly way of avoiding superposition of agents with Gcenter
      * we just subtract muis from meet2E,
      * we use a val for testing */
-    override val meetE2: ASTLt[V, B] = (super.meetE2 )& ~ thismuis}
+    override val meetE2: ASTLt[V, B] = (super.meetE2 )& ~ thismuis} //ya probablement plus besoin d'enlever thismuis
 
   val gc= new DetectedAgV(bve.meetE2 | bve.meetV) with keepInsideForce {
     override def inputNeighbors = List(d)
   }
 } //todo verifier que override fonctionne
+/** avoid simultaneous emtpy and invade  that can result in creating holes */
 trait blobConstrTrou{
   self: MovableAgV with addBloobV=>
   val videPlein= MutKeepFlipIf(this,Both(),bf.brdE) _ ;  addConstraint("videplein",';',videPlein)}
