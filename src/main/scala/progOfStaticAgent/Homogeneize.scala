@@ -69,7 +69,11 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoow(part.ri.existNearer)
   part.shoow(part.ri.gap)
   part.shoow(part.ri.gapV)
+  part.staat(part.bve.meet, part.d.muis)
   part.staat(part.bve.meetV, part.d.muis)
+ part.staat(part.muis, part.dgv.muis)
+  part.staat(part.bve.meetE2, part.d.muis)
+  part.shoow(part.bve.meetE2)
 }
 
 /** basic quasiparticle with blob and qpoint constraints */
@@ -84,7 +88,8 @@ abstract class Flies2 extends Seed {
 }
 
 /**adds distance, gabriel center,  distance to gabriel center, and then finally repulsive force*/
-class Homogen() extends Flies2 with addDist with addGcenter with addDistGcenter with keepOutsideForce with addVor with addDistGcenterVor
+class Homogen() extends Flies2 with addDist with addGcenter with
+  addDistGcenter with keepOutsideForce with addVor with addDistGcenterVor
 {  /** seed should not overlap gCenters */
    val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
   addConstraint("avoidgc",'g',avoidGc)

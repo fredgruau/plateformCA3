@@ -3,7 +3,7 @@ package simulator
 import compiler.ASTB.False
 import compiler.Locus.locusV
 import compiler.{Locus, V}
-import dataStruc.Util.{deepCopyArray, isEqualto, isMiror, printMat, stats}
+import dataStruc.Util.{deepCopyArray, isEqualto, isMiror, lastSegment, printMat, stats}
 import simulator.CAtype.pointLines
 import simulator.Medium.christal
 import simulator.Util.copyBasic
@@ -234,12 +234,13 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     result
   }
   /** iterate through all the layers for which we should compute statistics */
-  def computeStatistics(): Unit = {
-
-    medium.resetColorTextVoronoi(controller.displayedLocus) //chui pas sur
-    for (isDefined <- controller.partial.keys) { //process fiedls to be displayed, one by one
-
+  def computeStatistics():Boolean = {
+    var text=""
+    var converged=false
+    for (isDefined <- controller.partial.keys) { //process fiedls to be displayed, one by one we do all the stat
+      medium.resetColorTextVoronoi(controller.displayedLocus)
       val valueDefined=controller.partial(isDefined)
+      val namesState = lastSegment(isDefined)+lastSegment(valueDefined)
       val locusDefined: Locus = controller.locusOfDisplayedOrDirectInitField(isDefined)
       val locusValue : Locus = controller.locusOfDisplayedOrDirectInitField(valueDefined)
       assert(locusValue==locusDefined)
@@ -264,14 +265,21 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       println(integers)
         if(integers.nonEmpty)
       {val (mean, stdNorm, minVal, maxVal)=stats(integers)
-         caPannel.updateStat(mean,10*stdNorm, minVal, maxVal)
-
+          text += " "+namesState+":" +f"$stdNorm%.2f"+"/"+ f"$mean%.1f" +  " " +minVal+"<"+maxVal
+          if(lastSegment(isDefined)=="Meet") { //global assesmentt
+             converged=(stdNorm *10 < 2 && stdNorm > 0.01  )
+             if(converged==true)
+               println("tata")
+          }
         //
       //aprés je calcule les stats pour de vrai, ecart type patin coufin
        // for (points <- medium.locusPlane(locusDefined))          medium.statistics( bitIsDefined, points)
-      }}
+      }
+      caPannel.updateStat(text) //on veut deux décimale sur standard deviation
 
+    }
 
+    converged
        //at this stage, the int32 where is defined is true, are set we can collect the values in a list, and then compute statistics
 
 
@@ -282,11 +290,13 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   def play(fwd:Boolean): Unit = {
     val thread = new Thread {
       override def run(): Unit = {
+        var converged=false
         while (controller.isPlaying) //no pause asked by the user, no bugs detected
         { var nbIter = 0;
           val nbLoops=math.pow(2,controller.speedSlider.value)
           while (controller.isPlaying && nbIter < nbLoops ) // display every 2^speedSlider.value
-          {if(fwd) forward() else backward(1);
+          {if(fwd) converged=forward()
+          else backward(1);
             nbIter+=1
             if (bugs.size > 0)
               controller.isPlaying = false;
@@ -306,11 +316,11 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   /** contains locus of bug */
   var lociBug:Set[Locus]=immutable.HashSet()
   /** does one CA iteration on the memory */
-  def forward(): Unit = {
+  def forward(): Boolean = {
     //  controller.progCA.anchorFieldInMem(mem) //todo a refaire seulement si meme change (quand on display ou qu'on display plus)
     bugs = controller.progCA.theLoops(medium.propagate4Shift, mem).asScala //we retrieve wether there was a bug
     t += 1
-    computeStatistics()
+    val converged =computeStatistics()
     if (bugs.nonEmpty) {  //we set the locus of bugs
       for(bugName<-bugs) {
        val  locusBug=controller.progCA.fieldLocus.asScala(bugName)
@@ -321,8 +331,9 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       controller.checkNewLocus(lociBug) //marche meme si y a plusieurs bug différent détecté en meme temps.
       val i=0
     }
-    iterationLabel.text="" + t
+    iterationLabel.text="t=" + t
     cache.push(deepCopyArray( mem))
+    converged
   }
 
   /** @param nbIter number of iteration steps

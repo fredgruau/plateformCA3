@@ -125,12 +125,12 @@ class BlobVe(val muis:BoolV with carrySysInstr,brdE:BoolE, brdVe:BoolVe) extends
 trait addGcenter{
   self: MovableAgV with addBlobVfields with addDist=>
   val thismuis=muis
-  val bve=new BlobVe(muis,d.voisinDiff,  d.sloplt){
+  val bve=new BlobVe(muis,~d.level,  d.sloplt){
     /**  silly way of avoiding superposition of agents with Gcenter
      * we just subtract muis from meet2E,
      * we use a val for testing */
-    override val meetE2: ASTLt[V, B] = (super.meetE2 )& ~ thismuis} //ya probablement plus besoin d'enlever thismuis
-
+    override val meetE2: ASTLt[V, B] = (super.meetE2 ) //& ~ thismuis ya probablement plus besoin d'enlever thismuis
+  }
   val gc= new DetectedAgV(bve.meetE2 | bve.meetV) with keepInsideForce {
     override def inputNeighbors = List(d)
   }

@@ -174,10 +174,7 @@ object Simulator extends SimpleSwingApplication {
           /** allows to add widjet for each CA, such as the time */ {
 
 
-          def updateStat(mean:Double,stdNorm:Double, minVal:Int, maxVal:Int) = {
-            stat.text = " stat "+f"$mean%.1f" + "_"+ f"$stdNorm%.1f"+ " " +minVal+"<"+maxVal
-            //  s"stat:%.1f${mean}-${stdNorm}"
-          }
+          def updateStat(s:String) = {stat.text = s  }
 
         }
           val numberPannel=new BoxPanel(Orientation.Horizontal) {

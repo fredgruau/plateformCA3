@@ -28,11 +28,9 @@
       </expandedLayer>
         <colorOfField>
           <layer color="0x000000">
-            homogeneizePartDMuis
+            homogeneizePartDgvMuis
           </layer><layer color="0xFFC800">
             homogeneizePartIsv
-          </layer><layer color="0x8000FF">
-            homogeneizePartSfStablesimple2
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
           </layer>
