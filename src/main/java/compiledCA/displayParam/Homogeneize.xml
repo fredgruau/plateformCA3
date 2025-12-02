@@ -27,12 +27,14 @@
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0x000000">
+          <layer color="0xFF0000">
+            homogeneizePartVorIsv
+          </layer><layer color="0x000000">
             homogeneizePartDgvMuis
           </layer><layer color="0xFFC800">
             homogeneizePartIsv
-          </layer><layer color="0xFF0000">
-            homogeneizePartVorIsv
+          </layer><layer color="0xFFFF00">
+            homogeneizePartRiMuis
           </layer>
         </colorOfField>
       </displayParam>

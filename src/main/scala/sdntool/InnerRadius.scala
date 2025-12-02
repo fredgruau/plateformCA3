@@ -25,20 +25,28 @@ object InnerRadius{
  *   we could but we actually do not take the time to compute the min, we consider only the min, as seen from neighbors.
  *  the class computes an additional layer which broadcaste the radius throughout the voronoi cell.
  */
-class InnerRadius ( val source:MuStruct [V,B], val d:Dist,val dgv:Dist) extends MuStruct [V,SI]{
+class InnerRadius ( val source:MuStruct [V,B], val d:SiField,val dgv:Dist) extends MuStruct [V,SI]{
   override def inputNeighbors: List[MuStruct[_ <: Locus, _ <: Ring]] = List(source,d,dgv)
+  /** nearer alone may sometimes be all 0 if we are next to particle support. In this spécific case, we have thus to include the particle support   */
   val nearer=d.sloplt |  neighborsSym(e(source.muis))
   val existNearer=exist(nearer)
   var gapV:BoolV=null
+  /** the layer itself */
   override val muis: LayerS[V, SI] = new LayerS[V, SI](MuDistGcenterVor.nbit, "0") //we first put 5 bits so as to obtain continuity but 3 bits suffice at the end
-  { val zero:SintV=fromInt(0)
+  { /** near the source, rin will follow distance to voronoi, so we have to check the difference */
     val diffRdgv= (dgv.muis + (-2)) - pred
-    /** si gapV devient vrai ca merde */
-    gapV=eq0(diffRdgv + 4)|eq0(diffRdgv + 3)
+    /** that difference cannot be 4, otherwise comparison is not possible */
+    val fucked=eq0(diffRdgv + 4)
+    /** neither can it be three, because dgv can change simultaneously with rin */
+    val couldBeFucked=eq0(diffRdgv + 3)
+    gapV=fucked | couldBeFucked
+    /** used to update rin when on particle support */
     val sgndiffRdgv=sign(diffRdgv)
-    //on met zero si il n'existe pas encore de nearer. sauf que nearer considére aussi les voisin particule
-    // override val next: AST[(V, SI)] = delayedL(cond(source.muis, this.pred + sgndiffRdgv, cond(/*d.*/existNearer,this.pred + incr, zero) ))
-    val incr2=delayedL(cond(source.muis,sgndiffRdgv, incr))
+    /** as for mudit, setting radius to dgv on source's support is done incrementally, by adding the sign of the difference */
+     val incr2=delayedL(cond(source.muis,sgndiffRdgv, incr))
+    /** Radius is initialized to zero, at the very start, when there is no nearer */
+    val zero:SintV=fromInt(0)
+    /** instead of adding incr which takes care of the case far */
     override val next: AST[(V, SI)] = cond(existNearer|source.muis, this.pred +  incr2, zero)
   }
   source match{
@@ -58,25 +66,18 @@ class InnerRadius ( val source:MuStruct [V,B], val d:Dist,val dgv:Dist) extends 
   val gap: BoolE = eq0(grad3 + 4) //  gap is true iff the two neighbors cannot be compared
   val grad6: IntEv = send(List(-grad3, grad3))
 
-  /** 1 is neutral for min*/
+  /** we do the min only on nearer,  1 is neutral for min*/
   val sgnLt:IntVe= cond(/*d.sloplt*/nearer,sign(transfer(grad6)),extend(2,fromInt(1))) // on regarde les voisins plus proche de particule
-  val sgnMinLt: IntV = reduce(minSignRedop, sgnLt) //we need to add 2, using one more bit, in order to add modulo 16 and not 8
-  /** -1 is neutral for max */
-  val sgngradm2=sign(extend(7, transfer(grad6)) + (-2) )//on regarde tous  les voisin qui sont a un delta au moins de 2 voir 3
-  /** sign pulled up by neighbor having high radius.  */
-  val sgnMaxVor: IntV = reduce(maxSignRedop, sgngradm2) //on regarde tous  les voisin qui sont a un delta au moins de 2 voir 3
-  /** pulls radius on voronoi towards radius of dominant voronoi neighbor (dominant= the one with biggest radius) */
+  val minSignLt: IntV = reduce(minSignRedop, sgnLt) //we need to add 2, using one more bit, in order to add modulo 16 and not 8
+  /** sign which allows neighbors having high radius, to pull up the radius,
+   * by considering delta in the window 3,2,1  causing  a positive (resp null, resp negative sign */
+  val signGradm2=sign(extend(7, transfer(grad6)) + (-2) )//on regarde tous  les voisin qui sont a un delta au moins de 2 voir 3
+  /** pulls radius of a voronoi cell towards radius of dominant voronoi neighbor (dominant= the one with biggest radius) */
+  val maxSignGradm2: IntV = reduce(maxSignRedop, signGradm2) //on regarde tous  les voisin qui sont a un delta au moins de 2 voir 3
 
-  //val sgngradm2Gt:IntVe= cond(d.slopgt,sgngradm2,fromInt(-1)) //todo 7 ca a l'air vachement trop grand
-  // val sgnMaxGt=reduce(maxSignRedop, sgngradm2Gt)
-  //val sgnMax=cond(d.existFurther,sgnMaxGt,sgnMaxVor)
 
-  // val maxltgt=binop(maxSign,sgnMax,sgnMinLt)
-  val maxltgt=binop(maxSign,sgnMaxVor,sgnMinLt)
-  //val incr=extend(4,maxltgt)  //on  ajoute un signe sur deux bit, a un int sur 3 bits.
-  val incr=maxltgt //on  ajoute un signe sur deux bit, a un int sur 3 bits.
-  // val incr=maxltgt  //on  ajoute un signe sur deux bit, a un int sur 3 bits.
-  /** support of agent, implemented as a layer. we also use it to store a list  of system instructions */
+  val incr=binop(maxSign,maxSignGradm2,minSignLt)
+
 }
 /** adds  inner Radius to particles */
 trait addRadius {

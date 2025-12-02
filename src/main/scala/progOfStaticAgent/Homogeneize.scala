@@ -14,7 +14,7 @@ import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, sm
 import sdn.MuStruct.{setFlipSynced, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
 import sdn.Util.{addLt, addSym}
 import sdn._
-import sdntool.{addDist, addDistGcenter, addDistGcenterVor, addRadius}
+import sdntool.{addDist,  addDistGcenterVor, addRadius}
 
 /**illustrate the working of repulsion combined with exploration  */
 class Homogeneize() extends LDAG with Named with BranchNamed
@@ -48,8 +48,8 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoow( part.dgv.gap, part.dgv.sloplt, part.dgv.level, part.dgv.vortex) // necessary so as to use all parameters returned by slopeDeltashoow(vortex)
   part.shoowText(part.dgv.deltag,List())
   part.shoowText(part.dgv.muis, List())
-  part.shoow( part.dg.gap, part.dg.sloplt, part.dg.level, part.dg.vortex) // necessary so as to use all parameters returned by slopeDeltashoow(vortex)
-  part.shoowText(part.dg.deltag,List())
+ // part.shoow( part.dg.gap, part.dg.sloplt, part.dg.level, part.dg.vortex) // necessary so as to use all parameters returned by slopeDeltashoow(vortex)
+ // part.shoowText(part.dg.deltag,List())
 //  part.shoowText(part.dg.muis, List())
   //part.dg.showMe;part.dgv.showMe
  part.gc.showme
@@ -61,10 +61,10 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoow(part.sf.stableSimple);  part.shoow(part.sf.stableSimple2)
   // part.shoow(part.sf.stable2)
     part.shoow(part.ri.muis)
-  part.shoowText(part.ri.sgnMaxVor,List())
-  part.shoowText(part.ri.sgnMinLt,List())
-  part.shoowText(part.ri.maxltgt,List())
-  part.shoow(part.ri.sgngradm2)
+  part.shoowText(part.ri.maxSignGradm2,List())
+  part.shoowText(part.ri.minSignLt,List())
+  part.shoowText(part.ri.incr,List())
+  part.shoow(part.ri.signGradm2)
   part.shoow(part.ri.nearer)
   part.shoow(part.ri.existNearer)
   part.shoow(part.ri.gap)
@@ -88,8 +88,7 @@ abstract class Flies2 extends Seed {
 }
 
 /**adds distance, gabriel center,  distance to gabriel center, and then finally repulsive force*/
-class Homogen() extends Flies2 with addDist with addGcenter with
-  addDistGcenter with keepOutsideForce with addVor with addDistGcenterVor
+class Homogen() extends Flies2 with addDist with addGcenter with keepOutsideForce with addVor with addDistGcenterVor
 {  /** seed should not overlap gCenters */
    val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
   addConstraint("avoidgc",'g',avoidGc)
@@ -142,7 +141,7 @@ class Convergent extends Homogen with addRadius // with Lead //pas besoin de lea
 {  val sf=new Attributs() { //sf==stableFields
   override val muis: ASTLg with carrySysInstr = Convergent.this.muis
   /** border of qparticle  where dg diminishes */
-  val brdVeSloped=bf.brdVeIn & dg.sloplt
+  val brdVeSloped=bf.brdVeIn & dgv.sloplt
   /** around isV, adds Vertices on the otherside of brdVeslopped */
   val isVplus=isV | exist(transfer(sym(transfer(brdVeSloped))))
   /** add vertex  if three neighbors are on */
