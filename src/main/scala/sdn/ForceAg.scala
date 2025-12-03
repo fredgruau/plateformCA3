@@ -63,7 +63,8 @@ abstract class Agent[L <: Locus] extends MuStruct[L, B] with HasIsV {
     deflipSync= isV & ~isV  //on part de falseV
     checkInvariantSync
     //on va visiter tout les agent borné par l'agent courant, pour calculer le deflipSync de l'agent courant
-    for((_,c)<-constrsync)    deflipSync=deflipSync | c.zoneSync & c.cancel(flipAfterConstr,c.bounded.flipAfterSync)
+    for((_,c)<-constrsync)
+      deflipSync=deflipSync | c.zoneSync & c.cancel(flipAfterConstr,c.bounded.flipAfterSync)
     //to do, faudrait faire évoluer flipAfterConstr on se rends compte déja la que il faut considérer des chemins.
     flipAfterSync=flipAfterConstr & ~ deflipSync
     /** we can verify  deflipSync is false, for detected agents such as gcenter */
@@ -155,6 +156,8 @@ abstract class DetectedAgV ( val detected: BoolV )  extends Agent[V] {
   override def checkInvariantSync: Unit = {
     super.checkInvariantSync
     buugif(deflipSync) //synchronisation should not disturb the completely deterministic movement of a detected agent.
+    //it should never happen that a failure of flip of voronoi due for example to blob constraints, causes a failure of flip of
+    //gabriel centers.
   }
 }
 
@@ -223,6 +226,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    def allFlip:UintV
   //variable defined when computing fliprioOfMove
    var isQuiescent:BoolV=null
+   var yesnoHighestTriggered:UintV=null
    var yesHighestTriggered:UintV=null
    var allBugs:UintV=null
    /**  adds a bit of randomnes to forces's priority
@@ -244,8 +248,10 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
        val filled=orScanRight(all)
        (filled,unop(derivative, filled),unary2Bin(filled))
      }
-     val (filledTriggered,/** all false except for highest priority move */ highestTriggered, prioDet: UintV) =
+     val (filledTriggered,/** all false except for highest priority move */ highestTriggered, prioDet: UintV) = {
        processMoves(allTriggered)
+     }
+     yesnoHighestTriggered=highestTriggered
      /** selectionne le flip parmis les flip des mouvement proposés */
      val flipOfMove = neq(highestTriggered & allFlip)
 
@@ -327,6 +333,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    /** will show only move that trigger movement. Move that "block" movement are hidden,  */
    def showPositiveMoves={
      shoowText(yesHighestTriggered,codeMove.toList)
+     shoowText(yesnoHighestTriggered,codeMove.toList)
      // shoowText(prioDeet,List())
      shoowText(allBugs,codeMove.toList)
    }

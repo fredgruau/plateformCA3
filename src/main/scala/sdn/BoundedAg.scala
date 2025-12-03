@@ -46,7 +46,7 @@ abstract class BoundedAgV(init:String, val bounding: Aggg , val follows:Force )
   override def allForces: ArrayBuffer[mutable.LinkedHashMap[String, Force]] = {
     val copy = forces.clone()   // nouvelle instance
     val nbforces=forces.size
-    priorityObliged=nbforces //will be available in time!
+    priorityObliged=nbforces //priority of the follow force
     copy+= mutable.LinkedHashMap[String,Force]();
     copy(nbforces)("!follows")=follows
     moves+= mutable.LinkedHashMap[String,MoveC]();
@@ -57,35 +57,32 @@ abstract class BoundedAgV(init:String, val bounding: Aggg , val follows:Force )
   //on calcule isForced au plus tot, dés qu'on a yesHighestTriggered
   override def setFliprioOfMove(): Unit = { super.setFliprioOfMove();isForced=yesHighestTriggered>fromInt(1)  }
   override def  flipRandomlyCanceled=   cond(isForced, flipAfterSync,super.flipRandomlyCanceled)
- /* override def  flipRandomlyCanceled={
-    println("totototototototo");    println("totototototototo")
-    isForced=yesHighestTriggered>fromInt(priorityObliged)
-    cond(isForced, flipAfterSync,super.flipRandomlyCanceled)
-  }*/
-  //& highproba //decommenter pour annuler au hasard, utilise pour casser les cycles
-  //bounding.addConstrSync("toto",'w', new ConstrSyncImply(bounding,this,~bounding.isV & ~this.isV /* ~ bounding.isV & this.isV */))
-
 }
-/** voronoi is our first instance of partially  bounded agents, so we define it here, allthough we should modify the code
- * so as to faire entrer en scéne bounded agent. */
-class Vor(h:MovableAgV with addDist with addGcenter with keepOutsideForce )
-  extends BoundedAgV("globalInv", h.gc,h.gc.keepInside ) with MovableAgV with addBloobV with blobConstrain with blobConstrTrou
-{  override def inputNeighbors=List(h.gc,h.d)
+/** voronoi is our first instance of partially  bounded agents, so we define it here, it is our first bounded agent. */
+class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/ )
+  extends BoundedAgV("globalInv", part.gc,part.gc.keepInside ) with MovableAgV with addBloobV with blobConstrain with blobConstrTrou
+{  override def inputNeighbors=List(part.gc,part.d)
   /** illustrates how to print stuff */var tmp:BoolV=null;
   /** priority of "obliged" force */
-   force(introduceNewPriority(),"repulse",'|',h.d.repulseVor)//specific forces applied to Flies
+   force(introduceNewPriority(),"repulse",'|',part.d.repulseVor)//specific forces applied to Flies
   /** donotcover part turns out not to be necessary; indeed, particle will not overlap gcenter,
    * and that alone is sufficient to ensure that part very rarely overlap voronoi
    *  when it does it, in very dense condition, this does not last long*/
   //force(introduceNewPriority(),"donotCoverPart",'<',h.keepOutside) h.addConstrSync(new ConstrSyncImply(this,h, ~ h.isV & this.isV ))
-  //on zone sync equals no gcenter and no voronoi, apparition of gcenter (flip) implies apparition of voronoi.
-  h.gc.addConstrSync("toto",'w', new ConstrSyncImply(h.gc,this,~h.gc.isV & ~this.isV))
+
+  //zone sync equals no gcenter and no voronoi,
+  // on this zone, apparition of gcenter (flip) implies also apparition of voronoi (flip).
+  // on this zone, if the particle deflip, so should do the gabriel center, although it cannot, (so it triggers a bug).
+  part.gc.addConstrSync("toto",'w', new ConstrSyncImply(part.gc,this,~part.gc.isV & ~this.isV))
+  // the slow constraints emited by radius hits the particle not the voronoi.
+  // the slow constraints emitted by Mudist(voronoi) does hit the voronoi, we should check that it does not transfer to
+  // the gcenter. let us display the
 
 }
 
 
 trait addVor {
-  self:MovableAgV with addDist  with addGcenter with keepOutsideForce=>
+  self:MovableAgV with addDist  with addGcenter /*with keepOutsideForce*/=>
   val vor=new Vor(this)
 }
 

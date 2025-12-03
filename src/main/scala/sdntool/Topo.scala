@@ -95,7 +95,7 @@ class BlobV(val muis:BoolV with carrySysInstr,f:BlobVFields) extends Blob  {
 trait addBloobV{ self: MovableAgV with addBlobVfields =>val b=new BlobV(muis,bf)}
 /** endows  a  BoolVe COMMING AS THE SLOPELT OF  A DISTANCE with  its  meeting points
  * those meeting points correspond to the gabriel centers.
- * It computes first a borderE, muis is passed for the sole pupose of enabling shoow */
+ * It computes first a borderE, muis is passed for the sole purpose of enabling shoow */
 class BlobVe(val muis:BoolV with carrySysInstr,brdE:BoolE, brdVe:BoolVe) extends Blob{
   val nbCc: UintV = nbccVe(brdVe) //nbcc 's computation is refined compared to BlobV, and BlobE
   val vf: BoolVf = cac(ASTBfun.delta, brdVe)/**  true if all neighbors are at equal distance which happen for a PE is encicled by an hexagon of seeds at distance 2, or a the very begining*/

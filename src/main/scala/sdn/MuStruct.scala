@@ -86,7 +86,8 @@ object MuStruct{
     case _ =>
   }
   /** for the moment we go reverse, and  update the synced flip of  inputAgent which is stored in the constraint itself, as a destination*/
-  def setFlipSynced()=  for(m<-allMuStruct.reverse) m match {
+  def setFlipSynced()=
+    for(m<-allMuStruct.reverse) m match {
     case a:Aggg=>
       a.setFlipSync()
     case _ =>

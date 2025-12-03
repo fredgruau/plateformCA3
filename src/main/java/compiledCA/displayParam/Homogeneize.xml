@@ -1,7 +1,7 @@
 <displayParam>
         <expandedLayer>
         <Layer>
-          homogeneizePartBve
+          homogeneizePartVorFlipafterlocalconstr
         </Layer><Layer>
           homogeneizePartVorFlipaftermutexconstr
         </Layer><Layer>
@@ -11,15 +11,11 @@
         </Layer><Layer>
           homogeneizePartFliprioofmove
         </Layer><Layer>
-          homogeneizePartDgv
-        </Layer><Layer>
           homogeneizePart
         </Layer><Layer>
-          homogeneizePartD
+          homogeneizePartGc
         </Layer><Layer>
-          homogeneizePartVorFlipafterlocalconstr
-        </Layer><Layer>
-          homogeneizePartSf
+          homogeneizePartSu
         </Layer><Layer>
           homogeneizePartVor
         </Layer><Layer>
@@ -27,14 +23,16 @@
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0xFF0000">
-            homogeneizePartVorIsv
+          <layer color="0x80FF00">
+            homogeneizePartSuIssummit
           </layer><layer color="0x000000">
-            homogeneizePartDgvMuis
+            homogeneizePartVorAllfliplocalcanceled
+          </layer><layer color="0xFF0000">
+            homogeneizePartVorIsv
+          </layer><layer color="0xFFFF00">
+            homogeneizePartGcDeflipsync
           </layer><layer color="0xFFC800">
             homogeneizePartIsv
-          </layer><layer color="0xFFFF00">
-            homogeneizePartRiMuis
           </layer>
         </colorOfField>
       </displayParam>
