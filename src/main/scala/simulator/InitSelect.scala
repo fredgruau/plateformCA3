@@ -99,10 +99,12 @@ trait InitSelect {
   }
   private lazy val borderInit: InitMaald = new InitMaald(1) {
     for (i <- 0 until nbLine) {
-      setBoolVField(i, 0); setBoolVField(i, nbCol - 1)
+      setBoolVField(i, 0);if(i%2==1) setBoolVField(i, nbCol - 3)
+      setBoolVField(i, 1); setBoolVField(i, nbCol - 2)
     }
     for (i <- 0 until nbCol) {
       setBoolVField(0, i); setBoolVField(nbLine - 1, i)
+      setBoolVField(1, i); setBoolVField(nbLine - 2, i)
     }
   }
   private lazy val symInit: InitMaald = new InitMaald(1) {

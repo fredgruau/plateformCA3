@@ -34,8 +34,10 @@ trait shoow{
     muis.syysInstr ::= CallProc("show", List(), List(v))
     Circuit.labelsOfFieldsBeforeName=Circuit.labelsOfFieldsBeforeName + ((v , ls))
   }
-
-}
+  def shot(vs: AST[_]*)= {
+    for (v <- vs) shoowText(v, List())
+  }
+  }
 
  class LDAG{
   /** this enables to deliver compute root, which is allways the first mustruc*/
@@ -61,7 +63,6 @@ abstract class LayerS[L<:Locus,R<:Ring](override val nbit: Int, override val ini
  * pour cela on mix les trait branchname et name */
 abstract class MuStruct[L<:Locus,R<:Ring] extends  DagNode[MuStruct[_<:Locus,_<:Ring]]
   with Named with BranchNamed with hasMuisSysInstr with shoow {
-  //self: AST[(L,B)] =>
   allMuStruct.append( this) //insert new created muStruct on  last position of already instanciated mu struct
   /** support of agent, implemented as a layer. we also use it to store a list  of system instructions */
 val muis: ASTL.Strate[L,R] with ASTLt[L,R] with carrySysInstr

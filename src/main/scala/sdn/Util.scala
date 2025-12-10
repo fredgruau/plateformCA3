@@ -48,7 +48,8 @@ class Root4naming() extends Named with BranchNamed {
 
   /** random bits  are stored in a mutable hashmap */
   val rands = new mutable.HashMap[Int, UintV]() with Named {}
-
+  val r= addRandBit()
+   def myFalse=delayedL(rands(0).asInstanceOf[BoolV] & ~ rands(0).asInstanceOf[BoolV] ) //faut que y est du rand sinon ca merde
   /** adds a random boolean bit, which will be named */
   def addRandBit(): UintV = {
     val res = new Rand().asInstanceOf[UintV]
@@ -76,7 +77,7 @@ trait ComparDiff[R<:I]{
   /** true if both values are different */
   val diff:BoolE= elt(0,segmentOf1)(new repr(E()),myRing)
   /** true if both values are equal */
-  val eq= not(diff);
+  val eq:BoolE= not(diff);
 }
 
 /** add lt and  gt for only unsinged int, using  segmentof1 already computed in Compardiff, */
@@ -203,5 +204,7 @@ class Rand() extends Layer[(V, B)](1, "random") with ASTLt[V, B]         {
   } //lazy because probably not used
   lazy val randSide: BoolEv = randE2(this) //only qpointRand uses this
 }
+
+
 
 

@@ -11,9 +11,9 @@ import compiler.Circuit.hexagon
 import progOfmacros.Compute._
 import progOfmacros.Wrapper.{borderS, not, segment1}
 
+/** contient des operateurs utilisant le gradient, compilé comme des macro de plusieurs centaines de gates
+ * dans le module java miroir, java/compiledMacro */
 object Grad {
-
-
   type siFieldOperator=Fundef1[(V, SI), ((T[V, E], B), ((V, SI), ((E, B), (E, B))))]
 
   type siFieldOperatorProp=Fundef2[(V, SI), (T[V, E], B), ((T[V, E], B), ((V, SI), ((E, B), (E, B))))]
@@ -75,10 +75,10 @@ object Grad {
     //neighbors are equal if neither lt nor gt
     val slopgt: BoolVe = transfer(slopEv)
     val level: BoolE = ~reduce(orRedop[B], slopEv)
-
-
     // pour propager radius, on regarde les voisins plus proche de particule si y en pas
     // (a cause d'un vidage et remplisage simultané ) on regarde les vertices voising dans le support d'une particule.
+    // ben si y en a toujours pas, on met une valeur par défaut:0, c'est la valeur qui va débarquer lorsque finalement
+    // radiusIn sera definissable
 
     /** we do the min only on nearer,  1 is neutral for min*/
     val sgnLt:IntVe= cond(srcPropag,sign(transfer(grad6)),extend(2,fromInt(1)))
@@ -94,8 +94,6 @@ object Grad {
     level.setName("level"); grad3.setName("grad");    slopgt.setName("slop");    delta.setName("delta");
     Fundef2("grad.slopDeltaRadius", Cons(slopgt, Cons(delta, Cons(level, gap))), r,srcPropag)
   }
-
-
 
   /** Calls a gradient operator that return four fields, used to compute a SIfield */
   def slopDeltaDist(d: IntV): (BoolVe, IntV, BoolE, BoolE) = {
@@ -133,32 +131,6 @@ object Grad {
     val e4 = new Taail(t2) with BoolE
     (e1, e2, e3, e4)
   }
-
-
-
-
-  /*val propagateRadiusDef: Fundef1[(V, SI), ((T[V, E], B), ((V, SI), ((E, B), (E, B))))] =  {
-    val d = pL[V, SI]("dis")
-    val dopp = -d
-    val se: IntVe = send(List(d, d, d, dopp, dopp, dopp)) //we  apply an opp on distances comming from the center.
-    val grad3: IntE = reduce(addRedop[SI].asInstanceOf[redop[SI]], transfer(se)) //the trick here is to do the expensive operation (add) only on the three edges locus, instead of the 6 Ve transfer
-    val gap: BoolE = eq0(grad3 + 4) //  gap is true iff the two neighbors cannot be compared
-    val grad6: IntEv = send(List(-grad3, grad3))
-
-
-    val slopEv: BoolEv = ltSI(grad6) //when sending back the result to EV, we have to invert again towards the center
-    val slopgt: BoolVe = cond(chip.borderVe.df, transfer(slopEv), false) //faut definir ckispasse au bord. we put zero if undefined
-    val level: BoolE = ~reduce(orRedop[B], slopEv) //its equal if it is neither lt nor gt
-    //val delta: IntV = reduce(minSignRedop, sign(extend(4, transfer(grad6)) + 2)) //we need to add 2, using one more bit, in order to add modulo 16 and not 8
-    val delta: IntV = reduce(minSignRedop, sign(extend(7, transfer(grad6)) + 2)) //we need to add 2, using one more bit, in order to add modulo 16 and not 8
-    //show(opp) //breaks a cycle
-    level.setName("level"); //vortex.setName("vortex")
-    grad3.setName("grad");
-    slopgt.setName("slop");
-    delta.setName("delta");
-    Fundef1("grad.slopDelta", Cons(slopgt, Cons(delta, Cons(level, gap))), d)
-  }*/
-
 
   /** former way of computing together both lt and eq, may be not so bad, but eq has to be used, which is prone to error
    * because quite often we are only interested by lt
@@ -240,7 +212,6 @@ object Grad {
   def ltApex(d: UintV,s:UintE)(implicit n: repr[B],l:repr[T[E,V]]): BoolEf = {
     new Call2[(V,UI),(E,UI),(T[E, F], B)] (ltDefApex, d,s)with BoolEf
   }
-
 
   val ltDefApex2: Fundef3[(T[E, F], UI),(E, UI), (E, B),(T[E, F], B) ] =  {
     /** main variable that we want to compare */

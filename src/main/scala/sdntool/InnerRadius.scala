@@ -2,21 +2,23 @@ package sdntool
 
 import compiler.ASTBfun.{addRedop, maxSign, maxSignRedop, minSignRedop, redop, xorRedop}
 import compiler.ASTL.{binop, delayedL, send, transfer}
-import compiler.ASTLfun.{andR, cond, e, eq0, extend, fromInt, reduce, sign}
+import compiler.ASTLfun.{andR, cond, e, eq0, extend, fromInt, ltSI, reduce, sign}
 import compiler.SpatialType.{BoolE, BoolF, BoolV, BoolVe, IntE, IntEv, IntV, IntVe, SintV}
 import compiler.{AST, ASTLfun, ASTLt, B, Locus, Ring, SI, V, chip}
-import progOfmacros.Comm.neighborsSym
+import progOfStaticAgent.Homogeneize
+import progOfmacros.Comm.{insideBall, neighborsSym}
 import progOfmacros.Grad.{deltaCallProp, siFieldOperatorProp, slopeDeltaDistDef, slopeDeltaRadiusDef}
 import progOfmacros.RedT.cacEndomorph
 import progOfmacros.Wrapper.exist
 import sdn.{CancelFlipIf, LayerS, MovableAgV, MuStruct, One}
 
-object InnerRadius{
-  /** we use the same number of bits for radius, as for distance to gcenter and voronoi.  */
-  val nbit=MuDistGcenterVor.nbit
-}
-
-
+/**
+ *
+ * @param n number of bits
+ * @param source place where target on source should be targeted
+ * @param srcProp points to source for propagation
+ * @param op operator. this class is a wrapper for that operator siFieldOperatorProp,
+ *  which computes all what's needed to compute for an integer layers */
 abstract class SiFieldZeroInit2(n:Int,  source: MuStruct[V, B], srcProp:BoolVe , op:siFieldOperatorProp)extends MuStruct [V,SI] {
   val targetOnSource: ASTLt[V, SI]
   val zero:SintV=fromInt(0);
@@ -26,7 +28,7 @@ abstract class SiFieldZeroInit2(n:Int,  source: MuStruct[V, B], srcProp:BoolVe ,
   /** slopelt retrieves the sign of the slope, which is allways needed, delta is 0, +1 ot -1  we update with small delta:either increment or decrement */
   val (sloplt: BoolVe, delta, level, gap) = deltaCallProp(muis.pred,srcProp,op)
   val slopgt = neighborsSym(sloplt);  val existNearer = exist(sloplt);  val existFurther = exist(slopgt);
-  val opp = -(muis)  //todo opp can be retrieved from deltaCall
+  val opp = -(muis)  //todo opp can be retrieved from deltaCallProp, it spared computation and factorize code
   /** spurious vortex occurs outside chip.borderF.df, so we have to and with chip.borderF.df in order to prevent false detection of vortex bug */
   val vortex: BoolF =   chip.borderF.df & andR(transfer(cacEndomorph(xorRedop[B]._1, sloplt)))
   /** same story with gap*/   val gap2=gap & chip.borderE.df
@@ -35,11 +37,8 @@ abstract class SiFieldZeroInit2(n:Int,  source: MuStruct[V, B], srcProp:BoolVe ,
      shoow (vortex) ;  shoow( gap2)
   }
 }
-
-
-
-class InnerRadius(source: MuStruct[V, B], val d:SiField, val dgv:MuDist)
-  extends SiFieldZeroInit2(MuDistGcenterVor.nbit,
+class InnerRadius(source: MuStruct[V, B], val d:MuDist, val dgv:MuDist)
+  extends SiFieldZeroInit2(Homogeneize.nbitRi,
     source ,d.sloplt|neighborsSym(e(source.muis)),
     slopeDeltaRadiusDef  ) {
   /** pour propager radius, on regarde les voisins plus proche de particule si y en pas
@@ -47,7 +46,6 @@ class InnerRadius(source: MuStruct[V, B], val d:SiField, val dgv:MuDist)
   var forbidden: BoolV = null
   override def inputNeighbors: List[MuStruct[_ <: Locus, _ <: Ring]] = List(source)
   override val targetOnSource: ASTLt[V, SI] = (dgv.muis + (-2)) - muis
-
   source match{
     case ag: sdn.ForceAg[V]=> //adds a slow constraint to avoid vortex creation
       val fucked=eq0(targetOnSource + 4)
@@ -60,8 +58,8 @@ class InnerRadius(source: MuStruct[V, B], val d:SiField, val dgv:MuDist)
       ag.addConstraint("slov",'v',slow)
     case _ =>
   }
-  /* override def showMe={super.showMe; shoow(testLevel)}
-   // val deefF=new ConstLayer[F, B](1, "def") //we sometimes need to restrict*/
+
+  override def showMe: Unit = {super.showMe;  }
 }
 
 

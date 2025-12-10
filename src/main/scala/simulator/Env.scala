@@ -63,7 +63,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     val toto=controller.progCA.init().keys
     for (layerName: String <- controller.progCA.init().keys) { //iterate over the layers to be initalized
       /** fields layerName's components */
-        //if(layerName.startsWith("llhomogeneizePartGcIsv"))
+        if(layerName.startsWith("llhomogeneizePartVorIsv"))
+          println("llhomogeneizePartVorIsv")
 
       val memFields2Init: Seq[Array[Int]] = memFields(layerName) //gets the memory plane
       val initNameFinal = initName.getOrElse(layerName, controller.initName(layerName)) //either it is the root layer or we find it in env
@@ -75,7 +76,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
         controller.locusOfDisplayedOrDirectInitField(layerName), // locus is passed. It is used in def/center/yaxis
         controller.bitSizeDisplayedOrDirectInitField.getOrElse(layerName, 1),
         controller.density ,inverted     ) // bitsize  is passed.
-      //if(layerName.startsWith("lldefVe"))     println("lldefVe")
+      if(layerName.startsWith("llhomogeneizePartVorIsv"))
+        println("lldefVe")
       initMethod.init(memFields2Init.toArray)
       val u=0
     }

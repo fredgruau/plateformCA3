@@ -3,36 +3,50 @@
         <Layer>
           homogeneizePartVorFlipafterlocalconstr
         </Layer><Layer>
+          homogeneizePartBve
+        </Layer><Layer>
+          homogeneizePartVor
+        </Layer><Layer>
           homogeneizePartVorFlipaftermutexconstr
-        </Layer><Layer>
-          homogeneizePartVorFliprioofmove
-        </Layer><Layer>
-          homogeneize
         </Layer><Layer>
           homogeneizePartFliprioofmove
         </Layer><Layer>
           homogeneizePart
         </Layer><Layer>
-          homogeneizePartGc
-        </Layer><Layer>
           homogeneizePartSu
         </Layer><Layer>
-          homogeneizePartVor
+          homogeneizePartMergedmovesyyyseizeNo
         </Layer><Layer>
-          homogeneizePartRi
+          homogeneizePartZ
+        </Layer><Layer>
+          homogeneizePartVorFliprioofmove
+        </Layer><Layer>
+          homogeneize
+        </Layer><Layer>
+          homogeneizePartMergedmovesyyyseizeYes
+        </Layer><Layer>
+          homogeneizePartInbl
+        </Layer><Layer>
+          homogeneizePartZlt
+        </Layer><Layer>
+          homogeneizePartMergedmovesyyyseize
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0x80FF00">
+          <layer color="0x0000FF">
+            homogeneizePartZltStarte
+          </layer><layer color="0x00FF00">
             homogeneizePartSuIssummit
-          </layer><layer color="0x000000">
-            homogeneizePartVorAllfliplocalcanceled
+          </layer><layer color="0xFFFF00">
+            homogeneizePartZltStartv
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
-          </layer><layer color="0xFFFF00">
-            homogeneizePartGcDeflipsync
-          </layer><layer color="0xFFC800">
+          </layer><layer color="0xFF0080">
+            homogeneizePartZltMuis
+          </layer><layer color="0x80FF00">
             homogeneizePartIsv
+          </layer><layer color="0x00FFFF">
+            homogeneizePartInblMuis
           </layer>
         </colorOfField>
       </displayParam>

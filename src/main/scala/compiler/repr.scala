@@ -43,6 +43,7 @@ object chip {
   implicit val borderE = new chips[E](new ConstLayer[E, B](1, "def"))
   implicit val borderF = new chips[F](new ConstLayer[F, B](1, "def"))
   //todo inclure tout les transfer locus, pas seulement Ve
+  //val thinBorderV=new ConstLayer[V, B](1, "border")
 }
 /** this regroups layers which can be accessed from any macro $m$. the name of val correspond to
  * the name of the parameter in the javaloop method compiled for $m$,

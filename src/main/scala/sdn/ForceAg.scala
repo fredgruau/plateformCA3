@@ -4,7 +4,7 @@ import compiler.AST.Layer
 import compiler.ASTB.{False, Uint}
 import compiler.ASTBfun.{addRedop, derivative, ltUI2, orRedop, redop}
 import compiler.ASTL.{delayedL, send, transfer, unop}
-import compiler.ASTLfun.{allOne, andLB2R, b2SIL, cond, e, eq0, f, fromBool, fromInt, imply, lt2, ltSI, neighbors, neq, orScanRight, reduce, uI2SIL, v}
+import compiler.ASTLfun.{allOne, andLB2R, b2SIL, cond, e, eq0, f,  fromInt, imply, lt2, ltSI, neighbors, neq, orScanRight, reduce, uI2SIL, v}
 import compiler.SpatialType.{BoolE, BoolEv, BoolF, BoolV, BoolVe, BoolVf, IntE, IntEv, IntV, IntVe, UintV, UintVx}
 import compiler.repr.nomE
 import compiler.{AST, ASTLfun, ASTLt, B, E, F, Locus, SI, T, UI, V, chip, repr}
@@ -107,7 +107,7 @@ trait keepInsideForce {
       /** should be true everywhere */
        val oui = MoveC1(~ag.muis & ag.muis, push)
       /** we must not empty voronoi in places where it will contain gcenters*/
-      val non = MoveC1(willBeThere & ag.muis,e(fromBool(false)))
+      val non = MoveC1(willBeThere & ag.muis,e(root4naming.myFalse))
       MoveC2(oui,non)
     }
   }}
@@ -131,7 +131,7 @@ trait keepInsideForce {
       val remainThere  =   muis.pred   & ~fliipAafterCoonstr    //particle was there and remain there, voronoi should not come
 
       /** if not null will create a emptying of  nouveau where ag is filled */
-      val oui = MoveC1(nouveauToEmpty, e(fromBool(false)))
+      val oui = MoveC1(nouveauToEmpty, e(root4naming.myFalse))
       /** we must not push voronoi towards vertices that will contain particles */
         val willbethere=nouveauAfterConstr | remainThere
       val non = MoveC1(muis.pred & ~muis.pred ,ag.bf.brdVeIn & neighborsSym(e(willbethere)))  //particle was there and remain there, voronoi should not come
@@ -144,7 +144,8 @@ trait keepInsideForce {
 /** detected Agents directly compute their next state using a field called "detected"
  * typically, gCenter is a detected agent
  * they are not really agent because they do not undergo forces.
- * we can compute deflipSimult, also for those agents, in order to check that no deflip will apply*/
+ * we can compute deflipSimult, also for those agents, in order to check that no deflip will apply
+ * indeed, if a deflip would apply it would modify the simple detection.*/
 abstract class DetectedAgV ( val detected: BoolV )  extends Agent[V] {
   /** support of agent, implemented as a layer. we also use it to store a list  of system instructions */
   override val muis=new Layer[(V, B)](1, "globalInv") with ASTLt[V,B]  with Stratify [V,B] with carrySysInstr   {

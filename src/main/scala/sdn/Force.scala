@@ -10,6 +10,7 @@ import dataStruc.{BranchNamed, Named}
 import progOfmacros.Comm.neighborsSym
 import progOfmacros.Wrapper.{borderS, exist}
 import progOfmacros.RedT.clock2
+import sdn.Globals.root4naming
 import sdn.Rand
 import sdn.Util.addSym
 /** adds the possibility of using a randomizer */
@@ -25,6 +26,7 @@ trait rando {
  * to move everywhere possible the agent..
  */
 abstract class MoveC extends Named with BranchNamed {
+  def restrict(cond:BoolV):MoveC
   val triggered:BoolV
   /** when computing push, we selected maxprio only among the yes, we do not consider the no */
   val triggeredYes:BoolV
@@ -39,6 +41,8 @@ abstract class MoveC extends Named with BranchNamed {
  */
 case class MoveC1 (val empty: BoolV, val push: BoolVe) extends MoveC{
   def | (that: MoveC1) = MoveC1(empty|that.empty,push|that.push)
+  /* adds a condition to the move*/
+  def restrict(cond:BoolV)= MoveC1(empty & cond,push & e(cond))
   /* convert push to a boolV, true for vertice pointed by one of the push. NB there can be several distinct push
   * to the same single vertice, it is sufficient that there is one.  */
   val invade=exist(neighborsSym(push))
@@ -55,6 +59,7 @@ case class MoveC1 (val empty: BoolV, val push: BoolVe) extends MoveC{
  * @param no for specifying absence of flip ,  using either no.push or no.Empty
  */
 case class MoveC2(val yes:MoveC1,val no:MoveC1) extends MoveC{
+  def restrict(cond:BoolV)=MoveC2(yes.restrict(cond),no.restrict(cond))
   override val triggered = yes.triggered | no.triggered
   val bug= yes.triggered & no.triggered | yes.bug | no.bug
   override val triggeredYes: BoolV = yes.triggered
@@ -66,8 +71,8 @@ case class MoveC2(val yes:MoveC1,val no:MoveC1) extends MoveC{
 
 import ASTLfun._
 object MoveC{
-  def empty(where:BoolV)=MoveC1(where,  false)
-  def push(where:BoolVe)=MoveC1(false, where)
+  def empty(where:BoolV)=MoveC1(where,  e(root4naming.myFalse))
+  def push(where:BoolVe)=MoveC1(root4naming.myFalse, where)
 }
 /** a force is exerted on an's  support and generates a movement */
 abstract class Force extends  Named {
@@ -82,8 +87,22 @@ abstract class Force extends  Named {
     case V() => actionV(ag.asInstanceOf[MovableAgV])
    // case T(V(),E()) => actionVe(ag.asInstanceOf[MovAgVe])
   }
+  val myThis = this
+
 }
 object Force{
+  /**
+   *
+   * @param force to be restricted
+   * @param b
+   * @return restricted force
+   */
+  def restrictF(f:Force,b:BoolV)=new Force {
+    override def actionV(ag: MovableAgV): MoveC = {
+      val mvc = f.actionV(ag).restrict(b)
+      mvc
+    }
+  }
   import MoveC._
   /** produce maximum possible move, rely on priority to obtain random movement */
   val total:Force=new Force(){

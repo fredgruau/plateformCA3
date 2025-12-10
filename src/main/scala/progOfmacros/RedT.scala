@@ -32,8 +32,6 @@ object RedT {
     binop[T[S1, S3], R, R, P](op2, clock(arg), anticlock(arg))
   }
 
-  def shrink(arg:BoolVe):BoolVf=cac(andB,arg)
-
   /*
   def cac2[S1 <: S, S2 <: S, S3 <: S, R <: Ring, P <: Ring](op2: Fundef2RP[R, P], arg: ASTLt[T[S1, S2], R], arg2: ASTLt[T[S1, S2], R])
                                                           (implicit m1: repr[S2], m2: repr[S1], m3: repr[S3], n: repr[R], p: repr[P], a: AntiClock[S1, S2, S3]): ASTLt[T[S1, S3], P] = {
@@ -106,6 +104,8 @@ object RedT {
 
 
 
+
+  def shrinkshrink(arg:BoolVe):BoolVe=shrinkFE(shrinkEF(arg))
 
 
   /** shrink around V, from Ve to Vf or vice versa */

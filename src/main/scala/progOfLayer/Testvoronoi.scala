@@ -19,12 +19,12 @@ val Fv=transfer(Vf)
 val F:BoolF=orR(Fv)
 val Ef:BoolEf=clock(Ev)
 val Fe=transfer(Ef)*/
-  import ASTLfun.fromBool
-  val testConst:BoolVe=true
-  val otherUse=testConst ^ this
+ // import ASTLfun.fromBool
+  //val testConst:BoolVe=true
+  //val otherUse=testConst ^ this
   /** the value at t, is the strate itself. */
 override val next= this
-  show(this,testConst,otherUse)
+  show(this)//,testConst,otherUse)
 //show(Ev,E,V,Fv,Vf,F,Ef,Fe)
 
 }

@@ -16,7 +16,7 @@ import sdn.Globals.root4naming
 object ASTLfun {
 
   /** Allows to consider false and true as occurence of ASTLs */
-  implicit def fromBool[L <: Locus](d: Boolean)(implicit m: repr[L]): ASTLt[L, B] = const(if (d) True() else False())
+ // implicit def fromBool[L <: Locus](d: Boolean)(implicit m: repr[L]): ASTLt[L, B] = const(if (d) True() else False())
 
   /** Allows to consider integers as occurence of ASTLs */
   implicit def fromInt[L <: Locus, R <: I](d: Int)(implicit m: repr[L], n: repr[R]): ASTLt[L, R] = const(Intof(d))

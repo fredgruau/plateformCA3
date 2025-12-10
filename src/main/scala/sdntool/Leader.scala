@@ -35,7 +35,7 @@ class Leader(source: Seed) extends MuStruct [V,B] {
 
   shoow(electedNeigbor2,electedNeigbor1,sourceMovedWide,neighborSourceNext,elected3)
 
-  import compiler.ASTLfun.fromBool //pour avoir la conversion implicite de boolean vers boolVe
+  //import compiler.ASTLfun.fromBool //pour avoir la conversion implicite de boolean vers boolVe
   /** annule le mouvement si stable, donc seul no est défini */
 }
 

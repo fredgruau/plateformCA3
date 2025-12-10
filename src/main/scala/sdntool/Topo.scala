@@ -47,7 +47,7 @@ class BlobVFields(val muis:BoolV with carrySysInstr) extends Attributs {
   val notVe= ~isVe
   /** Ve edges leaving the support , we know we may take a sym so we prepare for it, to get a meaningfull name brdVe.sym*/
   val brdVeIn: BoolVe =transfer(v(brdE)) & isVe//addSym introduit un delayed et compromet le nommage automatique par reflection. addSym( transfer(v(brdE)) & isVe)
-  val brdVeOut=transfer(v(brdE)) & e(~muis)//todo bien possible qu'on puisse travailler juste avec un seul brdVe
+  val brdVeOut: BoolVe=transfer(v(brdE)) & e(~muis)//todo bien possible qu'on puisse travailler juste avec un seul brdVe
   val rand= root4naming.addRandBit().asInstanceOf[BoolV]
   val lightConcave=( exist(shrink3(brdVeOut)) | (exist(shrink2(brdVeOut)) & rand) ) & ~  inside(brdVeOut)
 
@@ -108,6 +108,10 @@ class BlobVe(val muis:BoolV with carrySysInstr,brdE:BoolE, brdVe:BoolVe) extends
   val selle=upwardSelle&downwardSelle & ~brdEsrc //selle cannot hapen next to seed. (it could if we did not explicitely forbid it, due to a specific artefact of simultaneously extening and diminishin a dougleton seed, fuck.
    val emptyRhomb:BoolE= ~rhombusExist(brdE) //il y a un gros plateau de distance sur tout le rhombus
   val meetE= selle | emptyRhomb //ca n'est pas un vrai gcenter avec emptyrhomb
+//used to initiate propagation from the gcenter towards particles
+  /** true if insidie a gcenter edge */  val brdGe=transfer(v(meetE))
+  /** true if next to a gcenter vertice */  val brdGv:BoolVe=neighborsSym(e(meetV))
+  /** combination , true if next to a gcenter */ //val brdG= brdGv // |brdGe
 
   override def showMe: Unit = {
     super.showMe
@@ -125,11 +129,11 @@ class BlobVe(val muis:BoolV with carrySysInstr,brdE:BoolE, brdVe:BoolVe) extends
 trait addGcenter{
   self: MovableAgV with addBlobVfields with addDist=>
   val thismuis=muis
-  val bve=new BlobVe(muis,~d.level,  d.sloplt){
-    /**  silly way of avoiding superposition of agents with Gcenter
+  val bve=new BlobVe(muis,~d.level,d.sloplt){
+    /**  OBSOLETEsilly way of avoiding superposition of agents with Gcenter
      * we just subtract muis from meet2E,
      * we use a val for testing */
-    override val meetE2: ASTLt[V, B] = (super.meetE2 ) //& ~ thismuis ya probablement plus besoin d'enlever thismuis
+    override val meetE2: ASTLt[V, B] = (super.meetE2 ) //& OBSOLETE ~ thismuis ya probablement plus besoin d'enlever thismuis
   }
   val gc= new DetectedAgV(bve.meetE2 | bve.meetV) with keepInsideForce {
     override def inputNeighbors = List(d)
@@ -190,6 +194,12 @@ trait  QpointConstrain extends addQpointFields  with rando {
    */
   def forallize(feature:BoolV)={
     insideBall(imply(muis, feature))
+  }
+  /* return a boolV true throughout the seed,
+  * if and only if feature is also true for one vertex of the seed */
+  def existize(feature:BoolV)={
+    val muisfeature=muis & feature
+    muisfeature| muis & exist(neighborsSym(e(muisfeature)))
   }
 
   /** will choose neighbor with higest flip priority in fp, does not depends on flip  */
