@@ -329,6 +329,9 @@ object AST {
        sysInstr ::= CallProc("show", List(), List(v))
         Circuit.labelsOfFieldsBeforeName=Circuit.labelsOfFieldsBeforeName + ((v , ls))
       }
+      def showt(vs: AST[_]*)= {
+        for (v <- vs) showText(v, List())
+      }
 
     /** @param v field that should be false everywere unless a bug appears */
     def bugif(v: AST[_]) = sysInstr ::= CallProc("bug", List(), List(v))

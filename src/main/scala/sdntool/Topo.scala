@@ -50,7 +50,8 @@ class BlobVFields(val muis:BoolV with carrySysInstr) extends Attributs {
   val brdVeOut: BoolVe=transfer(v(brdE)) & e(~muis)//todo bien possible qu'on puisse travailler juste avec un seul brdVe
   val rand= root4naming.addRandBit().asInstanceOf[BoolV]
   val lightConcave=( exist(shrink3(brdVeOut)) | (exist(shrink2(brdVeOut)) & rand) ) & ~  inside(brdVeOut)
-
+  /** true for inner edges */
+  val insideE: BoolE =inside(transfer(isVe))
   val smoothen: Force = new Force() {
     override def actionV(ag: MovableAgV): MoveC = {
       /** true if >= three consecutive neighbors & ~  inside(brdVeOut) rules out singleton holes which would otherwise be filled*/
@@ -87,6 +88,7 @@ class BlobV(val muis:BoolV with carrySysInstr,f:BlobVFields) extends Blob  {
   val twoAdjBlob: BoolE = insideS[V, E](f.brdV) //third use of brdE, check that there is two adjacent blobs next to the empty rhombus
   val emptyRhomb: BoolE = ~rhombusExist(f.brdE) // true if center of a NON-totally empty rhombus
   val meetE=twoAdjBlob & emptyRhomb
+  val meeEfilled=meetE & f.insideE
   /** */
   override  def showMe={super.showMe;shoow(emptyRhomb) }
 }
@@ -195,11 +197,12 @@ trait  QpointConstrain extends addQpointFields  with rando {
   def forallize(feature:BoolV)={
     insideBall(imply(muis, feature))
   }
-  /* return a boolV true throughout the seed,
-  * if and only if feature is also true for one vertex of the seed */
+  /** return a boolV true throughout the seed,
+  * if and only if feature is also true for one vertex of the seed
+  * feature is usually only defined in the seed */
   def existize(feature:BoolV)={
     val muisfeature=muis & feature
-    muisfeature| muis & exist(neighborsSym(e(muisfeature)))
+    muisfeature | (muis & exist(neighborsSym(e(muisfeature))))
   }
 
   /** will choose neighbor with higest flip priority in fp, does not depends on flip  */

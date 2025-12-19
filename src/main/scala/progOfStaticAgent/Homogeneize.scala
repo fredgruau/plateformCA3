@@ -8,11 +8,11 @@ import dataStruc.DagNode.EmptyBag
 import dataStruc.{BranchNamed, Named}
 import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
 import progOfmacros.Compute.countNeighbors
-import progOfmacros.RedT.{cac, shrinkshrink}
+import progOfmacros.RedT.{cac, shrink2min1to5, shrinkshrink}
 import progOfmacros.Topo.nbccV
 import progOfmacros.Wrapper
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, smoothen, smoothen2, testShrink}
-import sdn.Force.restrictF
+import sdn.Force.{attractPropagate, cibler, repulsePropagate, restrictF}
 import sdn.Globals.root4naming
 import sdn.MuStruct.{setFlipSynced, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
 import sdn.Util.{addLt, addSym}
@@ -34,10 +34,10 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   showTrucPourDebugger
   part.shoow(part.vor.muis) //triggers evaluation
   part.shoow(part.gc.alreadyThere)
-  part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].yes.empty)
+ // part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].yes.empty)
   part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].yes.push)
-  part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].no.empty)
-  part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].no.push)
+  //part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].no.empty)
+  //part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].no.push)
 
   /*  part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
    part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
@@ -140,13 +140,30 @@ class SpreadOnSummit extends Convergent with addRadius with addInsideBall with a
     val nbCC: UintV = nbccV(borderS(isSummit))
     val meetV= nbCC > fromInt(1)
     val cutingSumSum=singleSumSum&meetV
-    val vassal=shrinkshrink(neighborsSym(e(isSummit)))
-
-  val notDense= density < fromInt(3)
+    val isSummitN=neighborsSym(e(isSummit))
+    val vassalN=shrinkshrink(isSummitN)
+    val vassal2N=shrinkshrink(vassalN)
+    val isNullVassal2N= ~ exist(vassal2N)
+    val vassalMin=cond(e(isNullVassal2N), vassalN,vassal2N)
+    val isVassal=exist(neighborsSym(vassalMin & e(singleSumSum) ))
+    /** neighbor of vassal with higher density of vassal that is not sumsum */
+    val queen:BoolV=isSummit& (~isSummSumm)   &exist(transfer(density.lt) &  neighborsSym(  e(isVassal) ))
+    val center=isSummSumm | isVassal | queen
+    val notDense= density < fromInt(3)
   val notDenseN=addSym(e(notDense))
-    val zeq=  ~(zlt.existOnPart|zgt.existOnPart)
+    /** it is sufficient that one vertex of the particle support feels an difference in radius, for the whole support to feel it. */
+    //val zeq=  existize(~(zlt.existOnPart|zgt.existOnPart))
+    val zneq= zlt.muis|zgt.muis
+    val zneqexistize= existize(zneq )
+    val zeqOnSeed =  ~zneqexistize & isV
+    val emptyZgt=(isV&zgt.muis) & exist(neighborsSym(e(isV & ~(zgt.muis))))
+    val emptyZlt= (isV& ~zlt.muis) & exist(neighborsSym(e(isV & (zlt.muis))))
+    val pushZlt=shrink2min1to5(neighborsSym(e(zlt.muis)))
+    val pushZgt=shrink2min1to5(neighborsSym(e(~zgt.muis)))
+
     override def showMe: Unit = {
-      shoow(isSummit,cutingSumSum,vassal)
+     // shoow(isSummit,isSummSumm,vassalN,vassal2N,isNullVassal2N,vassalMin,isVassal,queen,center,zeq)
+      shoow(isSummit,zeqOnSeed,zneq,zneqexistize,emptyZlt,emptyZgt,pushZgt,pushZlt,isVassal,queen,isSummSumm)
     //  shoowText(density,List())
     }
   val seizeSummit=new Force{
@@ -166,9 +183,10 @@ class SpreadOnSummit extends Convergent with addRadius with addInsideBall with a
       MoveC2(oui, non)
     }
   }
-
-  val f=seizeSummit
-  force(introduceNewPriority(),"seize",'z',restrictF(f,zeq ))//allows final convergence
+  val seize:Force=restrictF(cibler(center),zeqOnSeed)
+    val seizeWhileUniformizingRadius=seize | repulsePropagate(zgt.muis) | attractPropagate(zlt.muis)
+  //val f=seizeSummit;  force(introduceNewPriority(),"seize",'z',restrictF(f,zeq ))//allows final convergence
+    force(introduceNewPriority(),"seize",'z',seizeWhileUniformizingRadius)
   force(introduceNewPriority(),"repulse",'|',dgv.repulse)//go away from voronoi, but in fact from gcenter,
   // because it is allowed to overlap voronoi, which should thereafter withdraw.
   // This overlapping is the key for ensuring uniformization of the radius.

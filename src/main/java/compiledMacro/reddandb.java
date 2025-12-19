@@ -37,4 +37,16 @@ for (int i = 1; i < ppFE$h1.length -1; i++) {
   ;
 p.prepareBit(reddandbefR)
  ;
+  }
+public static int ev_1_1GateCount=3;
+ public static void ev_1_1(PrShift p,int [][] ppVE,int [][] reddandbevR){
+ int[] reddandbevR$h=reddandbevR[0],reddandbevR$d=reddandbevR[1],reddandbevR$ad=reddandbevR[2],ppVE$h1=ppVE[0],ppVE$h2=ppVE[1],ppVE$d1=ppVE[2],ppVE$d2=ppVE[3],ppVE$ad1=ppVE[4],ppVE$ad2=ppVE[5];
+
+
+for (int i = 1; i < ppVE$h1.length -1; i++) {
+ reddandbevR$h[i]=( ppVE$h1[i]  &  ppVE$h2[i] );reddandbevR$d[i]=( ppVE$d1[i]  &  ppVE$d2[i] );reddandbevR$ad[i]=( ppVE$ad1[i]  &  ppVE$ad2[i] );
+  }
+  ;
+p.prepareBit(reddandbevR)
+ ;
   }}

@@ -38,7 +38,7 @@ abstract class SiField(n:Int,  source: MuStruct[V, B],op:siFieldOperator) extend
   /** spurious vortex occurs outside chip.borderF.df, so we have to and with chip.borderF.df in order to prevent false detection of vortex bug */
   val vortex: BoolF =   chip.borderF.df & andR(transfer(cacEndomorph(xorRedop[B]._1, sloplt)))
 /** same story with gap*/   val gap2=gap & chip.borderE.df
-  def showMe = { shoow(sloplt,level); shoowText(muis, List());
+  def showMe = { shoow(sloplt,slopgt,level); shoowText(muis, List());
     // buugif( vortex) ;  buugif( gap2)
     shoow (vortex) ;  shoow( gap2)
   }

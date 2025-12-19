@@ -47,7 +47,7 @@ trait MyOpInt2[L <: Locus, R <: Ring] {
     binop(ASTBfun.concat2UI, arg1.asInstanceOf[ASTLt[L, UI]], arg2.asInstanceOf[ASTLt[L, UI]])
   }
 
-  /** concatenatin, this=lsb, that =msb */
+  /** concatenation, this=lsb, that =msb */
   def ::[U >: R <: Ring](that: ASTLt[L, R])(implicit m: repr[L], n: repr[R]): ASTLt[L, UI] =
     concat2(that, this).asInstanceOf[ASTLt[L, UI]] //si on fait x::y  xor3::carry, a droite c'est le bit de poids fort
   //first arg is a bool, second arg is an UINT
@@ -55,7 +55,7 @@ trait MyOpInt2[L <: Locus, R <: Ring] {
   /** minus  must convert UI to SI which adds an extra bit. */
   def -[U >: R <: I](that: ASTLt[L, R])(implicit m: repr[L], n: repr[R]): ASTLt[L, SI] = ring match {
     case SI() => add[L, SI](this.asInstanceOf[ASTLt[L, SI]], -that)
-    case UI() => add[L, SI](uI2SIL(this.asInstanceOf[ASTL[L, UI]]), -uI2SIL(that.asInstanceOf[ASTL[L, UI]])) //add 1 bit so as to convert to unsined
+    case UI() => throw new Exception(" faut convertir en signed d'abord pour soustraire");add[L, SI](uI2SIL(this.asInstanceOf[ASTL[L, UI]]), -uI2SIL(that.asInstanceOf[ASTL[L, UI]])) //add 1 bit so as to convert to unsined
   }
 
 

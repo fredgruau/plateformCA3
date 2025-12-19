@@ -8,7 +8,7 @@ import compiler.{AST, ASTBfun, B, Locus, Ring, V}
 import progOfStaticAgent.{Homogen, Leader, Seed, SpreadOnSummit}
 import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
 import progOfmacros.RedT.cac
-import progOfmacros.Wrapper.{exist, existS}
+import progOfmacros.Wrapper.{exist, existS, inside}
 import sdn.{Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, addGcenter}
 /**
  *
@@ -44,8 +44,8 @@ class Zone(p:SpreadOnSummit, val rislope:BoolVe) extends MuStruct [V,B] {
     /** we have to consider sym to finally retrieve the new leader. */
     override val next: BoolV = (startE | startV | exist(p.d.slopgt & neighborsSym(e(pred))
       //avoid propagation to start in one voronoi cell and propagate to an adjacent voronoi cell,
-      &       ~(transfer(v(p.vor.b.meetE)))  )) &  //by crossing a thick voronoi wall
-    ~ (  p.vor.b.meetV) // by crossing a thin voronoi wall
+      &       ~(transfer(v(p.vor.b.meeEfilled )))))   &  //by crossing a thick voronoi wall
+    ~   (p.vor.b.meetV & p.vor.isV)// by crossing a thin voronoi wall, which is voronoi and nbcc2
 
 
 

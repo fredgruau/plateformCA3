@@ -3,12 +3,12 @@ package progOfmacros
 import compiler.AST.{Call1, Fundef1, pL}
 import compiler.ASTBfun.{Fundef2R, Fundef2RP, andB, orB, redop}
 import compiler.ASTL.{anticlock, binop, broadcast, clock, transfer}
-import compiler.ASTLfun.reduce
+import compiler.ASTLfun.{cond, e, reduce}
 import compiler.Circuit.iTabSymb
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf, UintV}
 import compiler._
 import progOfmacros.Topo.nbccDef
-import progOfmacros.Wrapper.border
+import progOfmacros.Wrapper.{border, exist}
 
 import scala.collection.immutable.HashMap
 /** allows to automatically generate macro for  "Transfer-reduction" such as from Ve to Vf more generally from Zy to Zy
@@ -106,6 +106,22 @@ object RedT {
 
 
   def shrinkshrink(arg:BoolVe):BoolVe=shrinkFE(shrinkEF(arg))
+  /** from a continuous opened neighborhood, computex the max shrinking possible before total emptying
+   * if the neighorhood is five, it should take two turns, if it is four or three, it takes only one turn. */
+  def shrink2min3to5(arg:BoolVe):BoolVe={
+    val vassalN=shrinkshrink(arg)
+    val vassal2N=shrinkshrink(vassalN)
+    val isNullVassal2N= ~ exist(vassal2N)
+    val shrink3to5=cond(e(isNullVassal2N), vassalN,vassal2N)
+    shrink3to5
+  }
+  /** works for also neighborhood stretch of 1 or 2 */
+  def shrink2min1to5(arg:BoolVe):BoolVe={
+    val shrink3to5=shrink2min3to5(arg)
+    val isNull3to5= ~ exist(shrink3to5)
+    cond(e(isNull3to5),arg,shrink3to5)
+  }
+
 
 
   /** shrink around V, from Ve to Vf or vice versa */

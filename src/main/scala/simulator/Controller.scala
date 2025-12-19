@@ -246,7 +246,8 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   }
 
   val statInitList = new ComboBox(statInitNames) {
-    selection.index=paramStat }
+    //selection.index=paramStat
+  }
   //val randomRootField = new TextField("" + randomRoot, 2)
   contents += (globalInitList, randomInitList,densityInitList,darknessInitList,statInitList) //, randomRootField)
 

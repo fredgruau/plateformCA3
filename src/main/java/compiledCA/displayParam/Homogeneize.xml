@@ -1,52 +1,52 @@
 <displayParam>
         <expandedLayer>
         <Layer>
-          homogeneizePartVorFlipafterlocalconstr
-        </Layer><Layer>
-          homogeneizePartBve
-        </Layer><Layer>
-          homogeneizePartVor
-        </Layer><Layer>
           homogeneizePartVorFlipaftermutexconstr
         </Layer><Layer>
-          homogeneizePartFliprioofmove
+          homogeneize
+        </Layer><Layer>
+          homogeneizePartZgt
+        </Layer><Layer>
+          homogeneizePartDgv
         </Layer><Layer>
           homogeneizePart
         </Layer><Layer>
           homogeneizePartSu
         </Layer><Layer>
-          homogeneizePartMergedmovesyyyseizeNo
+          homogeneizePartVor
+        </Layer><Layer>
+          homogeneizePartRi
+        </Layer><Layer>
+          homogeneizePartFlipafterlocalconstr
         </Layer><Layer>
           homogeneizePartZ
         </Layer><Layer>
           homogeneizePartVorFliprioofmove
         </Layer><Layer>
-          homogeneize
+          homogeneizePartFliprioofmove
         </Layer><Layer>
-          homogeneizePartMergedmovesyyyseizeYes
-        </Layer><Layer>
-          homogeneizePartInbl
+          homogeneizePartVorB
         </Layer><Layer>
           homogeneizePartZlt
+        </Layer><Layer>
+          homogeneizePartD
         </Layer><Layer>
           homogeneizePartMergedmovesyyyseize
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0x0000FF">
-            homogeneizePartZltStarte
-          </layer><layer color="0x00FF00">
-            homogeneizePartSuIssummit
+          <layer color="0x00FF00">
+            homogeneizePartRiSloplt2
           </layer><layer color="0xFFFF00">
-            homogeneizePartZltStartv
+            homogeneizePartRiSloplt
+          </layer><layer color="0x000000">
+            homogeneizePartRiMuis
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
-          </layer><layer color="0xFF0080">
-            homogeneizePartZltMuis
-          </layer><layer color="0x80FF00">
-            homogeneizePartIsv
           </layer><layer color="0x00FFFF">
             homogeneizePartInblMuis
+          </layer><layer color="0xFFC800">
+            homogeneizePartIsv
           </layer>
         </colorOfField>
       </displayParam>

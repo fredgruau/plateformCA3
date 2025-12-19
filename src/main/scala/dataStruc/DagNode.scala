@@ -27,14 +27,14 @@ trait DagNode[+T <: DagNode[T]] {
   //def other: List[T] = List.empty
 
   /** we print without parenthesis when there is a single input */
-  def toStringTreeTimeExpensive: String ={
+  def toStringTree: String ={
     //   println("toatoa")
     toString + " " +
       (if (inputNeighbors.size > 1 || this.isInstanceOf[Neton[_]])
         "(" + inputNeighbors.map(_.toStringTree).foldLeft("")(_ + ", " + _).substring(2) + ")" //le substring vire la premiere virgule
       else if (inputNeighbors.size == 1) inputNeighbors.head.toStringTree else " ")
   }
-  def toStringTree: String ={
+  def toStringTreePrintOnlyOne: String ={
     toString + " " +
       (if (inputNeighbors.size >= 1 )inputNeighbors.head.toStringTree else " ")
   }
@@ -92,9 +92,12 @@ trait DagNode[+T <: DagNode[T]] {
           try{
           val k = t.tSymbVarSafe(nameRad).k
           if (!k.isParam) toString //affectation is done to a register local in the loop.
-          else if (k.isRadius1) name + "[i-1]=" //Radius can be either 0 or 1 here we should also take into account the store.
-          else if (k.isRadiusm1) name + "[i+1]=" //Radius can be either 0 or 1 here we should also take into account the store.
-          else name + "[i]="
+          else if (k.isRadius1)
+            name + "[i-1]=" //Radius can be either 0 or 1 here we should also take into account the store.
+          else if (k.isRadiusm1)
+            name + "[i+1]=" //Radius can be either 0 or 1 here we should also take into account the store.
+          else
+            name + "[i]="
           }
           catch{
             case e:java.lang.Exception=>toString //je fait l'hypothése que on n'a pas trouvé l'id car il s'agit de nom de variable temporaraire, non stockés

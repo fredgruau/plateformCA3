@@ -18,7 +18,7 @@ import sdn.{Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, Vor}
 class InsideBall(d:MuDist,ri:InnerRadius,v:Vor) extends MuStruct [V,B] {
   override def inputNeighbors = List(d, ri)
 
-  val rmd = delayedL(ri.muis - d.muis)
+  val rmd = delayedL(ri.muis +(- d.muis))
   val inBall = ~ltSI(rmd)|d.source.muis
   /** true if next to previous inside ball */
   val adj = delayedL(adjacentBall(muis))

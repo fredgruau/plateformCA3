@@ -84,7 +84,7 @@ trait ComparDiff[R<:I]{
 trait Compar extends ComparDiff[UI]{
   self:ASTLt[V, UI]=>
   val lt: BoolEv =Grad.lt(this,segmentOf1)
-  val gt=symEv(lt)
+  val gt: BoolEv =symEv(lt)
 }
 /** same as Compar, except that we compare apex neighbors instead of direct neighbors? */
 trait ComparApex2{

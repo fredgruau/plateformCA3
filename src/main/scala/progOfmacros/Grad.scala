@@ -16,7 +16,7 @@ import progOfmacros.Wrapper.{borderS, not, segment1}
 object Grad {
   type siFieldOperator=Fundef1[(V, SI), ((T[V, E], B), ((V, SI), ((E, B), (E, B))))]
 
-  type siFieldOperatorProp=Fundef2[(V, SI), (T[V, E], B), ((T[V, E], B), ((V, SI), ((E, B), (E, B))))]
+  type siFieldOperatorProp=Fundef2[(V, SI), (T[V, E], B), ((T[V, E], B), ((V, SI), ((T[V,E], SI), (E, B))))]
   /** macro that does all the computation needing the distance  From an IntV, computes the gradient sign, slopgt
    * which is true on the side where the Vertice has a higher integer value, (so, further  from the source than its neighbor)
    * and the delta to be added to maintain it as a distance when the source is moving.
@@ -29,7 +29,7 @@ object Grad {
   val slopeDeltaDistDef: Fundef1[(V, SI), ((T[V, E], B), ((V, SI), ((E, B), (E, B))))] =  {
     val d = pL[V, SI]("dis")
     /** opposite of distance */
-    val dopp = -d
+    val dopp = - d
     /** we have distance on one side, and opposite of distance on the other side of boolE */
     val se: IntVe = send(List(d, d, d, dopp, dopp, dopp))
     /** we do the expensive operation (add) only on a boolE which has a density of 3 instead of 6 for a boolVe  */
@@ -52,8 +52,44 @@ object Grad {
     level.setName("level"); grad3.setName("grad");    slopgt.setName("slop");    delta.setName("delta");
     Fundef1("grad.slopDeltaDist", Cons(slopgt, Cons(delta, Cons(level, gap))), d)
   }
+  val slopeGradGapDef: Fundef1[(V, SI),( (T[V, E], B), (T[E, V], SI))] =  {
+    /////common to all operator on si fields;
+    val r = pL[V, SI]("diiiis")
+    /** indicates neighbors nearer to the source of propagation */
+    /** opposite of radius */
+    val ropp = -r
+    /** we have distance on one side, and opposite of distance on the other side of boolE */
+    val se: IntVe = send(List(r, r, r, ropp, ropp, ropp))
+    /** we do the expensive operation (add) only on a boolE which has a density of 3 instead of 6 for a boolVe  */
+    val grad3: IntE = reduce(addRedop[SI].asInstanceOf[redop[SI]], transfer(se))
+    /**  true iff the two neighbors cannot be compared. It should be 8 instead of 4,  if the number of bits is 4 */
+    val gaaap: BoolE = eq0(grad3 + 4) //& chip.borderE.df   /** builds the corresponding boolEv, by negating on one side but not the other  */
+    /** when sending back from boolE to boolEV, we have to take the opposite again,  towards the center */
+    val grad6: IntEv = send(List(-grad3, grad3))
+    /** we need to compare to 0 */
+    val slopEv: BoolEv = ltSI(grad6) //peut etre inverser en gtsi
+    /** we condidered undefined values on the border, not anymore because of the miror */
+    // val slopgt: BoolVe = cond(chip.borderVe.df, transfer(slopEv), false) //faut definir ckispasse au bord. we put zero if unedfined
+    //neighbors are equal if neither lt nor gt
+    val slopgt: BoolVe = transfer(slopEv)
+    //val level: BoolE = ~reduce(orRedop[B], slopEv)
+    // pour propager radius, on regarde les voisins plus proche de particule si y en pas
+    // (a cause d'un vidage et remplisage simultané ) on regarde les vertices voising dans le support d'une particule.
+    // ben si y en a toujours pas, on met une valeur par défaut:0, c'est la valeur qui va débarquer lorsque finalement
+    // radiusIn sera definissable
 
-  val slopeDeltaRadiusDef: Fundef2[(V, SI),(T[V, E], B), ((T[V, E], B), ((V, SI), ((E, B), (E, B))))] =  {
+    /** we do the min only on nearer,  1 is neutral for min, sy*/
+
+    Fundef1("grad.slopGradGap", Cons(slopgt,  grad6), r)
+  }
+  /** Calls slop grad gap and returns 3 fields, */
+  def slopGradGap(d: IntV): (BoolVe, IntEv) = {
+    val r = Call1(slopeGradGapDef, d);
+    val e1 = new Heead(r) with BoolVe
+    val e2 = new Taail(r) with IntEv
+    (e1, e2) }
+
+  val slopeDeltaRadiusDef: Fundef2[(V, SI),(T[V, E], B), ((T[V, E], B), ((V, SI), ((T[V,E], SI), (E, B))))] =  {
     /////common to all operator on si fields;
     val r = pL[V, SI]("dis")
     /** indicates neighbors nearer to the source of propagation */
@@ -74,25 +110,41 @@ object Grad {
     // val slopgt: BoolVe = cond(chip.borderVe.df, transfer(slopEv), false) //faut definir ckispasse au bord. we put zero if unedfined
     //neighbors are equal if neither lt nor gt
     val slopgt: BoolVe = transfer(slopEv)
-    val level: BoolE = ~reduce(orRedop[B], slopEv)
+    //val level: BoolE = ~reduce(orRedop[B], slopEv)
     // pour propager radius, on regarde les voisins plus proche de particule si y en pas
     // (a cause d'un vidage et remplisage simultané ) on regarde les vertices voising dans le support d'une particule.
     // ben si y en a toujours pas, on met une valeur par défaut:0, c'est la valeur qui va débarquer lorsque finalement
     // radiusIn sera definissable
 
-    /** we do the min only on nearer,  1 is neutral for min*/
-    val sgnLt:IntVe= cond(srcPropag,sign(transfer(grad6)),extend(2,fromInt(1)))
-    val minSignLt: IntV = reduce(minSignRedop, sgnLt) //we need to add 2, using one more bit, in order to add modulo 16 and not 8
-    /** sign which allows neighbors having high radius, to pull up the radius,
+    /** we do the min only on nearer,  1 is neutral for min, sy*/
+      val signGrad6=sign(transfer(grad6))
+    signGrad6.setName("signGrad6")
+    val m1:IntVe=e(extend(2,fromInt(-1)));;
+    m1.setName("minus1")
+    val sgnMinLt:IntVe= cond(srcPropag,signGrad6&signGrad6,extend(2,fromInt(1)))//we need one more bit, in order to add modulo 16 and not 8
+    val sgnMinLt2= sgnMinLt & sgnMinLt
+    val sgnMaxLt:IntVe= cond(srcPropag,signGrad6,m1) //we need one more bit, in order to add modulo 16 and not 8
+    /** minSignLt propagates the radius towards gabriel centers */
+    val minSignLt: IntV = reduce(minSignRedop, sgnMinLt2)
+    val minSignLt2=minSignLt&minSignLt
+    val maxSignLt: IntV = reduce(maxSignRedop, sgnMaxLt);;
+
+    val avgSignLt: SintV = sign(extend(4,minSignLt) + extend(4,maxSignLt)) //remplace min sign, permet d'obtenir la moyenne sur les gcenter fin et de propager le signe
+    /** sign which allows neighbors having high radius, to pull up the radius, for smoothing the radius
      * by considering delta in the window 3,2,1  causing  a positive (resp null, resp negative sign */
-    val signGradm2=sign(extend(7, transfer(grad6)) + (-2) )//on regarde tous  les voisin qui sont a un delta au moins de 2 voir 3
+    val signGradm2=sign(extend(4, transfer(grad6)) + (-2) )//on regarde tous  les voisin qui sont a un delta au moins de 2 voir 3
     /** pulls radius of a voronoi cell towards radius of dominant voronoi neighbor (dominant= the one with biggest radius) */
     val maxSignGradm2: IntV = reduce(maxSignRedop, signGradm2) //on regarde tous  les voisin qui sont a un delta au moins de 2 voir 3
-    /** what needs to be added to the radius */
-    val delta=binop(maxSign,maxSignGradm2,minSignLt)
+    /** what needs to be added to the radius takes into account both propagation of radius towards voronoi, and smoothing*/
+    val delta: SintV =binop(maxSign,maxSignGradm2,avgSignLt) //on a remplacé minSignLt par avgSignLt
     //show(opp) //breaks a cycle no longer needed because cycle are managed correctly
-    level.setName("level"); grad3.setName("grad");    slopgt.setName("slop");    delta.setName("delta");
-    Fundef2("grad.slopDeltaRadius", Cons(slopgt, Cons(delta, Cons(level, gap))), r,srcPropag)
+    gap.setName("gap"); maxSignLt.setName("maxsignLt")
+    sgnMaxLt.setName("sgnMaxLt"); ; sgnMinLt.setName("sgnMinLt");//avgSignLt.setName("avgSignLt")
+    minSignLt.setName("minsignLt") ; maxSignGradm2.setName("maxSignGradm2")
+    //level.setName("level");
+    grad3.setName("grad");    slopgt.setName("slop");    delta.setName("delta");
+  signGradm2.setName("signGradm2");;
+    Fundef2("grad.slopDeltaRadius", Cons(slopgt, Cons(delta, Cons(sgnMaxLt, gap))), r,srcPropag)
   }
 
   /** Calls a gradient operator that return four fields, used to compute a SIfield */
@@ -115,19 +167,19 @@ object Grad {
     val e2 = new Heead(t) with IntV
     val t2 = new Taail(t)
     val e3 = new Heead(t2) with BoolE
-    val e4 = new Taail(t2) with BoolE
+     val e4 = new Taail(t2) with BoolE
     (e1, e2, e3, e4)
   }
 
 
   /** Calls boolgrad, and separate the four results. */
-  def deltaCallProp(d: IntV, srcProp:BoolVe,opDef: siFieldOperatorProp ): (BoolVe, IntV, BoolE, BoolE) = {
+  def deltaCallProp(d: IntV, srcProp:BoolVe,opDef: siFieldOperatorProp ): (BoolVe, IntV, IntVe, BoolE) = {
     val r = Call2(opDef, d,srcProp);
     val e1 = new Heead(r) with BoolVe
     val t = new Taail(r)
     val e2 = new Heead(t) with IntV
     val t2 = new Taail(t)
-    val e3 = new Heead(t2) with BoolE
+    val e3 = new Heead(t2) with IntVe
     val e4 = new Taail(t2) with BoolE
     (e1, e2, e3, e4)
   }
@@ -234,8 +286,6 @@ object Grad {
   def ltApex2(deef: UintEf,deriv:UintE,diff:BoolE)(implicit n: repr[B],l:repr[T[E,V]]): BoolEf = {
     new Call3[(T[E, F], UI),(E, UI), (E, B),(T[E, F], B) ]  (ltDefApex2, deef,deriv, diff) with BoolEf
   }
-
-
 
   /** yet another way on computing lt, on which we spent a bit of time! */
   val ltDefOld: Fundef1[(V, UI), (T[E, V], B)] =  {

@@ -9,10 +9,12 @@ import compiler.SpatialType.{BoolE, BoolEv, BoolV, BoolVe}
 import dataStruc.{BranchNamed, Named}
 import progOfmacros.Comm.neighborsSym
 import progOfmacros.Wrapper.{borderS, exist}
-import progOfmacros.RedT.clock2
+import progOfmacros.RedT.{clock2, shrink2min1to5}
 import sdn.Globals.root4naming
 import sdn.Rand
 import sdn.Util.addSym
+
+import scala.util.matching.Regex.Match
 /** adds the possibility of using a randomizer */
 trait rando {
    val _rand = new Rand()  // Champ privé
@@ -26,6 +28,7 @@ trait rando {
  * to move everywhere possible the agent..
  */
 abstract class MoveC extends Named with BranchNamed {
+  def | (that: MoveC):MoveC
   def restrict(cond:BoolV):MoveC
   val triggered:BoolV
   /** when computing push, we selected maxprio only among the yes, we do not consider the no */
@@ -40,7 +43,10 @@ abstract class MoveC extends Named with BranchNamed {
  * centered move with only yes
  */
 case class MoveC1 (val empty: BoolV, val push: BoolVe) extends MoveC{
-  def | (that: MoveC1) = MoveC1(empty|that.empty,push|that.push)
+  def | (that: MoveC):MoveC = that match{
+    case mc1:MoveC1=>MoveC1(empty|mc1.empty,push|mc1.push)
+    case mc2:MoveC2=> mc2 | this
+  }
   /* adds a condition to the move*/
   def restrict(cond:BoolV)= MoveC1(empty & cond,push & e(cond))
   /* convert push to a boolV, true for vertice pointed by one of the push. NB there can be several distinct push
@@ -59,6 +65,11 @@ case class MoveC1 (val empty: BoolV, val push: BoolVe) extends MoveC{
  * @param no for specifying absence of flip ,  using either no.push or no.Empty
  */
 case class MoveC2(val yes:MoveC1,val no:MoveC1) extends MoveC{
+  def | (that: MoveC):MoveC = that match {
+    case mc2:MoveC2=> MoveC2((yes|mc2.yes).asInstanceOf[MoveC1],(no|mc2.no).asInstanceOf[MoveC1] )
+    case mc1:MoveC1=> MoveC2((yes|mc1).asInstanceOf[MoveC1],no )  //moveC1 are considered to be yesMove by default.
+  }
+
   def restrict(cond:BoolV)=MoveC2(yes.restrict(cond),no.restrict(cond))
   override val triggered = yes.triggered | no.triggered
   val bug= yes.triggered & no.triggered | yes.bug | no.bug
@@ -87,32 +98,73 @@ abstract class Force extends  Named {
     case V() => actionV(ag.asInstanceOf[MovableAgV])
    // case T(V(),E()) => actionVe(ag.asInstanceOf[MovAgVe])
   }
-  val myThis = this
-
+  def | (that: Force)= {
+    val myThis=this
+    new Force {
+      override def actionV(ag: MovableAgV): MoveC =  myThis.actionV(ag) | that.actionV(ag)
+    }
+  }
 }
 object Force{
   /**
    *
    * @param force to be restricted
-   * @param b
+   * @param b restricting condition, should be uniform where the force is exerted
    * @return restricted force
    */
   def restrictF(f:Force,b:BoolV)=new Force {
-    override def actionV(ag: MovableAgV): MoveC = {
-      val mvc = f.actionV(ag).restrict(b)
-      mvc
-    }
+    override def actionV(ag: MovableAgV): MoveC =  f.actionV(ag).restrict(b)
   }
+
   import MoveC._
   /** produce maximum possible move, rely on priority to obtain random movement */
   val total:Force=new Force(){
     override def actionV(ag: MovableAgV): MoveC = MoveC1(ag.muis,ag.bf.brdVeIn)//extends and empties everywhere possible.
   }
 
+  /**
+   *
+   * @param cible where we want our particle to be
+   * @return creates a force that will let the particle exactly fills cible */
+  def cibler(cible:BoolV):Force=new Force{
+    val toCible=neighborsSym(e(cible))
+    /** true if there is a target in the immediate neighborhood */
+    val next2cible=exist(toCible)
+    override def actionV(ag: MovableAgV): MoveC = {
+      //we empty non-target and forbid moving towards non-target, only if target is reachable, so as to avoid blocking situation
+      MoveC2(MoveC1(~cible & next2cible ,toCible & ag.bf.brdVeIn),MoveC1(cible, ~(toCible&e(next2cible))& ag.bf.brdVeIn ))
+    }
+  }
+
+/*
+  val emptyZgt=(isV&zgt.muis) & exist(neighborsSym(e(isV & ~(zgt.muis))))
+  val emptyZlt= (isV& ~zlt.muis) & exist(neighborsSym(e(isV & (zlt.muis))))
+  val pushZlt=shrink2min1to5(neighborsSym(e(zlt.muis)))
+  val pushZgt=shrink2min1to5(neighborsSym(e(~zgt.muis)))*/
+
+
+  def repulsePropagate(zoneGt:BoolV):Force = new Force{
+    override def actionV(ag: MovableAgV): MoveC = {
+        MoveC1( ag.muis & zoneGt & exist(neighborsSym(e(ag.muis & ~ zoneGt))),
+      shrink2min1to5(neighborsSym(e(~zoneGt))))
+    }
+  }
+
+
+  def attractPropagate(zoneLt:BoolV):Force = new Force{
+    override def actionV(ag: MovableAgV): MoveC = {
+      MoveC1( ag.muis & ~ zoneLt & exist(neighborsSym(e(ag.muis &  zoneLt))),
+        shrink2min1to5(neighborsSym(e(zoneLt))))
+    }
+  }
+
+
+
   /** we designed a random move that does not break the quasipoint property,
    * eliminating the need for checking gate-expensive mutex
    * However, we must still check for directionnality using
    * sophisticated blob tests, because combination with other force may break directionality
+   * therefore, it is not usefull, finally
   val qpointRand: Force = new Force() with rando  {
     override def actionV(is: BoolV): MoveC = {
       val isqp = is.asInstanceOf[BoolV with QPointify] //this force works only on quasiPoint

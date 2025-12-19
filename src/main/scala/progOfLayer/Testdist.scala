@@ -4,11 +4,13 @@ import compiler.AST.Layer
 import compiler.ASTL._
 import compiler.ASTLfun.orR
 import compiler.ASTLt.ConstLayer
-import compiler.SpatialType.BoolV
+import compiler.SpatialType.{BoolV, BoolVe}
 import compiler.{AST, ASTLt, B, Locus, Ring, V}
 import dataStruc.DagNode.EmptyBag
 import dataStruc.{BranchNamed, Named}
-import sdntool.addDist
+import progOfStaticAgent.Homogeneize
+import progOfmacros.Grad
+import sdntool.{MuDist, addDist}
 import progOfmacros.Wrapper.borderS
 import sdn.{LDAG, MuStruct, Stratify, carrySysInstr, muEmptyBag}
 
@@ -25,10 +27,16 @@ import scala.collection.immutable.HashMap
 
 /** same, but avoioding the wrapping of a constlayer */
 class Testdist() extends LDAG with Named with BranchNamed {
-  val constPart = new MuStruct[V, B] with muEmptyBag with BranchNamed with addDist {
+  val constPart = new MuStruct[V, B] with muEmptyBag with BranchNamed  {
     /** support of agent */
+    val d = new MuDist(3,this)
     override val muis = new ConstLayer[V, B](1, "global") with Stratify[V, B] with ASTLt[V, B] with carrySysInstr
-    shoow(muis,d.muis)
+    shoow(muis)
+    d.showMe
+    val (slope, grad)=Grad.slopGradGap(d.muis)
+    shoow(slope)
+    shoow( grad)
+    //shoow(d.sloplt,d.delta, d.level,d.gap)
   } //root classe compilable
 
 }
