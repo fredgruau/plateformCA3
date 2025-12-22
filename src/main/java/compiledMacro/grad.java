@@ -77,34 +77,6 @@ for (int i = 1; i < pdis$0.length -1; i++) {
 p.prepareBit(slop);p.prepareBit(deltaR);p.prepareBit(level);p.prepareBit(resultCA)
  ;
   }
-public static int slopGradGap_4_1_4GateCount=92;
- public static void slopGradGap_4_1_4(PrShift p,int [][] pdiiiis,int [][] resultCA,int [][] auxL100){
- int[] resultCA$e=resultCA[0],resultCA$se=resultCA[1],resultCA$sw=resultCA[2],resultCA$w=resultCA[3],resultCA$nw=resultCA[4],resultCA$ne=resultCA[5],auxL100$h1$0=auxL100[0],auxL100$h1$1=auxL100[1],auxL100$h1$2=auxL100[2],auxL100$h1$3=auxL100[3],auxL100$h2$0=auxL100[4],auxL100$h2$1=auxL100[5],auxL100$h2$2=auxL100[6],auxL100$h2$3=auxL100[7],auxL100$d1$0=auxL100[8],auxL100$d1$1=auxL100[9],auxL100$d1$2=auxL100[10],auxL100$d1$3=auxL100[11],auxL100$d2$0=auxL100[12],auxL100$d2$1=auxL100[13],auxL100$d2$2=auxL100[14],auxL100$d2$3=auxL100[15],auxL100$ad1$0=auxL100[16],auxL100$ad1$1=auxL100[17],auxL100$ad1$2=auxL100[18],auxL100$ad1$3=auxL100[19],auxL100$ad2$0=auxL100[20],auxL100$ad2$1=auxL100[21],auxL100$ad2$2=auxL100[22],auxL100$ad2$3=auxL100[23],pdiiiis$0=pdiiiis[0],pdiiiis$1=pdiiiis[1],pdiiiis$2=pdiiiis[2],pdiiiis$3=pdiiiis[3];
-
-// initialisation 
- int auxL101$0=0,auxL101$1=0,auxL101$2=0,auxL101$3=0,auxL102$0=0,auxL102$1=0,auxL102$2=0,auxL102$3=0,auxL177$0=0,auxL177$1=0,auxL177$2=0,auxL177$3=0,diiiis$0=0,diiiis$1=0,diiiis$2=0,diiiis$3=0,r0=0,r1=0,tmun58$0=0,tmun58$1=0,tmun58$2=0,tmun58$3=0;
-for (int i = 1; i < pdiiiis$0.length -1; i++) {
- diiiis$0= pdiiiis$0[i] ;diiiis$1= pdiiiis$1[i] ;diiiis$2= pdiiiis$2[i] ;diiiis$3= pdiiiis$3[i] ;
- auxL102$0= diiiis$0 ;auxL102$1=((r0=~ diiiis$0 ) ^ ~ diiiis$1 );auxL102$2=((r0=( r0  & ~ diiiis$1 )) ^ ~ diiiis$2 );auxL102$3=(( r0  & ~ diiiis$2 ) ^ ~ diiiis$3 );
- auxL101$0= tmun58$0 ;auxL101$1= tmun58$1 ;auxL101$2= tmun58$2 ;auxL101$3= tmun58$3 ;
- tmun58$0=((r1=( auxL102$0  <<  1 )) ^  diiiis$0 );tmun58$1=(((r0=( diiiis$0  &  r1 )) ^ (r1=( auxL102$1  <<  1 ))) ^  diiiis$1 );tmun58$2=(((r0=(( r0  &  r1 ) | ( diiiis$1  & ( r0  |  r1 )))) ^ (r1=( auxL102$2  <<  1 ))) ^  diiiis$2 );tmun58$3=(((( r0  &  r1 ) | ( diiiis$2  & ( r0  |  r1 ))) ^ ( auxL102$3  <<  1 )) ^  diiiis$3 );
- auxL100$h1$0[i-1]= auxL101$0 ;auxL100$h1$1[i-1]=((r0=~ auxL101$0 ) ^ ~ auxL101$1 );auxL100$h1$2[i-1]=((r0=( r0  & ~ auxL101$1 )) ^ ~ auxL101$2 );auxL100$h1$3[i-1]=(( r0  & ~ auxL101$2 ) ^ ~ auxL101$3 );
- r0= auxL100$h1$3[i-1] ;resultCA$e[i-1]= r0 ;auxL100$h2$0[i-1]= auxL101$0 ;auxL100$h2$1[i-1]= auxL101$1 ;
- auxL100$h2$2[i-1]= auxL101$2 ;auxL100$h2$3[i-1]= auxL101$3 ;r0= auxL100$h2$3[i-1] ;resultCA$w[i-1]=( r0  >>>  1 );
- auxL101$0=( auxL177$0  ^  auxL102$0 );auxL101$1=(((r0=( auxL102$0  &  auxL177$0 )) ^  auxL177$1 ) ^  auxL102$1 );auxL101$2=(((r0=(( r0  &  auxL177$1 ) | ( auxL102$1  & ( r0  |  auxL177$1 )))) ^  auxL177$2 ) ^  auxL102$2 );auxL101$3=(((( r0  &  auxL177$2 ) | ( auxL102$2  & ( r0  |  auxL177$2 ))) ^  auxL177$3 ) ^  auxL102$3 );
- auxL100$d1$0[i-1]= auxL101$0 ;auxL100$d1$1[i-1]=((r0=~ auxL101$0 ) ^ ~ auxL101$1 );auxL100$d1$2[i-1]=((r0=( r0  & ~ auxL101$1 )) ^ ~ auxL101$2 );auxL100$d1$3[i-1]=(( r0  & ~ auxL101$2 ) ^ ~ auxL101$3 );
- r0= auxL100$d1$3[i-1] ;resultCA$se[i-1]= r0 ;r0= auxL100$d2$3[i-1] ;resultCA$nw[i-1]= r0 ;
- auxL100$d2$0[i-1]= auxL101$0 ;auxL100$d2$1[i-1]= auxL101$1 ;auxL100$d2$2[i-1]= auxL101$2 ;auxL100$d2$3[i-1]= auxL101$3 ;
- auxL101$0=( auxL177$0  ^ (r1=( auxL102$0  >>>  1 )));auxL101$1=(((r0=( r1  &  auxL177$0 )) ^  auxL177$1 ) ^ (r1=( auxL102$1  >>>  1 )));auxL101$2=(((r0=(( r0  &  auxL177$1 ) | ( r1  & ( r0  |  auxL177$1 )))) ^  auxL177$2 ) ^ (r1=( auxL102$2  >>>  1 )));auxL101$3=(((( r0  &  auxL177$2 ) | ( r1  & ( r0  |  auxL177$2 ))) ^  auxL177$3 ) ^ ( auxL102$3  >>>  1 ));
- auxL177$0= diiiis$0 ;auxL177$1= diiiis$1 ;auxL177$2= diiiis$2 ;auxL177$3= diiiis$3 ;
- auxL100$ad1$0[i-1]= auxL101$0 ;auxL100$ad1$1[i-1]=((r0=~ auxL101$0 ) ^ ~ auxL101$1 );auxL100$ad1$2[i-1]=((r0=( r0  & ~ auxL101$1 )) ^ ~ auxL101$2 );auxL100$ad1$3[i-1]=(( r0  & ~ auxL101$2 ) ^ ~ auxL101$3 );
- r0= auxL100$ad1$3[i-1] ;resultCA$sw[i-1]= r0 ;r0= auxL100$ad2$3[i-1] ;resultCA$ne[i-1]=( r0  <<  1 );
- auxL100$ad2$0[i-1]= auxL101$0 ;auxL100$ad2$1[i-1]= auxL101$1 ;auxL100$ad2$2[i-1]= auxL101$2 ;auxL100$ad2$3[i-1]= auxL101$3 ;
-  }
-  ;
-p.prepareBit(resultCA);p.prepareBit(auxL100)
- ;
-  }
 public static int slopDeltaRadius_4_1_1_2_2_1GateCount=403;
  public static void slopDeltaRadius_4_1_1_2_2_1(PrShift p,int [][] pdis,int [][] psrcPropag,int [][] slop,int [][] delta,int [][] sgnMaxLt,int [][] gap){
  int[] slop$e=slop[0],slop$se=slop[1],slop$sw=slop[2],slop$w=slop[3],slop$nw=slop[4],slop$ne=slop[5],delta$0=delta[0],delta$1=delta[1],sgnMaxLt$e$0=sgnMaxLt[0],sgnMaxLt$e$1=sgnMaxLt[1],sgnMaxLt$se$0=sgnMaxLt[2],sgnMaxLt$se$1=sgnMaxLt[3],sgnMaxLt$sw$0=sgnMaxLt[4],sgnMaxLt$sw$1=sgnMaxLt[5],sgnMaxLt$w$0=sgnMaxLt[6],sgnMaxLt$w$1=sgnMaxLt[7],sgnMaxLt$nw$0=sgnMaxLt[8],sgnMaxLt$nw$1=sgnMaxLt[9],sgnMaxLt$ne$0=sgnMaxLt[10],sgnMaxLt$ne$1=sgnMaxLt[11],gap$h=gap[0],gap$d=gap[1],gap$ad=gap[2],pdis$0=pdis[0],pdis$1=pdis[1],pdis$2=pdis[2],pdis$3=pdis[3],psrcPropag$e=psrcPropag[0],psrcPropag$se=psrcPropag[1],psrcPropag$sw=psrcPropag[2],psrcPropag$w=psrcPropag[3],psrcPropag$nw=psrcPropag[4],psrcPropag$ne=psrcPropag[5];
@@ -380,36 +352,7 @@ for (int i = 1; i < pdis$0.length -1; i++) {
 p.prepareBit(slop);p.prepareBit(deltaR);p.prepareBit(level);p.prepareBit(resultCA)
  ;
   }
-
-public static int slopGradGap_3_1_3GateCount=58;
- public static void slopGradGap_3_1_3(PrShift p,int [][] pdiiiis,int [][] resultCA,int [][] auxL08){
- int[] resultCA$e=resultCA[0],resultCA$se=resultCA[1],resultCA$sw=resultCA[2],resultCA$w=resultCA[3],resultCA$nw=resultCA[4],resultCA$ne=resultCA[5],auxL08$h1$0=auxL08[0],auxL08$h1$1=auxL08[1],auxL08$h1$2=auxL08[2],auxL08$h2$0=auxL08[3],auxL08$h2$1=auxL08[4],auxL08$h2$2=auxL08[5],auxL08$d1$0=auxL08[6],auxL08$d1$1=auxL08[7],auxL08$d1$2=auxL08[8],auxL08$d2$0=auxL08[9],auxL08$d2$1=auxL08[10],auxL08$d2$2=auxL08[11],auxL08$ad1$0=auxL08[12],auxL08$ad1$1=auxL08[13],auxL08$ad1$2=auxL08[14],auxL08$ad2$0=auxL08[15],auxL08$ad2$1=auxL08[16],auxL08$ad2$2=auxL08[17],pdiiiis$0=pdiiiis[0],pdiiiis$1=pdiiiis[1],pdiiiis$2=pdiiiis[2];
-
-// initialisation 
- int auxL09$0=0,auxL09$1=0,auxL09$2=0,auxL10$0=0,auxL10$1=0,auxL10$2=0,auxL11$0=0,auxL11$1=0,auxL11$2=0,diiiis$0=0,diiiis$1=0,diiiis$2=0,r0=0,r1=0,tmun00$0=0,tmun00$1=0,tmun00$2=0;
-for (int i = 1; i < pdiiiis$0.length -1; i++) {
- diiiis$0= pdiiiis$0[i] ;diiiis$1= pdiiiis$1[i] ;diiiis$2= pdiiiis$2[i] ;auxL10$0= diiiis$0 ;
- auxL10$1=((r0=~ diiiis$0 ) ^ ~ diiiis$1 );auxL10$2=(( r0  & ~ diiiis$1 ) ^ ~ diiiis$2 );auxL09$0= tmun00$0 ;auxL09$1= tmun00$1 ;
- auxL09$2= tmun00$2 ;tmun00$0=((r0=( auxL10$0  <<  1 )) ^  diiiis$0 );tmun00$1=(((r1=( diiiis$0  &  r0 )) ^ (r0=( auxL10$1  <<  1 ))) ^  diiiis$1 );tmun00$2=(((( r1  &  r0 ) | ( diiiis$1  & ( r1  |  r0 ))) ^ ( auxL10$2  <<  1 )) ^  diiiis$2 );
- auxL08$h1$0[i-1]= auxL09$0 ;auxL08$h1$1[i-1]=((r0=~ auxL09$0 ) ^ ~ auxL09$1 );auxL08$h1$2[i-1]=(( r0  & ~ auxL09$1 ) ^ ~ auxL09$2 );r0= auxL08$h1$2[i-1] ;
- resultCA$e[i-1]= r0 ;auxL08$h2$0[i-1]= auxL09$0 ;auxL08$h2$1[i-1]= auxL09$1 ;auxL08$h2$2[i-1]= auxL09$2 ;
- r0= auxL08$h2$2[i-1] ;resultCA$w[i-1]=( r0  >>>  1 );auxL09$0=( auxL11$0  ^  auxL10$0 );auxL09$1=(((r0=( auxL10$0  &  auxL11$0 )) ^  auxL11$1 ) ^  auxL10$1 );
- auxL09$2=(((( r0  &  auxL11$1 ) | ( auxL10$1  & ( r0  |  auxL11$1 ))) ^  auxL11$2 ) ^  auxL10$2 );auxL08$d1$0[i-1]= auxL09$0 ;auxL08$d1$1[i-1]=((r0=~ auxL09$0 ) ^ ~ auxL09$1 );auxL08$d1$2[i-1]=(( r0  & ~ auxL09$1 ) ^ ~ auxL09$2 );
- r0= auxL08$d1$2[i-1] ;resultCA$se[i-1]= r0 ;r0= auxL08$d2$2[i-1] ;resultCA$nw[i-1]= r0 ;
-
- auxL08$d2$0[i]= auxL09$0 ; auxL08$d2$1[i]= auxL09$1 ;auxL08$d2$2[i]= auxL09$2 ;
-
- auxL09$0=( auxL11$0  ^ (r1=( auxL10$0  >>>  1 )));
- auxL09$1=(((r0=( r1  &  auxL11$0 )) ^  auxL11$1 ) ^ (r1=( auxL10$1  >>>  1 )));auxL09$2=(((( r0  &  auxL11$1 ) | ( r1  & ( r0  |  auxL11$1 ))) ^  auxL11$2 ) ^ ( auxL10$2  >>>  1 ));auxL11$0= diiiis$0 ;auxL11$1= diiiis$1 ;
- auxL11$2= diiiis$2 ;auxL08$ad1$0[i-1]= auxL09$0 ;auxL08$ad1$1[i-1]=((r0=~ auxL09$0 ) ^ ~ auxL09$1 );auxL08$ad1$2[i-1]=(( r0  & ~ auxL09$1 ) ^ ~ auxL09$2 );
- r0= auxL08$ad1$2[i-1] ;resultCA$sw[i-1]= r0 ;r0= auxL08$ad2$2[i-1] ;resultCA$ne[i-1]=( r0  <<  1 );
-
- auxL08$ad2$0[i]= auxL09$0 ;auxL08$ad2$1[i]= auxL09$1 ;auxL08$ad2$2[i]= auxL09$2 ;
-  }
-  ;
-p.prepareBit(resultCA);p.prepareBit(auxL08)
- ;
-  }
+  
 public static int slopDeltaDist_3_1_2_1_1GateCount=203;
  public static void slopDeltaDist_3_1_2_1_1(PrShift p,int [][] pdis,int [][] slop,int [][] deltaR,int [][] level,int [][] resultCA){
  int[] slop$e=slop[0],slop$se=slop[1],slop$sw=slop[2],slop$w=slop[3],slop$nw=slop[4],slop$ne=slop[5],deltaR$0=deltaR[0],deltaR$1=deltaR[1],level$h=level[0],level$d=level[1],level$ad=level[2],resultCA$h=resultCA[0],resultCA$d=resultCA[1],resultCA$ad=resultCA[2],pdis$0=pdis[0],pdis$1=pdis[1],pdis$2=pdis[2];
@@ -477,5 +420,58 @@ for (int i = 1; i < pdis$0.length -1; i++) {
   }
   p.mirror(deltaR);
 p.prepareBit(slop);p.prepareBit(deltaR);p.prepareBit(level);p.prepareBit(resultCA)
+ ;
+  }
+public static int slopGradGap_3_1_3GateCount=58;
+ public static void slopGradGap_3_1_3(PrShift p,int [][] pdiiiis,int [][] resultCA,int [][] auxL05){
+ int[] resultCA$e=resultCA[0],resultCA$se=resultCA[1],resultCA$sw=resultCA[2],resultCA$w=resultCA[3],resultCA$nw=resultCA[4],resultCA$ne=resultCA[5],auxL05$h1$0=auxL05[0],auxL05$h1$1=auxL05[1],auxL05$h1$2=auxL05[2],auxL05$h2$0=auxL05[3],auxL05$h2$1=auxL05[4],auxL05$h2$2=auxL05[5],auxL05$d1$0=auxL05[6],auxL05$d1$1=auxL05[7],auxL05$d1$2=auxL05[8],auxL05$d2$0=auxL05[9],auxL05$d2$1=auxL05[10],auxL05$d2$2=auxL05[11],auxL05$ad1$0=auxL05[12],auxL05$ad1$1=auxL05[13],auxL05$ad1$2=auxL05[14],auxL05$ad2$0=auxL05[15],auxL05$ad2$1=auxL05[16],auxL05$ad2$2=auxL05[17],pdiiiis$0=pdiiiis[0],pdiiiis$1=pdiiiis[1],pdiiiis$2=pdiiiis[2];
+
+// initialisation 
+ int auxL06$0=0,auxL06$1=0,auxL06$2=0,auxL07$0=0,auxL07$1=0,auxL07$2=0,auxL08$0=0,auxL08$1=0,auxL08$2=0,diiiis$0=0,diiiis$1=0,diiiis$2=0,r0=0,r1=0,tmun00$0=0,tmun00$1=0,tmun00$2=0;
+for (int i = 1; i < pdiiiis$0.length -1; i++) {
+ diiiis$0= pdiiiis$0[i] ;diiiis$1= pdiiiis$1[i] ;diiiis$2= pdiiiis$2[i] ;auxL07$0= diiiis$0 ;
+ auxL07$1=((r0=~ diiiis$0 ) ^ ~ diiiis$1 );auxL07$2=(( r0  & ~ diiiis$1 ) ^ ~ diiiis$2 );auxL06$0= tmun00$0 ;auxL06$1= tmun00$1 ;
+ auxL06$2= tmun00$2 ;tmun00$0=((r0=( auxL07$0  <<  1 )) ^  diiiis$0 );tmun00$1=(((r1=( diiiis$0  &  r0 )) ^ (r0=( auxL07$1  <<  1 ))) ^  diiiis$1 );tmun00$2=(((( r1  &  r0 ) | ( diiiis$1  & ( r1  |  r0 ))) ^ ( auxL07$2  <<  1 )) ^  diiiis$2 );
+ auxL05$h1$0[i-1]= auxL06$0 ;auxL05$h1$1[i-1]=((r0=~ auxL06$0 ) ^ ~ auxL06$1 );auxL05$h1$2[i-1]=(( r0  & ~ auxL06$1 ) ^ ~ auxL06$2 );r0= auxL05$h1$2[i-1] ;
+ resultCA$e[i-1]= r0 ;auxL05$h2$0[i-1]= auxL06$0 ;auxL05$h2$1[i-1]= auxL06$1 ;auxL05$h2$2[i-1]= auxL06$2 ;
+ r0= auxL05$h2$2[i-1] ;resultCA$w[i-1]=( r0  >>>  1 );auxL06$0=( auxL08$0  ^  auxL07$0 );auxL06$1=(((r0=( auxL07$0  &  auxL08$0 )) ^  auxL08$1 ) ^  auxL07$1 );
+ auxL06$2=(((( r0  &  auxL08$1 ) | ( auxL07$1  & ( r0  |  auxL08$1 ))) ^  auxL08$2 ) ^  auxL07$2 );auxL05$d1$0[i-1]= auxL06$0 ;auxL05$d1$1[i-1]=((r0=~ auxL06$0 ) ^ ~ auxL06$1 );auxL05$d1$2[i-1]=(( r0  & ~ auxL06$1 ) ^ ~ auxL06$2 );
+ r0= auxL05$d1$2[i-1] ;resultCA$se[i-1]= r0 ;auxL05$d2$0[i-1]= auxL06$0 ;auxL05$d2$1[i-1]= auxL06$1 ;
+ auxL05$d2$2[i-1]= auxL06$2 ;r0= auxL05$d2$2[i-1] ;resultCA$nw[i]= r0 ;auxL06$0=( auxL08$0  ^ (r1=( auxL07$0  >>>  1 )));
+ auxL06$1=(((r0=( r1  &  auxL08$0 )) ^  auxL08$1 ) ^ (r1=( auxL07$1  >>>  1 )));auxL06$2=(((( r0  &  auxL08$1 ) | ( r1  & ( r0  |  auxL08$1 ))) ^  auxL08$2 ) ^ ( auxL07$2  >>>  1 ));auxL08$0= diiiis$0 ;auxL08$1= diiiis$1 ;
+ auxL08$2= diiiis$2 ;auxL05$ad1$0[i-1]= auxL06$0 ;auxL05$ad1$1[i-1]=((r0=~ auxL06$0 ) ^ ~ auxL06$1 );auxL05$ad1$2[i-1]=(( r0  & ~ auxL06$1 ) ^ ~ auxL06$2 );
+ r0= auxL05$ad1$2[i-1] ;resultCA$sw[i-1]= r0 ;auxL05$ad2$0[i-1]= auxL06$0 ;auxL05$ad2$1[i-1]= auxL06$1 ;
+ auxL05$ad2$2[i-1]= auxL06$2 ;r0= auxL05$ad2$2[i-1] ;resultCA$ne[i]=( r0  <<  1 );
+  }
+  ;
+p.prepareBit(resultCA);p.prepareBit(auxL05)
+ ;
+  }
+public static int slopGradGap_4_1_4GateCount=92;
+ public static void slopGradGap_4_1_4(PrShift p,int [][] pdiiiis,int [][] resultCA,int [][] auxL98){
+ int[] resultCA$e=resultCA[0],resultCA$se=resultCA[1],resultCA$sw=resultCA[2],resultCA$w=resultCA[3],resultCA$nw=resultCA[4],resultCA$ne=resultCA[5],auxL98$h1$0=auxL98[0],auxL98$h1$1=auxL98[1],auxL98$h1$2=auxL98[2],auxL98$h1$3=auxL98[3],auxL98$h2$0=auxL98[4],auxL98$h2$1=auxL98[5],auxL98$h2$2=auxL98[6],auxL98$h2$3=auxL98[7],auxL98$d1$0=auxL98[8],auxL98$d1$1=auxL98[9],auxL98$d1$2=auxL98[10],auxL98$d1$3=auxL98[11],auxL98$d2$0=auxL98[12],auxL98$d2$1=auxL98[13],auxL98$d2$2=auxL98[14],auxL98$d2$3=auxL98[15],auxL98$ad1$0=auxL98[16],auxL98$ad1$1=auxL98[17],auxL98$ad1$2=auxL98[18],auxL98$ad1$3=auxL98[19],auxL98$ad2$0=auxL98[20],auxL98$ad2$1=auxL98[21],auxL98$ad2$2=auxL98[22],auxL98$ad2$3=auxL98[23],pdiiiis$0=pdiiiis[0],pdiiiis$1=pdiiiis[1],pdiiiis$2=pdiiiis[2],pdiiiis$3=pdiiiis[3];
+
+// initialisation 
+ int auxL100$0=0,auxL100$1=0,auxL100$2=0,auxL100$3=0,auxL146$0=0,auxL146$1=0,auxL146$2=0,auxL146$3=0,auxL99$0=0,auxL99$1=0,auxL99$2=0,auxL99$3=0,diiiis$0=0,diiiis$1=0,diiiis$2=0,diiiis$3=0,r0=0,r1=0,tmun28$0=0,tmun28$1=0,tmun28$2=0,tmun28$3=0;
+for (int i = 1; i < pdiiiis$0.length -1; i++) {
+ diiiis$0= pdiiiis$0[i] ;diiiis$1= pdiiiis$1[i] ;diiiis$2= pdiiiis$2[i] ;diiiis$3= pdiiiis$3[i] ;
+ auxL100$0= diiiis$0 ;auxL100$1=((r0=~ diiiis$0 ) ^ ~ diiiis$1 );auxL100$2=((r0=( r0  & ~ diiiis$1 )) ^ ~ diiiis$2 );auxL100$3=(( r0  & ~ diiiis$2 ) ^ ~ diiiis$3 );
+ auxL99$0= tmun28$0 ;auxL99$1= tmun28$1 ;auxL99$2= tmun28$2 ;auxL99$3= tmun28$3 ;
+ tmun28$0=((r1=( auxL100$0  <<  1 )) ^  diiiis$0 );tmun28$1=(((r0=( diiiis$0  &  r1 )) ^ (r1=( auxL100$1  <<  1 ))) ^  diiiis$1 );tmun28$2=(((r0=(( r0  &  r1 ) | ( diiiis$1  & ( r0  |  r1 )))) ^ (r1=( auxL100$2  <<  1 ))) ^  diiiis$2 );tmun28$3=(((( r0  &  r1 ) | ( diiiis$2  & ( r0  |  r1 ))) ^ ( auxL100$3  <<  1 )) ^  diiiis$3 );
+ auxL98$h1$0[i-1]= auxL99$0 ;auxL98$h1$1[i-1]=((r0=~ auxL99$0 ) ^ ~ auxL99$1 );auxL98$h1$2[i-1]=((r0=( r0  & ~ auxL99$1 )) ^ ~ auxL99$2 );auxL98$h1$3[i-1]=(( r0  & ~ auxL99$2 ) ^ ~ auxL99$3 );
+ r0= auxL98$h1$3[i-1] ;resultCA$e[i-1]= r0 ;auxL98$h2$0[i-1]= auxL99$0 ;auxL98$h2$1[i-1]= auxL99$1 ;
+ auxL98$h2$2[i-1]= auxL99$2 ;auxL98$h2$3[i-1]= auxL99$3 ;r0= auxL98$h2$3[i-1] ;resultCA$w[i-1]=( r0  >>>  1 );
+ auxL99$0=( auxL146$0  ^  auxL100$0 );auxL99$1=(((r0=( auxL100$0  &  auxL146$0 )) ^  auxL146$1 ) ^  auxL100$1 );auxL99$2=(((r0=(( r0  &  auxL146$1 ) | ( auxL100$1  & ( r0  |  auxL146$1 )))) ^  auxL146$2 ) ^  auxL100$2 );auxL99$3=(((( r0  &  auxL146$2 ) | ( auxL100$2  & ( r0  |  auxL146$2 ))) ^  auxL146$3 ) ^  auxL100$3 );
+ auxL98$d1$0[i-1]= auxL99$0 ;auxL98$d1$1[i-1]=((r0=~ auxL99$0 ) ^ ~ auxL99$1 );auxL98$d1$2[i-1]=((r0=( r0  & ~ auxL99$1 )) ^ ~ auxL99$2 );auxL98$d1$3[i-1]=(( r0  & ~ auxL99$2 ) ^ ~ auxL99$3 );
+ r0= auxL98$d1$3[i-1] ;resultCA$se[i-1]= r0 ;auxL98$d2$0[i-1]= auxL99$0 ;auxL98$d2$1[i-1]= auxL99$1 ;
+ auxL98$d2$2[i-1]= auxL99$2 ;auxL98$d2$3[i-1]= auxL99$3 ;r0= auxL98$d2$3[i-1] ;resultCA$nw[i]= r0 ;
+ auxL99$0=( auxL146$0  ^ (r1=( auxL100$0  >>>  1 )));auxL99$1=(((r0=( r1  &  auxL146$0 )) ^  auxL146$1 ) ^ (r1=( auxL100$1  >>>  1 )));auxL99$2=(((r0=(( r0  &  auxL146$1 ) | ( r1  & ( r0  |  auxL146$1 )))) ^  auxL146$2 ) ^ (r1=( auxL100$2  >>>  1 )));auxL99$3=(((( r0  &  auxL146$2 ) | ( r1  & ( r0  |  auxL146$2 ))) ^  auxL146$3 ) ^ ( auxL100$3  >>>  1 ));
+ auxL146$0= diiiis$0 ;auxL146$1= diiiis$1 ;auxL146$2= diiiis$2 ;auxL146$3= diiiis$3 ;
+ auxL98$ad1$0[i-1]= auxL99$0 ;auxL98$ad1$1[i-1]=((r0=~ auxL99$0 ) ^ ~ auxL99$1 );auxL98$ad1$2[i-1]=((r0=( r0  & ~ auxL99$1 )) ^ ~ auxL99$2 );auxL98$ad1$3[i-1]=(( r0  & ~ auxL99$2 ) ^ ~ auxL99$3 );
+ r0= auxL98$ad1$3[i-1] ;resultCA$sw[i-1]= r0 ;auxL98$ad2$0[i-1]= auxL99$0 ;auxL98$ad2$1[i-1]= auxL99$1 ;
+ auxL98$ad2$2[i-1]= auxL99$2 ;auxL98$ad2$3[i-1]= auxL99$3 ;r0= auxL98$ad2$3[i-1] ;resultCA$ne[i]=( r0  <<  1 );
+  }
+  ;
+p.prepareBit(resultCA);p.prepareBit(auxL98)
  ;
   }}

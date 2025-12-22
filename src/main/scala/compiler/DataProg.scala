@@ -1840,8 +1840,10 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
     var toBeMet: HashMap[String, Set[String]] = HashMap()
 
     //it suffices to start by a tm1 (we consider  a simple property) and have name not coalesced
-    def checkRuleC(i: Instr, used: Set[String]) = (
-      i.exps(0).asInstanceOf[ASTBg].isTm1 && used.intersect(coalesc.keys.toSet).isEmpty)
+    def checkRuleC(i: Instr, used: Set[String]) = {
+      i.exps(0).asInstanceOf[ASTBg].isTm1 && used.intersect(coalesc.keys.toSet).isEmpty &&
+        used.toList.filter(isParamR(_)).isEmpty //si on déplace des instruction qui affecte des registres, ca merde pour les indices.
+    }
 
     for (instr <- instrs) {
       var nom = instr.names(0)
@@ -2007,7 +2009,7 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
     val reInsertionB = lastUse.filter(pred).map(_ swap) //allows to reuse move, unfortunately, there can be several such lastUse, so we need reverse order? or count number of occurence of the instruction.
     (candA, reInsertionB)
   }
-
+  def isParamR(str: String) = tSymbVarSafe(str).k.isParamR
   /** tm1 operator are normaly supressed by adding registers, nevertheless,
    * different rules can be applied to avoid the cost of adding register:
    * juste removing the tm1 (rule A)
@@ -2015,7 +2017,7 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
    * adding a store instruction (rule D)
    * after detmify, all affects are replaced by stores. */
   def detm1Ify(): DataProg[InfoNbit[_]] = {
-    def isParamR(str: String) = tSymbVarSafe(str).k.isParamR
+
 
     val p = this.asInstanceOf[DataProg[InfoNbit[_]]]
     if (isLeafCaLoop) {
