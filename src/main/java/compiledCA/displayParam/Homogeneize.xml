@@ -35,18 +35,14 @@
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0x00FF00">
-            homogeneizePartRiSloplt2
-          </layer><layer color="0xFFFF00">
-            homogeneizePartRiSloplt
-          </layer><layer color="0x000000">
+          <layer color="0x000000">
             homogeneizePartRiMuis
-          </layer><layer color="0xFF0000">
-            homogeneizePartVorIsv
-          </layer><layer color="0x00FFFF">
-            homogeneizePartInblMuis
           </layer><layer color="0xFFC800">
             homogeneizePartIsv
+          </layer><layer color="0x00FFFF">
+            homogeneizePartInblMuis
+          </layer><layer color="0xFF0000">
+            homogeneizePartVorIsv
           </layer>
         </colorOfField>
       </displayParam>
