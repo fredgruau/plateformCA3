@@ -115,7 +115,7 @@ trait addDist {
 
 /** adds distance to gcentern corrected by voronoi*/
 trait addDistVor {
-  self: MovableAgV with addDist with addVor with addGcenter=>
+  self: MovableAgV with addDist with addVor with addGcenter =>
   val dgv = new MuDist(Homogeneize.nbitDgv,this.vor) with addRepulse {} //totoal
   //show(d); les show doivent etre fait dans le main
 }

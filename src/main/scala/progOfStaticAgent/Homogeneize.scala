@@ -12,12 +12,12 @@ import progOfmacros.RedT.{cac, shrink2min1to5, shrinkshrink}
 import progOfmacros.Topo.nbccV
 import progOfmacros.Wrapper
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, smoothen, smoothen2, testShrink}
-import sdn.Force.{attractPropagate, cibler, repulsePropagate, restrictF}
+import sdn.Force.{attractPropagate, cibler, repulsePropagate, restrictF, stabilize}
 import sdn.Globals.root4naming
 import sdn.MuStruct.{setFlipSynced, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
 import sdn.Util.{addLt, addSym}
 import sdn._
-import sdntool.{addDist, addDistVor, addInsideBall, addRadius, addRect, addZoneGt, addZoneLt}
+import sdntool.{addDist, addDistVor, addInsideBall, addRadius, addRect, addZone, addZoneGt, addZoneLt}
 object Homogeneize{
   /** bit size for integer encoding distance to particle*/   val nbitD=4
   /** bit size for integer encoding distance to gcenter and voronoi*/   val nbitDgv=4
@@ -34,8 +34,9 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   showTrucPourDebugger
   part.shoow(part.vor.muis) //triggers evaluation
   part.shoow(part.gc.alreadyThere)
- // part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].yes.empty)
-  part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].yes.push)
+  //garder ce qui suit en commentaire, ca indique comment faire pour montrer l'effet d'une force via son nom, come "seize"
+ // part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC1].yes.empty)
+//  part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC1].push)
   //part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].no.empty)
   //part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].no.push)
 
@@ -45,19 +46,23 @@ class Homogeneize() extends LDAG with Named with BranchNamed
    part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
    part.shoow(part.vor.mergedMoves("containGcenter").asInstanceOf[MoveC2].yes.push)*/
   part.shoow(part.muis)
+  part.shoow(part.lead.muis)
   part.vor.showMe;   part.vor.b.showMe;   part.vor.bf.showMe;  part.showMe
   part.bf.showMe;  part.b.showMe;  part.bve.showMe;  part.d.showMe; part.dgv.showMe
   part.shoowText(part.ri.muis,List()); part.ri.showMe;
  part.gc.showme;
-  part.sf.showMe
-  part.su.showMe
+  part.prop.showMe
+  part.centr.showMe
+ // part.zon.showMe
   //part.shoow(part.sf.isSummit)
  // part.shoowText( part.sf.density,List())
+//  part.shoow(part.centr.notCentrForallize)
+ // part.shoow(part.centr.isSummit)
+ // part.centr.showMe
   part.shoow(part.bve.meetE2)
   part.shoow( part.vor.isForced)
   part.shoow(part.inbl.muis);  part.inbl.showMe
-  part.shoow(part.zlt.muis,part.rect);  part.zlt.showMe
-  part.shoow(part.zgt.muis);  part.zgt.showMe
+ // part.shoow(part.zlt.muis,part.rect);  part.zlt.showMe;  part.shoow(part.zgt.muis);  part.zgt.showMe
   // part.z.showMe
 }
 
@@ -65,24 +70,49 @@ class Homogeneize() extends LDAG with Named with BranchNamed
 class Seed extends MovableAg[V]("global") with MovableAgV  with addBloobV with blobConstrain with addQpointFields with QpointConstrain
   with EmptyBag[sdn.MuStruct[_<: Locus,_<:Ring]]
 
-/** moves as much as possible called "fly" because flies move without purpose */
-class Flies2 extends Seed { force(introduceNewPriority(), "explore",'O', Force.total) }
-
 /** computes the average and variance of a partial SintV defined by a pair ( SintV ;BoolV )*/
 trait stat{ self:Homogen=>  staat(bve.meet, d.muis);  staat(bve.meetV, d.muis)
   staat(muis, dgv.muis);  staat(bve.meetE2, d.muis)}
 
 /**adds distance, gabriel center, voronoi distance to voronoi, and then finally repulsive force from voronoi*/
-class Homogen() extends Flies2 with addDist with addGcenter // with keepOutsideForce
+class Homogen() extends Seed with addDist with addGcenter // with keepOutsideForce
   with addVor with addDistVor with stat
 {  /** seed should not overlap gCenters */
    val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
   addConstraint("avoidgc",'g',avoidGc)
-
 }
 
+/** we compute the insideRadius rin,
+ *  the ball centered on part, with radius rin
+ *  zonelt (resp. zonegt) which inform wether the adjacent voronoi has larger (resp. smaller) rin
+ *  a force fine tunning occupancy of summits by:
+ *    1-   if zoneLt or zoneGt are touchin particle, attract particle to  zoneLt and repulsefrom zoneGt
+ *    2- otherwise, use the the force seizesummit  which fills up summit according to summit's density
+ *       by choosing to invade preferently vertices on summit whose number of summit-neighbor  are largest
+ *  */
+class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addRect
+   with addProp  with addCenter with addLeader/* with addZone*/ /* */
+{
 
-/** obsolete */
+   /** seize applique la force qui cible le  centre seulement si le radius est uniforme */
+ // val seize:Force=restrictF(cibler(centr.center),zon.zeqOnSeed)
+//  val uniformizeRadius:Force= repulsePropagate(zon.zgt.muis) | attractPropagate(zon.zlt.muis)
+ // val seizeWhileUniformizingRadius:Force= seize | uniformizeRadius
+  val blockIfStable=stabilize(prop.proped)
+  /** moves as much as possible called "fly" because flies move without purpose, we should modulate it with probability */
+  force(introduceNewPriority(), "explore",'O', Force.total.inflechi(centr.center))
+  //force(introduceNewPriority(), "stabilize",'z', blockIfStable)
+
+  //force(introduceNewPriority(), "size",'z', seize)
+ // force(introduceNewPriority(),"seize",'z',uniformizeRadius)  //c'est quand meme dgv qui prime sur seize.
+  force(introduceNewPriority(),"repulse",'|',dgv.repulse)//dgv.repulse moves seed away from voronoi, but in fact from gcenter,
+  // because it is allowed to overlap voronoi, which should thereafter withdraw.  // This overlapping is the key for ensuring uniformization of the radius.
+ }
+
+
+
+/** obsolete, calcule une convergence qui n'est pas assez generale pour stabiliser, soit elle stabilise trop tot,
+ * soit elle ne stabilise  pas assez*/
 class Convergent extends Homogen //with addRadius // with Lead //pas besoin de leader pour le moment
 {  val sf=new Attributs()
 { //sf==stableFields
@@ -115,83 +145,5 @@ class Convergent extends Homogen //with addRadius // with Lead //pas besoin de l
     }
   }
 }
- // force(introduceNewPriority(),"balance",'_',sf.balance)
+  // force(introduceNewPriority(),"balance",'_',sf.balance)
 }
-
-/** we compute the insideRadius rin,
- *  the ball centered on part, with radius rin
- *  zonelt (resp. zonegt) which inform wether the adjacent voronoi has larger (resp. smaller) rin
- *  a force fine tunning occupancy of summits by:
- *    1-   if zoneLt or zoneGt are touchin particle, attract particle to  zoneLt and repulsefrom zoneGt
- *    2- otherwise, use the the force seizesummit  which fills up summit according to summit's density
- *       by choosing to invade preferently vertices on summit whose number of summit-neighbor  are largest
- *  */
-class SpreadOnSummit extends Convergent with addRadius with addInsideBall with addRect with addZoneLt with addZoneGt /* with addLeader*/
-{
-  val su=new Attributs() { //su==summitFields
-  override val muis: ASTLg with carrySysInstr = SpreadOnSummit.this.muis
-
-  val isSummit:BoolV=  ~exist(dgv.slopgt) & adjacentBall(isV)
-  val density: UintVx =addLt(countNeighbors( addSym(e(isSummit)).sym))
-    /** summits of local highest density */
-    val isSummSumm=isSummit & ~exist(transfer( density.gt)& neighborsSym(e(isSummit)))
-    /** true if there is a single sumsum */
-   val singleSumSum= isSummSumm & ~exist(transfer( v(density.eq)) & neighborsSym(e(isSummit)))
-    val nbCC: UintV = nbccV(borderS(isSummit))
-    val meetV= nbCC > fromInt(1)
-    val cutingSumSum=singleSumSum&meetV
-    val isSummitN=neighborsSym(e(isSummit))
-    val vassalN=shrinkshrink(isSummitN)
-    val vassal2N=shrinkshrink(vassalN)
-    val isNullVassal2N= ~ exist(vassal2N)
-    val vassalMin=cond(e(isNullVassal2N), vassalN,vassal2N)
-    val isVassal=exist(neighborsSym(vassalMin & e(singleSumSum) ))
-    /** neighbor of vassal with higher density of vassal that is not sumsum */
-    val queen:BoolV=isSummit& (~isSummSumm)   &exist(transfer(density.lt) &  neighborsSym(  e(isVassal) ))
-    val center=isSummSumm | isVassal | queen
-    val notDense= density < fromInt(3)
-  val notDenseN=addSym(e(notDense))
-    /** it is sufficient that one vertex of the particle support feels an difference in radius, for the whole support to feel it. */
-    //val zeq=  existize(~(zlt.existOnPart|zgt.existOnPart))
-    val zneq= zlt.muis|zgt.muis
-    val zneqexistize= existize(zneq )
-    val zeqOnSeed =  ~zneqexistize & isV
-    val emptyZgt=(isV&zgt.muis) & exist(neighborsSym(e(isV & ~(zgt.muis))))
-    val emptyZlt= (isV& ~zlt.muis) & exist(neighborsSym(e(isV & (zlt.muis))))
-    val pushZlt=shrink2min1to5(neighborsSym(e(zlt.muis)))
-    val pushZgt=shrink2min1to5(neighborsSym(e(~zgt.muis)))
-
-    override def showMe: Unit = {
-     // shoow(isSummit,isSummSumm,vassalN,vassal2N,isNullVassal2N,vassalMin,isVassal,queen,center,zeq)
-      shoow(isSummit,zeqOnSeed,zneq,zneqexistize,emptyZlt,emptyZgt,pushZgt,pushZlt,isVassal,queen,isSummSumm)
-    //  shoowText(density,List())
-    }
-  val seizeSummit=new Force{
-    override def actionV(ag:MovableAgV): MoveC= {
-      val hasNearer: BoolV = exist(transfer( density.lt) & neighborsSym(e(ag.muis)))
-      val hasFurther = Wrapper.exist(transfer( density.gt) & neighborsSym(e(ag.muis)))
-      val oui=MoveC1( ag.muis & hasFurther & ~hasNearer & notDense, //on vide si y a des plus loin, pas de plus pres,
-        // et si on n'est pas dense
-        transfer(density.gt)& ag.bf.brdVeIn) //on envahit des voisines plus dense OK
-      //on va toujours remplir un vertice dont la densité est plus grande
-      //pour cibler des particules tripleton,
-      // on peut ou on peut ne pas autoriser  de vider si nombre de voisin est   3
-
-      val non = MoveC1(ag.muis & ~hasFurther,  //on interdit de vider si y a pas de plus dense a coté
-        transfer( density.lt)  & ag.bf.brdVeIn & notDenseN.sym ) //on interdit d'envahir des moins dense qui de plus ne sont pas dense
-      //on ne vas pas non plus chercher a remplir un vertice sommet voisin de dentisté pluc petite, si celle ci est  <3
-      MoveC2(oui, non)
-    }
-  }
-  val seize:Force=restrictF(cibler(center),zeqOnSeed)
-    val seizeWhileUniformizingRadius=seize | repulsePropagate(zgt.muis) | attractPropagate(zlt.muis)
-  //val f=seizeSummit;  force(introduceNewPriority(),"seize",'z',restrictF(f,zeq ))//allows final convergence
-    force(introduceNewPriority(),"seize",'z',seizeWhileUniformizingRadius)
-  force(introduceNewPriority(),"repulse",'|',dgv.repulse)//go away from voronoi, but in fact from gcenter,
-  // because it is allowed to overlap voronoi, which should thereafter withdraw.
-  // This overlapping is the key for ensuring uniformization of the radius.
-
-}
-
-
- }

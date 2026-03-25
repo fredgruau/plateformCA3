@@ -53,17 +53,17 @@ class Growtt extends Layer[(V, B)](1, "global") with ASTLt[V, B] with BranchName
   // he name of root to arg(0).lowercase
 }
 /** Simple growth from V to E to V; test of in, and border.we believe that at least for border, and neighbor, it will be reused */
-class GrowRaw extends Layer[(V, B)](1, "global") with ASTLt[V, B] with BranchNamed{
+class Grow extends Layer[(V, B)](1, "global") with ASTLt[V, B] with BranchNamed{
   val n: BoolE = existS(this);
   // val in: BoolE = inside(this);
   val brd: BoolE = borderS(this);
   override val next: BoolV = existS(n) //   uses  defVe implicitely, the override keyword is mandatory
-
+  show(this)
   // he name of root to arg(0).lowercase
 }
 
 /** uses plain  blobV computation to grow seed into Voronoi region,  by stoping the growth just before merge happens */
-class Grow() extends Layer[(V, B)](1, "global") with BoolV  with carrySysInstr with BranchNamed {
+class GrowVor() extends Layer[(V, B)](1, "global") with BoolV  with carrySysInstr with BranchNamed {
   val bf=new BlobVFields(this)
   val b=new BlobV(this,bf)
    override val next: AST[(V, B)] = this | bf.brdV & ~b.meet//we extend the blob around the border brdV, except for meeting meeting points

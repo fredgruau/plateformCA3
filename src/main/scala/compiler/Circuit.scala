@@ -62,15 +62,15 @@ abstract class Circuit[L <: Locus, R <: Ring](p: Param[_]*) extends AST.Fundef[(
     val prog1: DataProg[InfoType[_]] = DataProg(this,root4naming,nameCAlowerCase);
     //prog1.checkInvariant ca a un cout exponentiel
     // car le calcul des used variables n'est pas mémoisé, et le dag n'est pas encore treefié.
-   // print(prog1)
+  // print(prog1)
 
     //Now that fields have received a name, we can compute labelsOfFields
     labelsOfFields=labelsOfFieldsBeforeName.map{ case (key, value) => (key.name, value) }.toMap
    // print(labelsOfFields)
 
 
-    val prog2 = prog1.treeIfy();prog2.checkInvariant
-      print("222222222222222222222222222222222222222222222222222222222222222222222222222222222\n" + prog2);
+    val prog2 = prog1.treeIfy();//prog2.checkInvariant
+  //    print("222222222222222222222222222222222222222222222222222222222222222222222222222222222\n" + prog2);
 
     val prog3: DataProg[InfoType[_]] = prog2.procedurIfy();
       print("3333333333333333333333333333333333333333333333333333333333333333333333\n" + prog3);

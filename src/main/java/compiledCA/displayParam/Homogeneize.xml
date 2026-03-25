@@ -1,17 +1,17 @@
 <displayParam>
         <expandedLayer>
         <Layer>
+          homogeneizePartLead
+        </Layer><Layer>
           homogeneizePartVorFlipaftermutexconstr
-        </Layer><Layer>
-          homogeneize
-        </Layer><Layer>
-          homogeneizePartZgt
         </Layer><Layer>
           homogeneizePartDgv
         </Layer><Layer>
           homogeneizePart
         </Layer><Layer>
-          homogeneizePartSu
+          homogeneizePartGc
+        </Layer><Layer>
+          homogeneizePartVorBf
         </Layer><Layer>
           homogeneizePartVor
         </Layer><Layer>
@@ -19,30 +19,28 @@
         </Layer><Layer>
           homogeneizePartFlipafterlocalconstr
         </Layer><Layer>
-          homogeneizePartZ
-        </Layer><Layer>
           homogeneizePartVorFliprioofmove
+        </Layer><Layer>
+          homogeneize
+        </Layer><Layer>
+          homogeneizePartInbl
+        </Layer><Layer>
+          homogeneizePartCentr
         </Layer><Layer>
           homogeneizePartFliprioofmove
         </Layer><Layer>
           homogeneizePartVorB
-        </Layer><Layer>
-          homogeneizePartZlt
-        </Layer><Layer>
-          homogeneizePartD
-        </Layer><Layer>
-          homogeneizePartMergedmovesyyyseize
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0x000000">
-            homogeneizePartRiMuis
+          <layer color="0x00FFFF">
+            homogeneizePartCentrCenter
           </layer><layer color="0xFFC800">
             homogeneizePartIsv
-          </layer><layer color="0x00FFFF">
-            homogeneizePartInblMuis
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
+          </layer><layer color="0x000000">
+            homogeneizePartDgvMuis
           </layer>
         </colorOfField>
       </displayParam>

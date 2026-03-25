@@ -53,8 +53,6 @@ object RedS {
     val param = pL[S1, R]("p" + l.shortName + n.name.shortName) //parameter names inform about locus
     Fundef1(redsfunName(r, l)(m, n, q), redsDirect[S1, S2, R](r, param), param) // we compute a function of one argument. res is the body, param are the single parameter
   }
-
-
   /**
    *
    * @param S1 origine simplicial type

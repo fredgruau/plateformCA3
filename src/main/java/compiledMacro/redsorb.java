@@ -56,4 +56,18 @@ for (int i = 1; i < ppFV$do.length -1; i++) {
   p.mirror(redsorbfvR);
 p.prepareBit(redsorbfvR)
  ;
+  }
+public static int ve_1_1GateCount=3;
+ public static void ve_1_1(PrShift p,int [] ppVE,int [][] redsorbveR){
+ int[] redsorbveR$h=redsorbveR[0],redsorbveR$d=redsorbveR[1],redsorbveR$ad=redsorbveR[2];
+
+// initialisation 
+ int auxL00=0,auxL01=0;
+for (int i = 1; i < ppVE.length -1; i++) {
+ redsorbveR$h[i-1]=(( auxL01  <<  1 ) |  auxL01 );auxL01= ppVE[i] ;redsorbveR$d[i-1]=( auxL00  |  auxL01 );redsorbveR$ad[i-1]=( auxL00  | ( auxL01  >>>  1 ));
+ auxL00= auxL01 ;
+  }
+  ;
+p.prepareBit(redsorbveR)
+ ;
   }}

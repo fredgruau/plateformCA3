@@ -27,7 +27,6 @@ abstract class SiFieldZeroInit2(n:Int,  source: MuStruct[V, B],val srcProp:BoolV
     override val next: AST[(V, SI)] =cond (exist(srcProp)|source.muis.munext,delayedL( this.pred +cond(source.muis.munext, sign(targetOnSource) ,delta))(this.mym),zero)
   }
 
-
   /** slopelt retrieves the sign of the slope, which is allways needed, delta is 0, +1 ot -1  we update with small delta:either increment or decrement */
   val (sloplt: BoolVe, delta, buginAvg, gap) = deltaCallProp(muis.pred,srcProp,op)
   val slopgt = neighborsSym(sloplt);  val existNearer = exist(sloplt);  val existFurther = exist(slopgt);
@@ -75,7 +74,6 @@ class InnerRadius(source: MuStruct[V, B], val d:MuDist, val dgv:MuDist)
 
   override def showMe: Unit = {super.showMe; shoow(srcProp)
     shoow (sloplt2); shot(grad)
-
   }
 }
 

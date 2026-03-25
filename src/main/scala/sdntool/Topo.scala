@@ -16,17 +16,19 @@ import compiler.Circuit.hexagon
 import compiler._
 import compiler.ASTLt.ConstLayer
 import dataStruc.{BranchNamed, Named}
-import progOfStaticAgent.Convergent
-import progOfmacros.Comm.{apexE, apexV, insideBall, neighborsSym, symEv}
+import progOfStaticAgent.{Convergent, SpreadOnSummit}
+import progOfmacros.Comm.{adjacentBall, apexE, apexV, insideBall, neighborsSym, symEv}
 import sdn.MovableAgV
 import progOfmacros.{Topo, Wrapper}
 import progOfmacros.Compute._
 import progOfmacros.Wrapper.{borderS, exist, existS, inside, insideS, not, shrink, shrink1, shrink2, shrink3}
-import progOfmacros.RedT.{cac, enlarge, enlargeEF, enlargeFE}
+import progOfmacros.RedT.{cac, enlarge, enlargeEF, enlargeFE, shrinkshrink}
 import progOfmacros.Topo.{brdin, nbcc, nbccV, nbccVe}
 import sdn.Globals.root4naming
-import sdn.Util.addSym
-import sdntool.{MuDist, addDist}
+import sdn.Util.{addLt, addSym}
+import sdntool.{MuDist, addDist, addDistVor}
+
+import scala.collection.IterableOnce.iterableOnceExtensionMethods
 /** contains fields that can be computed for any boolV representing blobs, not just Vagents
  * for exemple, we can us it to grow voronoi, which needs meeting point
  * */
@@ -142,6 +144,9 @@ trait addGcenter{
   }
 } //todo verifier que override fonctionne
 /** avoid simultaneous emtpy and invade  that can result in creating holes */
+
+
+
 trait blobConstrTrou{
   self: MovableAgV with addBloobV=>
   val videPlein= MutKeepFlipIf(this,Both(),bf.brdE) _ ;  addConstraint("videplein",';',videPlein)}
@@ -152,8 +157,69 @@ trait  blobConstrain   {
   addConstraint("vmeet",'_',vmeet)
   /**a doubleton cannot flip both vertices*/
   val emeet = MutKeepFlipIf(this,Both(),b.meetE) _ ;  addConstraint("emeet",'=',emeet);}
-/** field needed to compute the constraints of  a quasipoint, and possibly elsewehere */
 
+/** computes wether a quasiParticle is resting within its voronoi wall (it could not move) */
+trait addProp{
+  self: MovableAgV with addDistVor with QpointConstrain=>
+/** rename this.muis in order to be able to adress it later on. */
+  val muisSelf= this.muis
+  val prop=new Attributs() { //su==summitFields
+    override val muis: ASTLg with carrySysInstr = muisSelf
+    val brdVeSlopped =bf.brdVeIn & dgv.sloplt
+    val allBrdSlop: UintV = concatR(brdVeSlopped) //on récupére 18 bits a la suite pour 6 voisins, chacun 3 bits,
+    val (e, se, sw, w, nw, ne) = (elt(0, allBrdSlop), elt(1, allBrdSlop), elt(2, allBrdSlop), elt(3, allBrdSlop), elt(4, allBrdSlop), elt(5, allBrdSlop)) // aprés on les numérote
+    val (xe, xse, xsw, xw, xnw, xne) = (existize(e), existize(se), existize(sw), existize(w), existize(nw), existize(ne))
+    val a:Array[BoolV]=Array(xe, xse, xsw, xw, xnw, xne)
+    /** interdit la présence de deux trous contigus qui crée donc un trou de deux directions adjacentes */
+     val trous:Array[BoolV]=(0 until 6).map(i => ~ a(i)   &  ~ a((i+1)%6)).toArray
+    //val trous:Array[BoolV]=(0 until 6).map(i => ~ a(i) ).toArray
+    /** interdit la présence de deux trous unitaire en face l'un de l'autre */
+    val trousSym:Array[BoolV]=(0 until 3).map(i =>  ~ a(i)   &  ~ a((i+3)%6) ).toArray
+
+    import compiler.MyAstlBoolOp
+    val xTrou=trous.reduce ((x, y) => x|y) //y a un trou on peut bouger
+    val xTrousSym=trousSym.reduce ((x, y) => x|y) //y a un trou on peut bouger
+    val proped= ~xTrou  & ~ xTrousSym  &  muisSelf//calé si pas de trou
+    override def showMe: Unit = {shoow(e, se, sw, w, nw, ne,xe, xse, xsw, xw, xnw, xne, xTrou,proped)}
+  }
+}
+/**
+ * Calcule une zone remarquable inclue dans summit, de 1,2, ou 3 vertex, appelée centre, qu'on pense que c'est la zone
+ * a envahir par la qseed, pour se trouver impeccablement au centre du voronoi
+ * fait des calculs assez compliqué pour occuper le sommet le mieux possible par rapport
+ * a sa forme spécifique */
+
+trait addCenter {
+  self: MovableAgV with addDistVor with QpointConstrain=>
+  val muissSelf= this.muis
+  val centr=new Attributs() { //su==summitFields
+    override val muis: ASTLg with carrySysInstr = muissSelf
+    val isSummit: BoolV = ~exist(dgv.slopgt) & adjacentBall(isV)
+    /** number of summit in immediate neighborhood */
+    val density: UintVx = addLt(countNeighbors(addSym(e(isSummit)).sym))
+    /** summits of local highest density */
+    val isSummSumm = isSummit & ~exist(transfer(density.gt) & neighborsSym(e(isSummit)))
+    /** true if there is a single sumsum */
+    val singleSumSum = isSummSumm & ~exist(transfer(v(density.eq)) & neighborsSym(e(isSummit)))
+    val nbCC: UintV = nbccV(borderS(isSummit))
+    val meetV = nbCC > fromInt(1)
+    val cutingSumSum = singleSumSum & meetV
+    val isSummitN = neighborsSym(e(isSummit))
+    val vassalN = shrinkshrink(isSummitN)
+    val vassal2N = shrinkshrink(vassalN)
+    val isNullVassal2N = ~exist(vassal2N)
+    val vassalMin = cond(e(isNullVassal2N), vassalN, vassal2N)
+    val isVassal = exist(neighborsSym(vassalMin & e(singleSumSum)))
+    /** neighbor of vassal with higher density of vassal that is not sumsum */
+    val queen: BoolV = isSummit & (~isSummSumm) & exist(transfer(density.lt) & neighborsSym(e(isVassal)))
+    /** aboutissement de tout ces calculs et d'identifier "center", zone du sommet qu'on souhaite occuper */
+    val center = isSummSumm | isVassal | queen
+    val notCentered= center ^ isV
+    val notCentrForallize=   existize(notCentered)
+    override def showMe: Unit = {shoow(center,isSummit,isVassal,queen,isSummSumm,notCentered)}
+  }}
+
+/** field needed to compute the constraints of  a quasipoint, and possibly elsewehere */
 trait addQpointFields {
   self: MovableAgV with addBlobVfields => //MovableAgentV with addBlobVfields =>
   /** allows to refere to the englobing class from the body of the anonymous attribute */

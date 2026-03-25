@@ -5,11 +5,12 @@ import compiler.AST.{Call2, Fundef2}
 import compiler.ASTL.{sym, transfer}
 import compiler.ASTLfun.{cond, e, v}
 import compiler.{AST, ASTB, ASTBfun, ASTBt, ASTLfun, B, E, Locus, Ring, T, V, repr}
-import compiler.SpatialType.{BoolE, BoolEv, BoolV, BoolVe}
+import compiler.SpatialType.{BoolE, BoolEv, BoolV, BoolVe, UintVx}
 import dataStruc.{BranchNamed, Named}
 import progOfmacros.Comm.neighborsSym
 import progOfmacros.Wrapper.{borderS, exist}
 import progOfmacros.RedT.{clock2, shrink2min1to5}
+import progOfmacros.Wrapper
 import sdn.Globals.root4naming
 import sdn.Rand
 import sdn.Util.addSym
@@ -49,6 +50,8 @@ case class MoveC1 (val empty: BoolV, val push: BoolVe) extends MoveC{
   }
   /* adds a condition to the move*/
   def restrict(cond:BoolV)= MoveC1(empty & cond,push & e(cond))
+  /** rand is a small proba that we do empty if its  target, or we do not push if it is not */
+  def inflechi(target:BoolV,rand:BoolV)=MoveC1(empty&(~target|rand),push& (e(rand)|neighborsSym(e(target))))
   /* convert push to a boolV, true for vertice pointed by one of the push. NB there can be several distinct push
   * to the same single vertice, it is sufficient that there is one.  */
   val invade=exist(neighborsSym(push))
@@ -104,7 +107,20 @@ abstract class Force extends  Named {
       override def actionV(ag: MovableAgV): MoveC =  myThis.actionV(ag) | that.actionV(ag)
     }
   }
-}
+  /** wherever this!that, voids with a probability half*/
+   def inflechi(target:BoolV):Force={
+    val myThis=this
+     val rnd= root4naming.addRandBit().asInstanceOf[BoolV]
+     val rnd2= root4naming.addRandBit().asInstanceOf[BoolV]
+     val rnd3= root4naming.addRandBit().asInstanceOf[BoolV]
+     new Force {
+      override def actionV(ag: MovableAgV): MoveC =
+        myThis.actionV(ag).asInstanceOf[MoveC1].inflechi(rnd&rnd2&rnd3,target) //marche seulement si le move est un moveC1
+    }
+  }}
+
+
+
 object Force{
   /**
    *
@@ -117,15 +133,14 @@ object Force{
   }
 
   import MoveC._
-  /** produce maximum possible move, rely on priority to obtain random movement */
+  /** produce maximum possible move, rely on random bits of priority to obtain random movement */
   val total:Force=new Force(){
     override def actionV(ag: MovableAgV): MoveC = MoveC1(ag.muis,ag.bf.brdVeIn)//extends and empties everywhere possible.
   }
-
   /**
    *
    * @param cible where we want our particle to be
-   * @return creates a force that will let the particle exactly fills cible */
+   * @return creates a generic force that will let the particle exactly fills cible */
   def cibler(cible:BoolV):Force=new Force{
     val toCible=neighborsSym(e(cible))
     /** true if there is a target in the immediate neighborhood */
@@ -136,28 +151,81 @@ object Force{
     }
   }
 
+  /**
+   *
+   * @param stbl true if forces of lower priority should be voided
+   * @return a force that blocks movement of lower priority, so as to obtain convergence.
+   */
+  def stabilize(stbl:BoolV): Force = new Force() {
+      //import compiler.ASTLfun.fromBool
+      override def actionV(ag: MovableAgV): MoveC = {
+        val yes=MoveC1(root4naming.myFalse,e(root4naming.myFalse)) //force is pure negative
+        /** if stable2 , this will cancel movement of lower priority, */
+          val agblob=ag.asInstanceOf[addBlobVfields]
+        val no = MoveC1(stbl, e(stbl)& ag.bf.brdVeIn) // negative  forces
+        MoveC2(yes,no)
+      }
+  }
+
+
+
+
+
+
+
 /*
   val emptyZgt=(isV&zgt.muis) & exist(neighborsSym(e(isV & ~(zgt.muis))))
   val emptyZlt= (isV& ~zlt.muis) & exist(neighborsSym(e(isV & (zlt.muis))))
   val pushZlt=shrink2min1to5(neighborsSym(e(zlt.muis)))
   val pushZgt=shrink2min1to5(neighborsSym(e(~zgt.muis)))*/
 
-
+  /**
+   *
+   * @param zoneGt signal comming from nearest Gabriel centes, true if radius of adjacent voronoi is bigger,
+   * @return force which repulse move the particles aways from this bigger voronoi,
+   */
   def repulsePropagate(zoneGt:BoolV):Force = new Force{
     override def actionV(ag: MovableAgV): MoveC = {
+      //emptying applies on tripleton or doubleton, on vertice inside zoneGt having neighbor vertices outside
         MoveC1( ag.muis & zoneGt & exist(neighborsSym(e(ag.muis & ~ zoneGt))),
+      //we fill by looking "most away as possible from zoneGt
       shrink2min1to5(neighborsSym(e(~zoneGt))))
     }
   }
-
-
+  /**
+   *
+   * @param zoneLt signal comming from nearest Gabriel centes, true if radius of adjacent voronoi is smaller,
+   * @return force which  move the particles nearer to this smaller voronoi,
+   */
   def attractPropagate(zoneLt:BoolV):Force = new Force{
     override def actionV(ag: MovableAgV): MoveC = {
+      //emptying applies on tripleton or doubleton, on vertice outside zoneLt having neighbor vertices inside
       MoveC1( ag.muis & ~ zoneLt & exist(neighborsSym(e(ag.muis &  zoneLt))),
+        //we fill by looking "most towards as possible to zoneLt
         shrink2min1to5(neighborsSym(e(zoneLt))))
     }
   }
 
+/** use density to favors occupancy of center of voronoi */
+  def seizeSummitDensity(density:UintVx)=new Force{
+    override def actionV(ag:MovableAgV): MoveC= {
+      val hasNearer: BoolV = exist(transfer( density.lt) & neighborsSym(e(ag.muis)))
+      val hasFurther = Wrapper.exist(transfer( density.gt) & neighborsSym(e(ag.muis)))
+      val notDense = density < fromInt(3)
+      val notDenseN = addSym(e(notDense))
+      val oui=MoveC1( ag.muis & hasFurther & ~hasNearer & notDense, //on vide si y a des plus loin, pas de plus pres,
+        // et si on n'est pas dense
+        transfer(density.gt)& ag.bf.brdVeIn) //on envahit des voisines plus dense OK
+      //on va toujours remplir un vertice dont la densité est plus grande
+      //pour cibler des particules tripleton,
+      // on peut ou on peut ne pas autoriser  de vider si nombre de voisin est   3
+
+      val non = MoveC1(ag.muis & ~hasFurther,  //on interdit de vider si y a pas de plus dense a coté
+        transfer( density.lt)  & ag.bf.brdVeIn & notDenseN.sym ) //on interdit d'envahir des moins dense qui de plus ne sont pas dense
+      //on ne vas pas non plus chercher a remplir un vertice sommet voisin de dentisté pluc petite, si celle ci est  <3
+      MoveC2(oui, non)
+    }
+  }
 
 
   /** we designed a random move that does not break the quasipoint property,

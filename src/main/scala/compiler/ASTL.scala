@@ -74,7 +74,7 @@ object ASTL {
   { val tmp =  new Broadcast[S1, S2, R](arg, m, n) //step 1 is broadcast
   cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Broadcast[S1, S2, R]]
   }
-  /** a bit more subtle than broadcast, sends a distinct component to each of T[S1,S2]
+  /** a bit more subtle than broadcast, sends a distinct field to each of T[S1,S2]
    * size of the list is equal to fanout of locus for vertex it is 6, For edge it is 2.  */
   private[ASTL] final case class Send[S1 <: S, S2 <: S, R <: Ring](args: List[ASTLt[S1, R]])
                                                                   (implicit m: repr[T[S1, S2]], n: repr[R])

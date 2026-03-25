@@ -1,6 +1,6 @@
 package sdntool
 
-import compiler.ASTL.{anticlock, delayedL, sym, transfer}
+import compiler.ASTL.{ASTLg, anticlock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, ltSI, v}
 import compiler.ASTLt.ConstLayer
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf}
@@ -9,14 +9,14 @@ import progOfStaticAgent.{Homogen, Leader, Seed, SpreadOnSummit}
 import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.{exist, existS, inside}
-import sdn.{Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, addGcenter}
+import sdn.{Attributs, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, QpointConstrain, addGcenter, addVor, carrySysInstr}
 /**
  *
  * @param d distance to particle
  * @param ri radius broadcasted from the particle
  *
  */
-class Zone(p:SpreadOnSummit, val rislope:BoolVe) extends MuStruct [V,B] {
+class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter with QpointConstrain, val rislope:BoolVe) extends MuStruct [V,B] {
   override def inputNeighbors = List()
   val next2rect=neighborsSym(e(p.rect))
   /** true in the beginning, where voronoi is all over the place*/
@@ -62,7 +62,7 @@ class Zone(p:SpreadOnSummit, val rislope:BoolVe) extends MuStruct [V,B] {
  *  such as the inner radius being temporarily not the same */
 trait addRect{
   val rectLayer=new ConstLayer[V, B](1, "border")
-  val rect:BoolV=rectLayer&rectLayer //manip qui a l'air débile, pour avoir un nom sous forme d'un path.
+  val rect:BoolV=rectLayer&rectLayer //manip qui a l'air débile, c'est pour avoir un nom sous forme d'un path.
 }
 /** signal envoyé vers là ou le rayon est plus petit */
 trait addZoneLt {
@@ -76,4 +76,20 @@ trait addZoneGt {
   self: SpreadOnSummit => //adds a leader to a seed ,
   val zgt=new Zone(this,ri.sloplt);
   //show(d); les show doivent etre fait dans le main
+}
+
+/** ajoute les zone, plus qq calcule qui les fait intervenir les deux  */
+trait addZone {
+  self: MovableAgV with addRect with addDist with addVor with addGcenter with QpointConstrain with addRadius =>
+  val me=this
+  val zon = new Attributs() {
+    override val muis: ASTLg with carrySysInstr = me.muis
+    val zlt = new Zone(me, ri.slopgt);
+    val zgt = new Zone(me, ri.sloplt);
+    val zneq = zlt.muis | zgt.muis
+    /** it is sufficient that one vertex of the particle support feels an difference in radius, for the whole support to feel it. */
+    val zneqexistize = existize(zneq)
+    val zeqOnSeed = ~zneqexistize & isV
+    override def showMe: Unit = {zlt.showMe; zgt.showMe; shoow(zeqOnSeed, zneq, zneqexistize)    }
+  }
 }

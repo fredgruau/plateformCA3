@@ -106,7 +106,7 @@ object RedT {
 
 
   def shrinkshrink(arg:BoolVe):BoolVe=shrinkFE(shrinkEF(arg))
-  /** from a continuous opened neighborhood, computex the max shrinking possible before total emptying
+  /** from a continuous opened neighborhood, computes the max shrinking possible before total emptying
    * if the neighorhood is five, it should take two turns, if it is four or three, it takes only one turn. */
   def shrink2min3to5(arg:BoolVe):BoolVe={
     val vassalN=shrinkshrink(arg)
@@ -118,8 +118,12 @@ object RedT {
   /** works for also neighborhood stretch of 1 or 2 */
   def shrink2min1to5(arg:BoolVe):BoolVe={
     val shrink3to5=shrink2min3to5(arg)
-    val isNull3to5= ~ exist(shrink3to5)
-    cond(e(isNull3to5),arg,shrink3to5)
+    val isNull3to5: BoolV = ~ exist(shrink3to5)
+    /** if arg is on everywhere, shrinking cannot be done */
+    val nonShrinkable= ~ exist(~arg)
+    val resultIfShrinkable=cond(e(isNull3to5),arg,shrink3to5)
+    // if non shrinkable we cannot move
+    e(~nonShrinkable)&resultIfShrinkable
   }
 
 

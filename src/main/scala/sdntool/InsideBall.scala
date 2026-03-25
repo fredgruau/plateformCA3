@@ -17,7 +17,6 @@ import sdn.{Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, Vor}
  */
 class InsideBall(d:MuDist,ri:InnerRadius,v:Vor) extends MuStruct [V,B] {
   override def inputNeighbors = List(d, ri)
-
   val rmd = delayedL(ri.muis +(- d.muis))
   val inBall = ~ltSI(rmd)|d.source.muis
   /** true if next to previous inside ball */
@@ -41,8 +40,9 @@ class InsideBall(d:MuDist,ri:InnerRadius,v:Vor) extends MuStruct [V,B] {
   }
 }
 
+/** ajoute la capacité de calculer l'inside ball */
 trait addInsideBall {
-  self: SpreadOnSummit => //adds a leader to a seed ,
+  self: SpreadOnSummit =>
   val inbl=new InsideBall(d,ri,vor);
   //show(d); les show doivent etre fait dans le main
 }
