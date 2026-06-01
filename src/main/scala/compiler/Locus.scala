@@ -145,11 +145,26 @@ final case class F() extends S {
 
   override def scheduleProj(t: Seq[Int]): Array[Int] = Array(t(0), t(3))
 
+
   private val p2 = List(3, 4, 5).permutations
 
   private def combine(t: List[Int], u: List[Int]): Seq[Array[Int]] = List((t ::: u).toArray, (u ::: t).toArray)
 
-  def partitionnables: Option[Iterator[Array[Int]]] = Some(List(0, 1, 2).permutations.flatMap((t: List[Int]) => p2.map(combine(t, _))).flatten)
+  def partitionnablesOlc: Option[Iterator[Array[Int]]] = {
+    Some(List(0, 1, 2).permutations.flatMap((t: List[Int]) => p2.map(combine(t, _))).flatten)
+  }
+  def partitionnables: Option[Iterator[Array[Int]]] = {
+    val it =
+      for {
+        p1 <- (0 to 2).permutations
+        p2 <- (3 to 5).permutations
+        res <- Iterator(p1 ++ p2, p2 ++ p1)
+      } yield res.toArray
+     Some(it)
+  }
+
+
+
 
   def partitionable(a: scala.Seq[Int]) = a(0) == a(1) && a(1) == a(2) && a(3) == a(4) && a(4) == a(5)
 }

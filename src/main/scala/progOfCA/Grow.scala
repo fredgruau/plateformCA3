@@ -53,13 +53,25 @@ class Growtt extends Layer[(V, B)](1, "global") with ASTLt[V, B] with BranchName
   // he name of root to arg(0).lowercase
 }
 /** Simple growth from V to E to V; test of in, and border.we believe that at least for border, and neighbor, it will be reused */
-class Grow extends Layer[(V, B)](1, "global") with ASTLt[V, B] with BranchNamed{
+class GrowVE extends Layer[(V, B)](1, "global") with ASTLt[V, B] with BranchNamed{
   val n: BoolE = existS(this);
   // val in: BoolE = inside(this);
   val brd: BoolE = borderS(this);
   override val next: BoolV = existS(n) //   uses  defVe implicitely, the override keyword is mandatory
   show(this)
   // he name of root to arg(0).lowercase
+}
+
+
+/** Growing  from E through F */
+class Grow extends Layer[(E, B)](1, "global") with ASTLt[E, B] {
+// val broadcasted = f(this) //step 1 is broadcast
+//  val transfered = transfer(broadcasted) //step 2 is transfer
+ // val nf: BoolF= orR(transfered) //(n,m,d) yzeté implicit killerest
+  val nf2: BoolF = existS(this);
+  override val next: BoolE = existS(nf2) //  make use of defVe brough to us implicitely,nb if overrid is not written, it does not work!
+  show(this)
+  //show(this, broadcasted, transfered, nf, next)
 }
 
 /** uses plain  blobV computation to grow seed into Voronoi region,  by stoping the growth just before merge happens */
@@ -102,14 +114,6 @@ class GrowF extends Layer[(V, B)](1, "global") with ASTLt[V, B] {
 
 }
 
-/** Growing  from E through F */
-class GrowEF extends Layer[(E, B)](1, "global") with ASTLt[E, B] {
-  val broadcasted = f(this) //step 1 is broadcast
-  val transfered = transfer(broadcasted) //step 2 is transfer
-  val nf = orR(transfered) //(n,m,d) yzeté implicit killerest
-  override val next: BoolE = existS(nf) //  make use of defVe brough to us implicitely,nb if overrid is not written, it does not work!
-  show(this, broadcasted, transfered, nf, next)
-}
 
 /** Growing  from E through V */
 class GrowEV extends Layer[(E, B)](1, "global") with ASTLt[E, B] {

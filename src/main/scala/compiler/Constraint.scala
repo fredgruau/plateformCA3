@@ -41,9 +41,10 @@ sealed abstract class Constraint(val locus:Locus)
     HashSet[Seq[Int]]()++filteredPerms
   }
   def printSchedules(): String = {
-    var result: String = "";
+    var result: String = ""
+    val i=0
     for (s: Seq[Int] <- schedules)
-      result += s.map(locus.the6sufx(_)).mkString("->")+" "
+      result += s.map(locus.the6sufx(_)).mkString("->")+" "+i+";"
     result
   }
 
@@ -62,8 +63,13 @@ sealed abstract class Constraint(val locus:Locus)
   /** constraint obtained by picking one schedule
    * TODO could be improved to avoid generate all the schedules, but only the first one! */
   def pick(): Constraint = {
-    if (empty) throw new RuntimeException("empty constraint cannot be picked + this")
+    if (empty) {
+      throw new RuntimeException("empty constraint cannot be picked + this")
+    }
+    println("rrr");printSchedules()
     val s = schedules
+    if(s.isEmpty)
+      throw(new Exception("pas de schedules"))
     Schedules(HashSet(s.head), locus)
   }
 }
@@ -252,7 +258,9 @@ object Constraint {
     def card: Int = slocus.card
     def permute(p: Array[Int], l: Locus): Partition = Partition(compose(invert(p), b), slocus, l.asInstanceOf[TT])
    override def schedules: HashSet[Seq[Int]] = if (slocus.isInstanceOf[V]) AllConstr(locus).schedules
-    else {  val possible=slocus.partitionnables.get.toList
+    else {
+      val slpart=slocus.partitionnables
+      val possible=slpart.get.toList
       HashSet.empty ++  possible.map(  compose(_, rectify).toSeq)     }
     override def verified(a: Seq[Int]): Boolean = slocus.partitionable(compose(a, b))
     /***

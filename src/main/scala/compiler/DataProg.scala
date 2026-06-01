@@ -201,7 +201,7 @@ object DataProg {
     tsb ++= layers.map(a => (Named.lify(a.name), InfoType(a, LayerField(a.nbit, a.init)))) // stores layers with bit size, in the symbol table.
     val newProg=new DataProg[InfoType[_]](new DagInstr(instrs, dag), //alreadycompiled fun will not be in subFun,
       toBeCompiled.map { case (k, v) ⇒ k -> DataProg(v,v.body,k) }, tsb, f.p.toList.map("p" + _.name), List())//compiles carefully selected subset of macros.
-    //newProg.checkInvariant;
+    //newProg.checkInvariant; //virer en mode pas debug, sinon ca risque de prendre un temps exponentiel.
     newProg
   }
 
@@ -276,6 +276,7 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
     def isLayer(name: String) = tSymbVar(name).k.isLayerField
     tSymbVar.keys.filter(isLayer(_)).toList
   }
+  /** Check for example, that every used field is in the symbol table. Temporarily disabled to avoid exponential time due to hashcode not being cached. */
   def checkInvariant={
     def invariantLayers={ //only the main can have layers, oups, not true because we pass the defVe layers
       assert(allLayers.isEmpty||isRootMain, "we have a macro" +"with layers, let us look at produce java, what happens in the suppressed segment")
@@ -296,10 +297,17 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
         if (!tSymbVarExists(v) && !tSymbVarExists("p" + v) && !v.startsWith("mem["))
           throw new Exception("variable:" + v + " not present in symbol table")
     }
- invariantCoalesc;
+    def invariantUsedBeforeDef={
+      val d=delayed;
+      if(d.nonEmpty)
+        print("warning: variable:" + d + " used before defined")
+    }
+    invariantCoalesc;
     invariantSingleMain;
     invariantVariable//}//;invariantLayers
+    invariantUsedBeforeDef
   }
+ //checkInvariant //temporarily disabled
   /** the main root is characterized by the fact that it has a bug layer. */
   def isRootMain: Boolean = tSymbVar.contains("llbugV")
 
@@ -1059,7 +1067,15 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
   def unfoldSpace(m: Machine): DataProg[InfoNbit[_]] = {
     if (!isLeafCaLoop) {
       val (muI, tSymbScalar) = muInstrMain(dagis) //computes the muI associated to a callProc and direct affectation, and the modified symbolTable.
-      return new DataProg(DagInstr(muI.reverse), funs.map { case (k, v) => k -> v.unfoldSpace(m) },
+      return new DataProg(DagInstr(muI.reverse),
+        funs.map { case (k, v) => k -> { System.out.println("premierdebug "+k);
+          if(k.startsWith("redsandb.vf_1_1") )
+            System.out.println("redsandb.vf_1_1")
+          if(k.startsWith("_fun39") )
+            System.out.println("_fun39")
+          if(k.startsWith("redsorb.ef_1_1") )
+            System.out.println("redsorb.ef_1_1")
+          v.unfoldSpace(m)} },
         tSymbScalar, paramD.flatMap(deploySpace(_)), paramR.flatMap(deploySpace(_)), HashMap.empty) //no coalesced registers we put empty to enforce schedule matters
     }
     val p = this.asInstanceOf[DataProg[InfoNbit[_]]]
@@ -1079,7 +1095,7 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
       val dagisWithShift: DagInstr = dagis.propagate(rewrite2)
       //  print("ererererererererererererererererererererererererererererererererererererererererererererer\n" + dagis2)
       if (!cycleConstraints.isEmpty)
-        println("Constraint: " + cycleConstraints) //we check constraints generated
+        System.out.println("Constraint: " + cycleConstraints) //we check constraints generated
       //for (i <- dagisWithShift.visitedL) i.reset //will become useless soon
       for (i <- dagisWithShift.visitedL) //adds the names of shifted variables introduced If cycles where present)
         if (i.isShift) {
@@ -1351,7 +1367,7 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
      * @return scheduled  muinstruction for redop.
      *         it depends wether the reduced field is folded or not
      *         Reduction can happen in successive step to optimize register use
-     *         a suffix #1 #2 #3 is appended to indicate which stage we are
+     *         a suffix #1 #2 #3 is appended to indicate which stage we are, may be it is _1 _2
      **/
     def foldRedop(i: Affect[_]): List[Instr] = {
       /**
@@ -1788,20 +1804,41 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
       var defs: Map[String, Instr] = defby(dagis.visitedL)
 
 
-      val idCand4Simplnotsdwich = idCandidate4Simplif.filter((s: String) => checkNotSandwich(defs(s).asInstanceOf[Affect[_]]))
+      val idCand4Simplnotsdwich: Predef.Set[String] = idCandidate4Simplif.filter((s: String) => checkNotSandwich(defs(s).asInstanceOf[Affect[_]]))
+
+      val keys: List[String] = tSymbVar.keys.toList
+      /** regroup  identifier having a common varkind */
+      val idIndexedByKind: Predef.Map[VarKind, List[String]] = keys.groupBy(tSymbVar(_).k)
+
+      val delayed: Set[String] = {
+        var res: Set[String] = HashSet()
+        var defined: Set[String] = HashSet()
+        for (instr: Instr <- dagis.visitedL.reverse) {
+          res ++= (instr.usedVars() -- defined)
+          defined ++= instr.names
+        }
+        if (idIndexedByKind.contains(ParamD()))
+          res --= idIndexedByKind(ParamD()).toSet // dis   <-  pdis makes pdis appear as a delayed variable,
+        // pdis appears in tabSymb sorted by kind,
+        // (res -- paramD.toSet).toList.sorted  pdis does not appears directly in paramD, which countains pdis#0, pdis#1 ...
+        res
+      }
+      val idCand4SimplnotsdwichClean: Set[String]= idCand4Simplnotsdwich -- delayed
+
+
 
       val newVisitedL = dagis.visitedL.reverse.map((f: Instr) =>
-        if (f.inputNeighbors.map(_.names(0)).toSet.intersect(idCand4Simplnotsdwich).nonEmpty) //f contains some read to be replaced
+        if (f.inputNeighbors.map(_.names(0)).toSet.intersect(idCand4SimplnotsdwichClean).nonEmpty) //f contains some read to be replaced
         {
-          val a = new Affect(f.names(0), defs(f.names(0)).exps(0).asInstanceOf[ASTBt[_]].simplify(idCand4Simplnotsdwich, defs))
+          val a = new Affect(f.names(0), defs(f.names(0)).exps(0).asInstanceOf[ASTBt[_]].simplify(idCand4SimplnotsdwichClean, defs))
           defs = (defs + (f.names(0) -> a)) // we update the defs as it might be reused on the fly when we replace a read in an expression which itself will replace another read.      a
           a
         }
         else f
       )
-      dagis.visitedL = newVisitedL.reverse.filter((i: Instr) => !idCand4Simplnotsdwich.contains(i.names(0))) //removes the now useless instructions
+      dagis.visitedL = newVisitedL.reverse.filter((i: Instr) => !idCand4SimplnotsdwichClean.contains(i.names(0))) //removes the now useless instructions
       WiredInOut.setInputAndOutputNeighbor(dagis.visitedL)
-      val nameStillUsed = p.dagis.visitedL.flatMap(_.names).toSet.diff(idCand4Simplnotsdwich)
+      val nameStillUsed = p.dagis.visitedL.flatMap(_.names).toSet.diff(idCand4SimplnotsdwichClean)
       val coalescedStillUsed = nameStillUsed.map((str: String) => coalesc.getOrElse(str, str))
       val used = dagis.usedVars
       for (str <- newTsymbar.keys) { //we remove from the table the now useless symbols
@@ -1822,7 +1859,10 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
     val newCoalesc = if (coalesc != null) coalesc.toList.filter((x: (String, String)) => newTsymbar.contains(x._2)).toMap
     else null
 
-    new DataProg(dagis, funs.map { case (k, v) ⇒ k -> v.simplify }, newTsymbar, paramD, paramR, newCoalesc)
+    new DataProg(dagis, funs.map { case (k, v) ⇒ k -> {
+      if(k.startsWith("redsorb.ef_1_1") )
+      System.out.println("redsorb.ef_1_1")
+      v.simplify }}, newTsymbar, paramD, paramR, newCoalesc)
 
 
   }

@@ -33,14 +33,14 @@
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0x00FFFF">
-            homogeneizePartCentrCenter
-          </layer><layer color="0xFFC800">
+          <layer color="0xFFC800">
             homogeneizePartIsv
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
           </layer><layer color="0x000000">
             homogeneizePartDgvMuis
+          </layer><layer color="0x00FFFF">
+            homogeneizePartCentrCenter
           </layer>
         </colorOfField>
       </displayParam>

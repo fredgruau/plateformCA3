@@ -137,8 +137,11 @@ class Zone(val root: Affect[_], val instrs: Iterable[Affect[_]], var constraintS
     // TODO why not consider all neighors to determine a schedule for everybody even unfolded zones
     val propagateConstr: List[Constraint] = foldedInNeighbors.map((z: Zone) => propagate(partitionnedInOut(z.name), z.constraintSchedule))
     val newConstr = Constraint.intersect(constraintSchedule :: propagateConstr, constraintSchedule.locus)
-    if (newConstr.empty) folded = false
-    else constraintSchedule = newConstr.pick()
+    print(newConstr)
+    if (newConstr.empty)
+      folded = false
+    else
+      constraintSchedule = newConstr.pick()
   }
 
   def pickedSchedule =
