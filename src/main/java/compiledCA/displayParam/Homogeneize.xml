@@ -3,23 +3,19 @@
         <Layer>
           homogeneizePartLead
         </Layer><Layer>
-          homogeneizePartVorFlipaftermutexconstr
+          homogeneizePartZonZgt
         </Layer><Layer>
           homogeneizePartDgv
         </Layer><Layer>
           homogeneizePart
         </Layer><Layer>
-          homogeneizePartGc
+          homogeneizePartD
         </Layer><Layer>
           homogeneizePartVorBf
         </Layer><Layer>
+          homogeneizePartZonZlt
+        </Layer><Layer>
           homogeneizePartVor
-        </Layer><Layer>
-          homogeneizePartRi
-        </Layer><Layer>
-          homogeneizePartFlipafterlocalconstr
-        </Layer><Layer>
-          homogeneizePartVorFliprioofmove
         </Layer><Layer>
           homogeneize
         </Layer><Layer>
@@ -27,20 +23,22 @@
         </Layer><Layer>
           homogeneizePartCentr
         </Layer><Layer>
-          homogeneizePartFliprioofmove
-        </Layer><Layer>
           homogeneizePartVorB
+        </Layer><Layer>
+          homogeneizePartGc
+        </Layer><Layer>
+          homogeneizePartZon
         </Layer>
       </expandedLayer>
         <colorOfField>
           <layer color="0xFFC800">
             homogeneizePartIsv
+          </layer><layer color="0x0000FF">
+            homogeneizePartCentrIssummit
           </layer><layer color="0xFF0000">
             homogeneizePartVorIsv
           </layer><layer color="0x000000">
             homogeneizePartDgvMuis
-          </layer><layer color="0x00FFFF">
-            homogeneizePartCentrCenter
           </layer>
         </colorOfField>
       </displayParam>

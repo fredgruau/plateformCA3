@@ -251,11 +251,16 @@ public class Util {
             for (int i = 0; i < src.length; i++)
                 copy(src[i], dest[j * src.length + i]);
     }
+
+    /** cas plus restreint ou on broadcast juste un seul bit. */
+    public static void broadcaast1(int rapport, int[][] src, int[][] dest) {
+        broadcaast(dest.length/src.length,src,dest);
+    }
     /**
      * used to broadcast an IntE field, such as a distance to an int Transfer field
      */
-    public static void broadcaast(int rapport, int[][] src, int[][] dest) {
-        int arity = dest.length / src.length; //
+        public static void broadcaast(int rapport, int[][] src, int[][] dest) {
+            int arity = dest.length / src.length; //
         int nbit= dest.length/6;
 
         for (int i = 0; i < nbit; i++)

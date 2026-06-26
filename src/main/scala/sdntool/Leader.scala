@@ -1,4 +1,4 @@
-package progOfStaticAgent
+package sdntool
 
 import compiler.ASTL.{anticlock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e}
@@ -8,11 +8,15 @@ import progOfmacros.Comm.adjacentBall
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.exist
 import sdn.{Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct}
+import progOfStaticAgent.Seed
 
 /**
  *
  * @param source quasiparticle
- * identifies a vertex within source, may be not usefull after all,
+ * identifies a single vertex within source,
+ * when doing computation within a quasiparticle, only the leader would need to do them.
+ * Also, adding a leader dimish movement, indeed the leader moves less than the quasiparticle.
+ * may be not usefull after all,
  * since it is arguably easier to compute stuf on the whole particle support*/
 class Leader(source: Seed) extends MuStruct [V,B] {
   override def inputNeighbors = List(source)

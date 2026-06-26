@@ -44,4 +44,31 @@ tmun01=( auxL57  & ( auxL58  <<  1 ));
  p.mirror(redsandbevR);
 p.prepareBit(redsandbevR)
 ;
- }}
+ }
+public static int fv_1_1GateCount=5;
+ public static void fv_1_1(PrShift p,int [][] ppFV,int [] redsandbfvR){
+ int[] ppFV$do=ppFV[0],ppFV$up=ppFV[1];
+
+// initialisation 
+ int auxL98=0,auxL99=0,tmun10=0;
+for (int i = 1; i < ppFV$do.length -1; i++) {
+ auxL98= ppFV$do[i] ;auxL99= ppFV$up[i] ;redsandbfvR[i]=((( tmun10  &  auxL98 ) &  auxL99 ) & ( auxL98  >>>  1 ));tmun10=(( auxL99  &  auxL98 ) & ( auxL99  <<  1 ));
+  }
+  p.mirror(redsandbfvR);
+p.prepareBit(redsandbfvR)
+ ;
+  }
+public static int fe_1_1GateCount=3;
+ public static void fe_1_1(PrShift p,int [][] ppFE,int [][] redsandbfeR){
+ int[] redsandbfeR$h=redsandbfeR[0],redsandbfeR$d=redsandbfeR[1],redsandbfeR$ad=redsandbfeR[2],ppFE$do=ppFE[0],ppFE$up=ppFE[1];
+
+// initialisation 
+ int auxL116=0,auxL117=0,tmun32=0;
+for (int i = 1; i < ppFE$do.length -1; i++) {
+ auxL117= ppFE$do[i] ;auxL116= ppFE$up[i] ;redsandbfeR$h[i]=( auxL117  &  tmun32 );tmun32=( auxL116  <<  1 );
+ redsandbfeR$d[i]=( auxL117  &  auxL116 );redsandbfeR$ad[i]=( auxL116  & ( auxL117  >>>  1 ));
+  }
+  ;
+p.prepareBit(redsandbfeR)
+ ;
+  }}

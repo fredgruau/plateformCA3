@@ -4,7 +4,7 @@ import compiler.ASTL.{anticlock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, ltSI}
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf}
 import compiler.{AST, ASTBfun, B, Locus, Ring, V}
-import progOfStaticAgent.{Homogen, Leader, Seed, SpreadOnSummit}
+import progOfStaticAgent.{Homogen, Seed, SpreadOnSummit}
 import progOfmacros.Comm.{adjacentBall, insideBall}
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.exist

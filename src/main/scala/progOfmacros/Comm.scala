@@ -11,8 +11,18 @@ import progOfmacros.Wrapper.{exist, inside}
  *  such as adjacentRing, adjacentBall which uses neighborsSym
  *  we do not definie macros for those, in order to avoid generating too much java*/
 object Comm {
+  //faudra lui trouver un meilleur nom
+  val neighborsDefEv: Fundef1[(T[V,E], B), (T[E,V], B)] = {
+    val ve= pL[T[V,E], B]("nghhhh")
+    val ver: BoolEv= transfer(sym(ve))
+    ver.setName("ver");
+    Fundef1("comm.neighborsEv", ver, ve)
+  }
+  def neighborsEvSym(ve :BoolVe): BoolEv = new Call1[(T[V,E], B), (T[E,V], B)](neighborsDefEv, ve) with BoolEv
+
+
   /** Unary function: From a boolVe computes another symetric boolVe, exploiting the sym operator on edges */
-  val neighborsDef: Fundef1[(T[V, E], B), (T[V, E], B)] = {
+  val neighborsDef: Fundef1[(T[V, E], B), (T[V,E], B)] = {
     val ve = pL[T[V,E], B]("ngh")
     val ver: BoolVe = transfer(sym(transfer(ve)))
     ver.setName("ver");

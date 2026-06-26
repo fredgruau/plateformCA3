@@ -156,17 +156,36 @@ object Force{
    * @param stbl true if forces of lower priority should be voided
    * @return a force that blocks movement of lower priority, so as to obtain convergence.
    */
-  def stabilize(stbl:BoolV): Force = new Force() {
-      //import compiler.ASTLfun.fromBool
-      override def actionV(ag: MovableAgV): MoveC = {
-        val yes=MoveC1(root4naming.myFalse,e(root4naming.myFalse)) //force is pure negative
-        /** if stable2 , this will cancel movement of lower priority, */
-          val agblob=ag.asInstanceOf[addBlobVfields]
-        val no = MoveC1(stbl, e(stbl)& ag.bf.brdVeIn) // negative  forces
-        MoveC2(yes,no)
-      }
+
+
+  def stabilizeNotEmpty(stbl:BoolV): Force = new Force() {
+    //import compiler.ASTLfun.fromBool
+    override def actionV(ag: MovableAgV): MoveC = {
+      val yes=MoveC1(root4naming.myFalse,e(root4naming.myFalse)) //a stabilizing force is pure negative, so there are no yes move
+      /** if stable2 , this will cancel movement of lower priority, */
+      val agblob=ag.asInstanceOf[addBlobVfields]
+      val no = MoveC1(stbl, e(root4naming.myFalse)) // negative  forces do not empty for vertice which are stabilized, do not push towards stabilied vertice
+      MoveC2(yes,no)
+    }
   }
 
+  /**
+   *
+   * @param notEmpty vertice that should be kept full
+   * @param notFill  vertice that should be kept empty
+   * @return
+   */
+  def stabilize(notEmpty:BoolV,notFill:BoolV): Force = new Force() {
+    //import compiler.ASTLfun.fromBool
+    override def actionV(ag: MovableAgV): MoveC = {
+      val yes=MoveC1(root4naming.myFalse,e(root4naming.myFalse)) //a stabilizing force is pure negative, so there are no yes move
+      /** if stable2 , this will cancel movement of lower priority, */
+      val agblob=ag.asInstanceOf[addBlobVfields]
+      val notInvade:BoolVe=transfer(sym(transfer(e(notFill))))
+      val no = MoveC1(notEmpty, notInvade) // negative  forces do not empty for vertice which are stabilized, do not push towards stabilied vertice
+      MoveC2(yes,no)
+    }
+  }
 
 
 

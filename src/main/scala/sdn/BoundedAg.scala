@@ -83,7 +83,7 @@ class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/
 
 trait addVor {
   self:MovableAgV with addDist  with addGcenter /*with keepOutsideForce*/=>
-  val vor=new Vor(this)
+  val vor: Vor =new Vor(this)
 }
 
 

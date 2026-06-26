@@ -178,7 +178,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    protected def addForces(priority:Int, name:String, shortName:Char, f:Force ) = { //we may have to store set of moves, if we need add move of same priority.
      val ht=forces(priority)
      assert(!(ht.contains(name)), "each force must have a distinct priority");
-     forces(priority)(shortName+name)=f
+     forces(priority)(shortName+name)=f //le caractére identifiant la force est mis au début du nom, pour simplifier.
    }
 
    /** moves are stored in centered form, so that we can restrict them. we store one hashmap for each priority. It two moves with identical names are added, we throw an exception */
@@ -192,7 +192,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    protected def addMoves(priority:Int, name:String, shortName:Char, m: MoveC ) = { //we may have to store set of moves, if we need add move of same priority.
      val ht=moves(priority)
      assert(!(ht.contains(name)), "each force must have a distinct priority");
-     moves(priority)(shortName+name)=m
+     moves(priority)(shortName+name)=m  //le caractére identifiant le move est mis au début du nom, pour simplifie
    }
    /** generates move from forces */
    def applyForces = {

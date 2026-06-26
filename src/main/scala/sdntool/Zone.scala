@@ -4,8 +4,8 @@ import compiler.ASTL.{ASTLg, anticlock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, ltSI, v}
 import compiler.ASTLt.ConstLayer
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf}
-import compiler.{AST, ASTBfun, B, Locus, Ring, V}
-import progOfStaticAgent.{Homogen, Leader, Seed, SpreadOnSummit}
+import compiler.{AST, ASTBfun, ASTLt, B, Locus, Ring, V}
+import progOfStaticAgent.{Homogen, Seed, SpreadOnSummit}
 import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.{exist, existS, inside}
@@ -14,7 +14,9 @@ import sdn.{Attributs, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruc
  *
  * @param d distance to particle
  * @param ri radius broadcasted from the particle
- *
+ * @param rislope comment initialiser au bord du voronoi,
+ *                il y aura deux prédicat, un si le rayon est plus grand (resp. plus petit) que le voisin.
+ * propage un boolVe du bord du voronoi, jusqu'a la particule
  */
 class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter with QpointConstrain, val rislope:BoolVe) extends MuStruct [V,B] {
   override def inputNeighbors = List()
@@ -54,7 +56,8 @@ class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter wi
   }
   val existOnPart=p.existize(muis)
   def showMe = {
-    shoow(startV,startE,existOnPart)
+    shoow(startV,startE,
+      existOnPart,muis)
     //shoow(zonegtInite,zonegtInitv,zoneltInitv,zoneeqInitv)
   }
 }
@@ -78,7 +81,7 @@ trait addZoneGt {
   //show(d); les show doivent etre fait dans le main
 }
 
-/** ajoute les zone, plus qq calcule qui les fait intervenir les deux  */
+/** ajoute les zone, plus  calcul qui les fait intervenir les deux  */
 trait addZone {
   self: MovableAgV with addRect with addDist with addVor with addGcenter with QpointConstrain with addRadius =>
   val me=this
@@ -86,7 +89,7 @@ trait addZone {
     override val muis: ASTLg with carrySysInstr = me.muis
     val zlt = new Zone(me, ri.slopgt);
     val zgt = new Zone(me, ri.sloplt);
-    val zneq = zlt.muis | zgt.muis
+    val zneq: ASTLt[V, B] = zlt.muis | zgt.muis
     /** it is sufficient that one vertex of the particle support feels an difference in radius, for the whole support to feel it. */
     val zneqexistize = existize(zneq)
     val zeqOnSeed = ~zneqexistize & isV

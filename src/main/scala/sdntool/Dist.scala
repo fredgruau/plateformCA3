@@ -11,14 +11,14 @@ import compiler.Circuit.hexagon
 import compiler._
 import compiler.SpatialType._
 import dataStruc.{BranchNamed, Named}
-import progOfStaticAgent.{Homogeneize, Leader}
-import progOfmacros.Comm.neighborsSym
+import progOfStaticAgent.Homogeneize
+import progOfmacros.Comm.{neighborsSym, neighborsSymUI}
 import progOfmacros.Grad.{deltaCall, deltaCallProp, siFieldOperator, siFieldOperatorProp, slopeDeltaDistDef}
-import progOfmacros.{Grad, Wrapper}
+import progOfmacros.{Comm, Grad, Wrapper}
 import progOfmacros.Wrapper.{borderS, exist, existS, inside, neqUI2L}
 import progOfmacros.RedT.cacEndomorph
 import sdn.Globals.root4naming
-import sdn.{BlobVe, CancelFlipIf, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, One, Stratify, addGcenter, addVor, carrySysInstr}
+import sdn.{BlobVe, CancelFlipIf, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, One, Stratify, addGcenter, addQpointFields, addVor, carrySysInstr}
 import sdn.Util.{addLt, addLtSI}
 
 /**
@@ -33,18 +33,23 @@ abstract class SiField(n:Int,  source: MuStruct[V, B],op:siFieldOperator) extend
    }
    /** slopelt retrieves the sign of the slope, which is allways needed, delta is 0, +1 ot -1  we update with small delta:either increment or decrement */
    val (sloplt: BoolVe, delta, level, gap) = deltaCall(muis.pred,op)
+
   val slopgt = neighborsSym(sloplt);  val existNearer = exist(sloplt);  val existFurther = exist(slopgt);
   val opp = -(muis)  //todo opp can be retrieved from deltaCall
   /** spurious vortex occurs outside chip.borderF.df, so we have to and with chip.borderF.df in order to prevent false detection of vortex bug */
   val vortex: BoolF =   chip.borderF.df & andR(transfer(cacEndomorph(xorRedop[B]._1, sloplt)))
 /** same story with gap*/   val gap2=gap & chip.borderE.df
-  def showMe = { shoow(sloplt,slopgt,level); shoowText(muis, List());
+   def showMe = { shoow(sloplt,slopgt,level); shoowText(muis, List());
     // buugif( vortex) ;  buugif( gap2)
-    shoow (vortex) ;  shoow( gap2)
+    shoow (vortex, gap2)
   }
 }
 
-
+trait addStreched extends SiField {
+  val tmpDoubletoon:BoolEv=Comm.neighborsEvSym(this.sloplt)
+  val streched:BoolE=inside(tmpDoubletoon) //& inside(bf.doubletoon)
+  abstract override def showMe():Unit = {super.showMe; shoow(streched)}
+}
 /**
  * define the repulse  forces.
  *
@@ -99,6 +104,8 @@ class MuDist(bitSize:Int, val source: MuStruct[V, B])
       ag.addConstraint("slow",'w',slow)
     case _ =>
   }
+  // a deplacer dans un trait.
+
  /* override def showMe={super.showMe; shoow(testLevel)}
   // val deefF=new ConstLayer[F, B](1, "def") //we sometimes need to restrict*/
 }
@@ -109,14 +116,18 @@ class MuDist(bitSize:Int, val source: MuStruct[V, B])
 trait addDist {
   self: MuStruct[V, B] => //adds a distance to a LayerV , also limit its movement so as to avoid vortices
   val d = new MuDist(Homogeneize.nbitD,self) with addRepulse with addRepulseVor {} ;
+
   //show(d); les show doivent etre fait dans le main
+
 }
 
 
 /** adds distance to gcentern corrected by voronoi*/
 trait addDistVor {
   self: MovableAgV with addDist with addVor with addGcenter =>
-  val dgv = new MuDist(Homogeneize.nbitDgv,this.vor) with addRepulse {} //totoal
+  val dgv = new MuDist(Homogeneize.nbitDgv,this.vor) with addRepulse  with addStreched {}  //totoal
+
+
   //show(d); les show doivent etre fait dans le main
 }
 /** contains show(dist) otherwise, class Dist is not compiled at all, because not used from the root */

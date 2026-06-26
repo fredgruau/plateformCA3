@@ -498,7 +498,7 @@ trait ProduceJava[U <: InfoNbit[_]] {
           else radicalOfVar(paramsD(0))
           val locuspR = tSymbVarSafe(pR).locus
           //val copiedConst=tSymbVarSafe(pD).t==B() //verifier
-          val copiedConst=tSymbVarSafe(paramsD(0)).t==B() //verifier
+          val copiedConst=tSymbVarSafe(paramsD(0)).t==B() //veux dire qu'on broadcast un booleen et pas un entier. donc on peut calculer directement commentverifier
           val locuspD = if(copiedConst) V() else  tSymbVarSafe(paramsD(0)).locus //evite de consulter pd qui contient des crochet
 
               //here we have scalar used for constant, of type B, which we can assume to be Vertex
@@ -510,7 +510,9 @@ trait ProduceJava[U <: InfoNbit[_]] {
           if (locuspR.isTransfer && !locuspD.isTransfer) { //marche pas pour E,F
             //c'est le broadcast qui renvoie void je pense, utilisé par copy
 
-            callCode = (if(copiedConst)  "broadcaast1("  else "broadcaast(" )+ 6 / locuspD.density + ","
+            callCode = (if(copiedConst)
+              "broadcaast1("
+            else "broadcaast(" )+ 6 / locuspD.density + ","
           } //6 copy from 1D array to 1Darray are turned into a call to broaadcast from 1D arrau to 2D array
           //val l: mutable.LinkedHashSet[String] = mutable.LinkedHashSet(pR, pD)
          // callCode += pD  + "," + pR  // bizarrement j'ai eu plus besoin de spécifier la component, c'est déja fait
