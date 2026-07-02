@@ -32,7 +32,7 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   //part.shoow(part.gc.flipAfterSync,part.gc.flipAfterConstr)
   showTrucPourDebugger
   part.shoow(part.vor.muis) //triggers evaluation
-  part.shoow(part.gc.alreadyThere)
+  part.shoow(part.gc.alreadyThere,part.gc.muis)
   //part.shoow(part.mergedMoves("stabilize").asInstanceOf[MoveC2].no.empty)
   //garder ce qui suit en commentaire, ca indique comment faire pour montrer l'effet d'une force via son nom, come "seize"
  // part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC1].yes.empty)
@@ -57,6 +57,7 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.prop.showMe
   part.centr.showMe
   part.zon.showMe
+  part.qf.showMe
   //part.shoow(part.sf.isSummit)
  // part.shoowText( part.sf.density,List())
 //  part.shoow(part.centr.notCentrForallize)
@@ -121,13 +122,14 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
   //val streched2:BoolV=isV& ~qf.singleton&insideS(doubletonImplyStreched)
   //val streched3:BoolV=isV& ~qf.singleton&insideS(tripletonImplyStreched)
   val streched2=qf.doubletonV & insideS(doubletonImplyStreched)
-  val streched3=qf.tripletonV & insideS(tripletonImplyStreched)// &  ~prop.awayFromRiGt //strech 3 sera faux pour la particule du tripleton pas encore atteinte par zlt, donc elle va fautre le camp
+  val streched3=qf.tripletonV & insideS(tripletonImplyStreched)// vrai si les trois doubleton inclus ont tous dgv.streched
   val streched=  streched2 | streched3
 
 
 
-//  val adjustedCentr3= adjustedCentr2 | centr.centerForMovingSingleton
-  val seizeCenter=cibler(centr.adjustCenterForSingletonMove)
+//  val adjustedCentr3= adjustedCentr2 | centr.centerForMovingSingleton updatedCenter
+//val seizeCenter=cibler(centr.adjustCenter4ForYMove) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
+  val seizeCenter=cibler(centr.updatedCenter) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
   //val blockIfStreched:Force=stabilizeNotEmpty(streched)
   //val next2mature:BoolV=exist(neighborsSym(e(qf.doubletonV& ~zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
  // val next2immature:BoolV=exist(neighborsSym(e(zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement

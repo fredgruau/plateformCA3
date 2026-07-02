@@ -60,9 +60,10 @@ trait addRepulse{
     override def actionV(ag: MovableAgV): MoveC = {
       val hasNearer: BoolV = Wrapper.exist(sloplt & neighborsSym(e(ag.muis)))
       val hasFurther = Wrapper.exist(slopgt & neighborsSym(e(ag.muis)))
-      val oui = MoveC1( ag.muis & hasFurther & ~hasNearer,
-        neighborsSym(sloplt) & ag.bf.brdVeIn) //extends towards increasing value of distances and empties everywhere possible.
-      val non = MoveC1(ag.muis & hasNearer, sloplt & ag.bf.brdVeIn  ) //falseVe
+      val oui = MoveC1( ag.muis & hasFurther & ~hasNearer, //empties iff there is a further but no nearer
+        slopgt & ag.bf.brdVeIn) //extends towards increasing value of distances , on the border.
+      val non = MoveC1(ag.muis & hasNearer, //we do not empty iff there is a nearer
+        sloplt & ag.bf.brdVeIn  ) //we do fill towards smaller values of distance
       MoveC2(oui, non)
     }}}
 trait addRepulseVor{
@@ -72,7 +73,7 @@ trait addRepulseVor{
     /** true if a nearby vertice is filled, and nearer to the source */
     val hasNearer: BoolV = Wrapper.exist(sloplt & ag.bf.qqnEnFace)
     /** true if a nearby vertice is filled, and further from  the source */
-    val hasFurther = Wrapper.exist(slopgt & ag.bf.qqnEnFace)
+    val hasFurther:BoolV = Wrapper.exist(slopgt & ag.bf.qqnEnFace)
     /** we will empty if there is a further, and no nearer */
     val weWantItEmpty=hasFurther & ~hasNearer
     /** we empty if weWantItEmpty, and vertice was occupied

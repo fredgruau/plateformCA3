@@ -147,7 +147,9 @@ object Force{
     val next2cible=exist(toCible)
     override def actionV(ag: MovableAgV): MoveC = {
       //we empty non-target and forbid moving towards non-target, only if target is reachable, so as to avoid blocking situation
-      MoveC2(MoveC1(~cible & next2cible ,toCible & ag.bf.brdVeIn),MoveC1(cible, ~(toCible&e(next2cible))& ag.bf.brdVeIn ))
+      MoveC2(MoveC1(~cible & next2cible ,toCible & ag.bf.brdVeIn),
+        //MoveC1(cible, ~(toCible&e(next2cible)) & ag.bf.brdVeIn ))
+      MoveC1(cible, ~toCible & ag.bf.brdVeIn ))
     }
   }
 
