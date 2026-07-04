@@ -65,10 +65,10 @@ class Homogeneize() extends LDAG with Named with BranchNamed
  // part.centr.showMe
   part.shoow(part.bve.meetE2)
   part.shoow( part.vor.isForced)
-  part.shoow(part.inbl.muis);  part.inbl.showMe
+  part.shoow(part.inbl.muis) //;  part.inbl.showMe
   part.shoow(part.doubletonImplyStreched)
   //part.shoow(part.next2strechedDoubleton)
-  part.shoow(part.streched,part.streched2, part.streched3)
+  part.shoow(part.streched,part.streched2, part.streched3all)
 
   //part.shoow(part.zon.zlt.muis,part.rect); part.shoow(part.zon.zgt.muis);
  // part.zon.zlt.showMe;    part.zon.zgt.showMe
@@ -122,8 +122,8 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
   //val streched2:BoolV=isV& ~qf.singleton&insideS(doubletonImplyStreched)
   //val streched3:BoolV=isV& ~qf.singleton&insideS(tripletonImplyStreched)
   val streched2=qf.doubletonV & insideS(doubletonImplyStreched)
-  val streched3=qf.tripletonV & insideS(tripletonImplyStreched)// vrai si les trois doubleton inclus ont tous dgv.streched
-  val streched=  streched2 | streched3
+  val streched3all=qf.tripletonV & insideS(tripletonImplyStreched)// vrai si les trois doubleton inclus ont tous dgv.streched
+  val streched=  streched2 | streched3all
 
 
 
