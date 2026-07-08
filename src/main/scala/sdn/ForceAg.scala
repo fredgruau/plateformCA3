@@ -55,7 +55,7 @@ abstract class Agent[L <: Locus] extends MuStruct[L, B] with HasIsV {
     val agthis=this
   var flipAfterConstr: BoolV=null
   var flipAfterSync:BoolV=null
-  //Invariantles contraintes sont  stoquée chez l'agent contraint qui est moi meme, mais aussi c.bounding.
+  //Invariant les contraintes sont  stoquée chez l'agent contraint qui est moi meme, mais aussi c.bounding.
   def checkInvariantSync=for((_,c)<-constrsync) assert(c.bounding==this)
   var deflipSync:BoolV=null
   // each constrsync contributes a deflipsync that reduces flipAfter Constr
@@ -267,7 +267,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
      }
      allBugs=allBug
      yesHighestTriggered = yHT //used for printable purpose
-     /** selected positive move has lower priority than selected move, implies quiescence */
+     /** if selected positive move has lower priority than selected move, selected move is a no move, and it implies quiescence */
      isQuiescent = lt2(yesPrioDet, prioDet)
      val prioYes: UintV = prioRand :: yesPrioDet
      /** nullify prio if vertice is quiescent we are interested only in high prio only if move is generated

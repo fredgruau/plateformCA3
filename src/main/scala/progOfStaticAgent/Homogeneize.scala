@@ -28,7 +28,8 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   //val part=new Homogen()
   val part=new SpreadOnSummit()
   //val part=new Convergent()
-  showMustruct;  setFliprioOfMoveAndFlipAfterConstr();  setFlipSynced()
+  showMustruct;
+  setFliprioOfMoveAndFlipAfterConstr();  setFlipSynced()
   //part.shoow(part.gc.flipAfterSync,part.gc.flipAfterConstr)
   showTrucPourDebugger
   part.shoow(part.vor.muis) //triggers evaluation

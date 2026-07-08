@@ -67,7 +67,7 @@ class BlobVFields(val muis:BoolV with carrySysInstr) extends Attributs {
         oui
     }
   }
-  override def showMe={ shoow(brdE,brdV,brdVeIn,brdVeOut)   }
+  override def showMe={ shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave)   }
 }
 /** endows a movableAgentV with the feature needed to a blob stored in a class "f" (shortname) */
 trait addBlobVfields{ self: MovableAgV =>
@@ -268,17 +268,17 @@ trait addCenter {
     val vassal2N = shrinkshrink(vassalN)
     val isNullVassal2N = ~exist(vassal2N)
     val vassalMin = cond(e(isNullVassal2N), vassalN, vassal2N)
-    val isVassal = exist(neighborsSym(vassalMin & e(singleSumSum)))
-    val nbCC: UintV = nbccV(insideS(~isSummSumm & ~isVassal & isSummit))
+    val queen = exist(neighborsSym(vassalMin & e(singleSumSum)))
+    val nbCC: UintV = nbccV(insideS(~isSummSumm & ~queen & isSummit))
     val meetV = nbCC > fromInt(1)//utilisé pour pouvoir inscrire un losange dans le centre, oui mais cela dysimetrise, c'est donc peut etre pas indiqué.
     val nbCC2: UintV = nbccV(insideS(isSummit& ~isV))
     val meetV2 = nbCC2 > fromInt(1)
     /** neighbor of vassal with higher density of vassal that is not sumsum */
-    val queen: BoolV = isSummit & (~isSummSumm) & exist(transfer(density.lt) & neighborsSym(e(isVassal)))
+    val knight: BoolV = isSummit & (~isSummSumm) & exist(transfer(density.lt) & neighborsSym(e(queen)))
     /** neighbor of vassal with higher or equal density of vassal that is not sumsum */
     //val queeneq: BoolV = isSummit & (~isSummSumm) & exist(transfer(~ density.gt) & neighborsSym(e(isVassal)))
     /** aboutissement de tout ces calculs et d'identifier "center", zone du sommet qu'on souhaite occuper */
-    val center = isSummSumm | queen | isVassal  | meetV //| meetV2//
+    val center = isSummSumm | knight | queen  | meetV //| meetV2//
 
 
     val triangleIncluded:BoolF=insideS(center)
@@ -294,7 +294,6 @@ trait addCenter {
     val randV:BoolV=root4naming.addRandBit().asInstanceOf[BoolV];   val randE: BoolE = borderS[V, E, B](randV);   val randEv: BoolEv = send[E, V, B](List(randE, ~randE)) //selects on of the vertices of a weak link
     /** true for one of the two summits of a tripleton linked  by a weakedge, iff that tripleton is no streched */
     val oneOfWeaklinkExtremity=exist(transfer(v(weakLink)&randEv))
-
     val tripletonStrechedV= existS[F,V](prop.tripletonStreched)
     /** places where tripleton should shorten */
     val shortenTripleton2= qf.tripletonV &  //places to be removed from center, for a tripleton
@@ -311,7 +310,7 @@ trait addCenter {
     val extendDoubletonToUnstableTripleton=(isSummit & existS[E,V](perpendicularMoveOfDoubleton)& (~existS[E,V](potentialWeaLink) | zon.zlt.muis)&    ~center& ~isV) //reforme un tripleton
     val doubletonToDoubletonCreate=(isSummit & existS[E,V](perpendicularMoveOfDoubleton2)) //reforme un tripleton de l'autre cote de l'edge perpendicularMoveOfDoubleton2
     val doubletonToDoubletonDelete:BoolV=qf.doubletonV & exist[F,V](apexV(f(perpendicularMoveOfDoubleton2)))
-    val extendBasculateTribpleton=qf.doubletonV & apexToBasculate & zon.zlt.muis //on s'étends vers un rayon 1
+    val extendBasculateTribpleton=qf.doubletonV & apexToBasculate & zon.zlt.muis //on s'étends vers l'apex seulement si ca rapproche de zonegt
 
     //extension et retrecissement dans leur ordre d'apparition.
     val density1=eq0(density ^const(Intof(1))) //density is only one
@@ -324,12 +323,14 @@ trait addCenter {
     val extendCenter=    (extendSingletonToInstableDoubleton& zon.zlt.muis) |    extendSingletonToStableDoubleton   |
     /*  extendDoubletonToUnstableTripleton  |*/     extendBasculateTribpleton & zon.zlt.muis | doubletonToDoubletonCreate
     val updatedCenter= (center&  ~ shortenCenter) | extendCenter ///(center)
+
+
     override def showMe: Unit = {shoow(updatedCenter,shortenCenter,potentialWeaLink,
       shortenTripleton2,doubletonToDoubletonCreate,doubletonToDoubletonDelete,
       tripletonPeutBasculer,tripletonStrechedV,apexToBasculate,
      extendCenter, extendSingletonToStableDoubleton,extendSingletonToInstableDoubleton,extendDoubletonToUnstableTripleton,extendBasculateTribpleton,
       oneOfWeaklinkExtremity,weakLink,losangeIncluded,
-     center,isSummit,isVassal,queen,meetV,meetV2,isSummSumm,// losangeCenter,mignonLosange,losangeApexes,losangeIncluded,   randE,randV
+     center,isSummit,queen,knight,meetV,meetV2,isSummSumm,// losangeCenter,mignonLosange,losangeApexes,losangeIncluded,   randE,randV
     )}
   }}
 
