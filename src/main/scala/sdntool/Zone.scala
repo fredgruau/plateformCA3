@@ -23,7 +23,7 @@ class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter wi
   val next2rect=neighborsSym(e(p.rect))
   /** true in the beginning, where voronoi is all over the place*/
   val immersedInThickVor=insideBall(p.vor.muis)
-  /** consider first the case were propagation initiates next to meetE
+  /** consider first the case were propagation initiates next to meetV
    * we heavily constrain start otherwise it fires all over the place constantly */
   val startV:BoolV =delayedL( exist(p.bve.brdGv & rislope
     & ~next2rect //rules out the miror meetV which sends constant spurious initial propagate, due to symmetry
