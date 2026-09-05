@@ -32,6 +32,7 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   setFliprioOfMoveAndFlipAfterConstr();  setFlipSynced()
   //part.shoow(part.gc.flipAfterSync,part.gc.flipAfterConstr)
   showTrucPourDebugger
+  part.shoow(part.highproba)
   part.shoow(part.vor.muis) //triggers evaluation
   part.shoow(part.gc.alreadyThere,part.gc.muis)
   //part.shoow(part.mergedMoves("stabilize").asInstanceOf[MoveC2].no.empty)
@@ -67,9 +68,9 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoow(part.bve.meetE2)
   part.shoow( part.vor.isForced)
   part.shoow(part.inbl.muis) //;  part.inbl.showMe
-  part.shoow(part.doubletonImplyStreched)
+ // part.shoow(part.doubletonImplyStreched)
   //part.shoow(part.next2strechedDoubleton)
-  part.shoow(part.streched,part.streched2, part.streched3all)
+  part.shoow(part.hyperStretchedTripleton)
 
   //part.shoow(part.zon.zlt.muis,part.rect); part.shoow(part.zon.zgt.muis);
  // part.zon.zlt.showMe;    part.zon.zgt.showMe
@@ -116,17 +117,15 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
   //true for Edges separting two particles steched.
   // val doubletonImplyStreched= dgv.streched | ~ qf.doubleton //calculé sur l'edge
  // val doubletonImplyStreched=dgv.streched  | ~  qf.doubletoon  //achanger
-  val doubletonImplyStreched=(prop.doubletonStreched & dgv.streched) | ~  qf.doubletoon  //achanger
+ // val doubletonImplyStreched=(prop.doubletonStreched & dgv.streched) | ~  qf.doubletoon  //achanger
   //val next2DoubletonAndStreched:BoolV= existS (doubletonAndStreched)
   //val next2strechedDoubleton:BoolV=isV& ~qf.singleton & insideS(doubletonImplyStreched)
   val tripletonImplyStreched= prop.tripletonStreched | ~qf.tripleton
   //val streched2:BoolV=isV& ~qf.singleton&insideS(doubletonImplyStreched)
   //val streched3:BoolV=isV& ~qf.singleton&insideS(tripletonImplyStreched)
-  val streched2=qf.doubletonV & insideS(doubletonImplyStreched)
-  val streched3all=qf.tripletonV & insideS(tripletonImplyStreched)// vrai si les trois doubleton inclus ont tous dgv.streched
-  val streched=  streched2 | streched3all
-
-
+  //val streched2=qf.doubletonV & insideS(doubletonImplyStreched)
+  val hyperStretchedTripleton=qf.tripletonV & insideS(tripletonImplyStreched)// vrai si les trois doubleton inclus ont tous dgv.streched
+ // val streched=  streched2 | streched3all
 
 //  val adjustedCentr3= adjustedCentr2 | centr.centerForMovingSingleton updatedCenter
 //val seizeCenter=cibler(centr.adjustCenter4ForYMove) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
@@ -134,14 +133,12 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
   //val blockIfStreched:Force=stabilizeNotEmpty(streched)
   //val next2mature:BoolV=exist(neighborsSym(e(qf.doubletonV& ~zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
  // val next2immature:BoolV=exist(neighborsSym(e(zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
-  val blockIfStreched:Force=Force.stabilize(muis&streched/*&centr.center & ~zon.zlt.existOnPart*/,~muis & ~centr.center /*& ~next2immature*/ ) //on envahis pas le non centre si c'est mur.
+ // val blockIfStreched:Force=Force.stabilize(muis&streched/*&centr.center & ~zon.zlt.existOnPart*/,~muis & ~centr.center /*& ~next2immature*/ ) //on envahis pas le non centre si c'est mur.
   //  val blockIfStreched:Force=stabilizeNotEmpty(next2DoubletonAndStreched)
   /** explore moves as much as possible. We have called it called "fly" because flies move without purpose, we should modulate it with probability */
  // force(introduceNewPriority(), "explore",'O', Force.total.inflechi(centr.center))
   force(introduceNewPriority(), "explore",'O', Force.total)
-
   // force(introduceNewPriority(), "stabilize",'z', blockIfStable)
-
  // force(introduceNewPriority(), "size",'z', seize)
  // force(introduceNewPriority(), "size",'z', blockIfStreched)
   force(introduceNewPriority(), "size",'z', seizeCenter)
@@ -154,7 +151,7 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
 
 /** obsolete, calcule une convergence qui n'est pas assez generale pour stabiliser, soit elle stabilise trop tot,
  * soit elle ne stabilise  pas assez*/
-class Convergent extends Homogen with addLeader //with addRadius // //pas besoin de leader pour le moment
+/*class Convergent extends Homogen with addLeader //with addRadius // //pas besoin de leader pour le moment
 {  val sf=new Attributs()
 { //sf==stableFields
   override val muis: ASTLg with carrySysInstr = Convergent.this.muis
@@ -187,4 +184,4 @@ class Convergent extends Homogen with addLeader //with addRadius // //pas besoin
   }
 }
   // force(introduceNewPriority(),"balance",'_',sf.balance)
-}
+}*/

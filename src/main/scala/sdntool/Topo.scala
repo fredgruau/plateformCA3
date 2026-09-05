@@ -18,13 +18,13 @@ import compiler.Circuit.hexagon
 import compiler._
 import compiler.ASTLt.ConstLayer
 import dataStruc.{BranchNamed, Named}
-import progOfStaticAgent.{Convergent, SpreadOnSummit}
+import progOfStaticAgent.{SpreadOnSummit}
 import progOfmacros.Comm.{adjacentBall, apexE, apexV, insideBall, neighborsSym, symEv}
 import sdn.MovableAgV
 import progOfmacros.{Topo, Wrapper}
 import progOfmacros.Compute._
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, not, shrink, shrink1, shrink2, shrink3}
-import progOfmacros.RedT.{cac, enlarge, enlargeEF, enlargeFE, shrinkshrink}
+import progOfmacros.RedT.{cac, enlarge, enlargeEF, enlargeFE, shrinkEF, shrinkshrink}
 import progOfmacros.Topo.{brdin, nbcc, nbccV, nbccVe}
 import progOfmacros.Util.randE2
 import sdn.Globals.root4naming
@@ -162,14 +162,7 @@ trait  blobConstrain   {
   /**a doubleton cannot flip both vertices*/
   val emeet = MutKeepFlipIf(this,Both(),b.meetE) _ ;  addConstraint("emeet",'=',emeet);}
 
-/** computes a boolV proped, true iff a quasiParticle is inner balled is "proped" on its voronoi wall
- * it could not move further without penetrating that wall
- * if proped is true, it means that we should keep the quasiparticle thick, i.e
- * not allows it to shrink, if its 2 or 3 vertice wide, il will remain non punctual
- * we are happy because it is a convergence criterium, and such convergence is hard to formulate
- *  allthough caution should be made that this specific condition is not met that often.
- *
- *  We
+/** computes tripletonStreched
  * */
 trait addProp{
   self: MovableAgV with addDistVor with QpointConstrain with addZone=>
@@ -179,28 +172,23 @@ trait addProp{
     override val muis: ASTLg with carrySysInstr = muisSelf
     //true if border is adjacent to a strictly decreasing distance
     val brdVeSlopped: ASTLt[T[V, E], B] =bf.brdVeIn & dgv.sloplt  //to consider a sloplt greater than 1
-
-
-     //bifurcation: plutot que de calculer des existze sur les 6 direction, on calcule les composante connexe de BrdVeSlopped
+     //on calcule les composante connexe de BrdVeSlopped
    val participatinSite:BoolVf=shrink(bf.brdVeIn) //place to consider when computing the number of streched link
-    val streched: BoolVf =  participatinSite & cac(ASTBfun.delta, brdVeSlopped)
-    val bit0StrechedLocal: BoolV=border(streched)
-    val orStrechedLocal: BoolV =exist(streched) //vrai si ya des strech
-    val bit1StrechedLocal: BoolV =orStrechedLocal & ~bit0StrechedLocal  //il y a une retenu si on a le bit0 qui vaut 0, mais il y  a un voisin qui vaut 1
-
-    val bitONbStreched: BoolF = border(transfer(f(bit0StrechedLocal) )) //on peut trouver directement le bit0 final
+    val streched: BoolVf =  participatinSite & cac(ASTBfun.delta, brdVeSlopped) //computes one extremity for each connected component
+    val bit0StrechedLocal: BoolV=border(streched) //bit0 of localNbcc for each of the three vertice of a tripleton
+    val orStrechedLocal: BoolV =exist(streched) //true if localNbcc>0
+    val bit1StrechedLocal: BoolV =orStrechedLocal & ~bit0StrechedLocal  //there must be a carry if bit0 is 0, but localNbcc>0
+    val bitONbStreched: BoolF = border(transfer(f(bit0StrechedLocal) )) //we consider now the three vertice, and the F locus in the middle, using a xor, we can directly deduce bit 0
     val tforStrechedLocal=transfer(f(orStrechedLocal))
-    val orStrechedGlobal:BoolF=exist(tforStrechedLocal)
+    val orStrechedGlobal:BoolF=exist(tforStrechedLocal) //globalNbcc>0 iff one of localNbcc >0
     val threeOne:BoolF=inside(tforStrechedLocal) //true if tripleton has three neighbors, symetric
-    val carry= threeOne | (orStrechedGlobal & ~ bitONbStreched ) //il y a une retenu si on a le bit0 qui vaut 0, mais y a des strech warning, faut aussi regarder si les trois valent 1
+    val carry= threeOne | (orStrechedGlobal & ~ bitONbStreched ) //il y a une retenu si on a le bit0 qui vaut 0, mais nbccGlobal>0, faut aussi regarder si les trois valent 1
     val bit1NbStreched:BoolF = exist(transfer(f(bit1StrechedLocal))) | carry //le bit 1 vaut 1 si un des voisins contribue 2, ou bien si ya retenue
-    //val tripletonStreched:BoolF=qf.tripleton & (bit1NbStreched | ~ bitONbStreched) //test if nbccStreched is two or zero.
     val adj3=bit1NbStreched & bitONbStreched
-    val adj2=bit1NbStreched & ~bitONbStreched
     val adj0= ~bit1NbStreched & ~bitONbStreched
-    val notLocalCvgcRadius:BoolF = existS(zon.zneq)
-     val tripletonStreched:BoolF=qf.tripleton &(  (adj3 | adj0 /*& ~notLocalCvgcRadius*/)) //test if nbccStreched is three or zero, or two with local cvgc of radius.
+    val tripletonStreched:BoolF=qf.tripleton &(  (adj3 | adj0 /*& ~notLocalCvgcRadius*/)) //test if nbccStreched is three or zero, or two with local cvgc of radius.
 
+/*
     val ebitONbStreched = border(transfer(e(bit0StrechedLocal) ))
     val teorStrechedLocal=transfer(e(orStrechedLocal))
     val eorStrechedGlobal=exist(teorStrechedLocal)
@@ -210,10 +198,12 @@ trait addProp{
     val eadj2=ebit1NbStreched & ~ebitONbStreched
     val eadj0= ~ebit1NbStreched & ~ebitONbStreched
     val doubletonStreched:BoolE=qf.doubleton & (eadj2 | eadj0) //test if nbccStreched is two or zero.
+*/
 
-    override def showMe: Unit = {shoow(brdVeSlopped,participatinSite,streched,orStrechedGlobal,bitONbStreched,bit1NbStreched,//awayFromRiGt,
-      tripletonStreched,doubletonStreched,adj0,adj3)}
+    override def showMe: Unit = {shoow(//brdVeSlopped,participatinSite,streched,orStrechedGlobal,bitONbStreched,bit1NbStreched,,adj0,adj3//awayFromRiGt,
+      tripletonStreched)}
 
+/*
 
     //ce qui suit et probable obsolete
     val allBrdSlop: UintV = concatR(brdVeSlopped) //on récupére 18 bits a la suite pour 6 voisins, chacun 3 bits,
@@ -234,6 +224,7 @@ trait addProp{
     val propedOld: BoolV= ~xTrouConsecutifs  & ~ xTrousEnface  &  muisSelf//calé si pas de trou consecutif ou en face
     val proped: BoolV= ~xTrous &  muisSelf//calé si pas de trou du tout
    // override def showMe: Unit = {shoow(e, se, sw, w, nw, ne,xe, xse, xsw, xw, xnw, xne, xTrouConsecutifs,proped)}
+*/
 
   }
 }
@@ -242,7 +233,6 @@ trait addProp{
  * a envahir par la qseed, pour se trouver impeccablement au centre du voronoi, dans le cas de cellule de Voronoi pas trop allongée
  * fait des calculs assez compliqué pour occuper le sommet le mieux possible par rapport
  * a sa forme spécifique , ces calculs résultent d'une étude à la main*/
-
 trait addCenter {
   self: MovableAgV with addDistVor with QpointConstrain with addProp with addZone=> //on utilise prop.tripletonstreched
   val muissSelf= this.muis
@@ -253,93 +243,95 @@ trait addCenter {
     val isSummit1: BoolV =  isV |
       (  ~exist(dgv.slopgt & neighborsSym(e(isV)))  & //y a pas de particule au voisinage, plus loin
           exist (~dgv.slopgt & neighborsSym(e(isV))) )//y a une particule au voisinage a la meme distance ou plus pres
-    val cisSummit=isSummit1 |  exist (~dgv.slopgt & neighborsSym(e(isSummit1)) ) //permet d'etendre la detection des sommet un peu plus loin
+    val cisSummit=isSummit1 |  exist (~dgv.slopgt & neighborsSym(e(isSummit1)) ) //permet d'etendre la detection des sommet un vertex plus loin
     /** number of summit in immediate neighborhood */
     val density: UintVx = addLt(countNeighbors(addSym(e(cisSummit)).sym))
     /** summits of local highest density */
     val cisSummSumm = cisSummit & ~exist(transfer(density.gt) & neighborsSym(e(cisSummit)))
     /** true if there is a single sumsum */
     val singleSumSum = cisSummSumm & ~exist(transfer(v(density.eq)) & neighborsSym(e(cisSummit)))
-    //val nbCC: UintV = nbccV(borderS(isSummit))
-
-
-    //val cutingSumSum = singleSumSum & meetV
     val isSummitN = neighborsSym(e(cisSummit))
     val vassalN = shrinkshrink(isSummitN)
     val vassal2N = shrinkshrink(vassalN)
     val isNullVassal2N = ~exist(vassal2N)
     val vassalMin = cond(e(isNullVassal2N), vassalN, vassal2N)
+    /**  voisin   */
     val queenOld = exist(neighborsSym(vassalMin & e(singleSumSum)))
-    /** voisin de sumsum */
+    /** voisin de sumsum , et   chaque sumsum voisin dois correspondre a un vassal min*/
     val cqueen=cisSummit & exist(neighborsSym(e(cisSummSumm)) )& inside(neighborsSym(imply(e(cisSummSumm),vassalMin)))
     val cknight: BoolV = cisSummit & (~cisSummSumm) & exist(transfer(density.lt) & neighborsSym(e(cqueen)))
 
     val nbCC: UintV = nbccV(insideS(~cisSummSumm & ~cqueen & cisSummit))
     val meetV = nbCC > fromInt(1)//utilisé pour pouvoir inscrire un losange dans le centre, oui mais cela dysimetrise, c'est donc peut etre pas indiqué.
-    val center1 = cisSummSumm | cknight | cqueen
-    val nbCC2: UintV = nbccV(insideS(cisSummit& ~center1)) //nbccV(insideS(isSummit& ~isV))
+    val center1 = cisSummSumm | cknight | cqueen //manque encore le jocker qui peut couper en trois
+    val nbCC2: UintV = nbccV(insideS(cisSummit& ~center1))
     val cjoker = nbCC2 > fromInt(1)
+    val center1N=neighborsSym(e(center1))
+    val qpointOk=exist(shrinkEF(center1N)) // vrai pour les cases adjacente de deux case de centre1, de sorte qu'ensemble il vont former un quasipoint
+    val cjoker2=cjoker&qpointOk //restreint les joker a ceux qui forment un quasipoint avec le reste du centre.
+
     /** neighbor of vassal with higher density of vassal that is not sumsum */
    /** neighbor of vassal with higher or equal density of vassal that is not sumsum */
     //val queeneq: BoolV = isSummit & (~isSummSumm) & exist(transfer(~ density.gt) & neighborsSym(e(isVassal)))
     /** aboutissement de tout ces calculs et d'identifier "center", zone du sommet qu'on souhaite occuper */
-    val center = center1 | cjoker// isSummSumm | knight | queen  | meetV //| meetV2//
+    val center = center1 | cjoker2// isSummSumm | knight | queen  | meetV //| meetV2//
     val triangleIncluded:BoolF=insideS(center);   val losangeIncluded:BoolE=insideS(triangleIncluded) //ya une macro pour rhombus
     /** if losange and tripleton, tripleton is removed the apex and becomes a doubleton, so that it can move avaint further */
     val  losangeApexes:BoolV = exist[F, V](apexV(f(losangeIncluded))) //on calcul les apex du losange, afin de pouvoir bouger le tripleton en les enlevant
     //on verifie que les deux apex sont soient égale a meetV2, soient occupée par la particules
-    val confirmedApexes=losangeApexes & (isV|(cjoker & zon.zlt.muis))  //le coté vide est celui proche de zonegt
-    val tripletonPeutBasculer:BoolE=inside[F,E](apexE(f(confirmedApexes)))
-   val shortenOrExtendApexToBasculate=exist[F,V](apexV(f(tripletonPeutBasculer))) //meme formule utiliser pour shorten ou extend
+   // val confirmedApexes=losangeApexes & (isV|(cjoker & zon.zlt.muis))  //le coté vide est celui proche de zonegt
+    val confirmedApexes=losangeApexes & (isV|( zon.zlt.muis))  //le coté vide est celui proche de zonegt
+    //meme formule utiliser pour shorten ou extend
     val weakLink:BoolE=bf.insideE & ~dgv.streched //true for edges located between two vertice, one of them could be removed from center because link is not streched
     val potentialWeaLink:BoolE=bf.brdE & ~dgv.streched //if vertice is filled on one side, it will create a weak link
     val randV:BoolV=root4naming.addRandBit().asInstanceOf[BoolV];   val randE: BoolE = borderS[V, E, B](randV);   val randEv: BoolEv = send[E, V, B](List(randE, ~randE)) //selects on of the vertices of a weak link
     /** true for one of the two summits of a tripleton linked  by a weakedge, iff that tripleton is no streched */
     val oneOfWeaklinkExtremityOld=exist(transfer(v(weakLink)&randEv))
     val tripletonStrechedV= existS[F,V](prop.tripletonStreched)
-    val shortenOneOfWeaklinkExtremity=exist(transfer(v(weakLink))) &  ~ zon.zlt.muis & ~ tripletonStrechedV//au lieu d'utiliser un rand, on enleve celui qui est de l'autre coté du plus gros
-    //@todo faudra se gaffer que ca peut faire disparaite les deux
-    //on fait pas si le tripleton est stretched
 
-    /** places where tripleton should shorten */
-    val shortenTripleton= qf.tripletonV &  //places to be removed from center, for a tripleton
-     (shortenOrExtendApexToBasculate  | //this was for switching from one tripleton to another one, both having nbcc=3. seem to be not  useful ther center is restricted to the losange center so that after, we can add the appex
-      ( shortenOneOfWeaklinkExtremity ) //remvoves one of two vertices of weaklink extremity does not touch tripleton which are "streched" have nbcc =0 or nbcc =3
-       )
+    /** it is better to apply the following not randomly */
+    val exshorten2OneOfWeaklinkExtremity=exist(transfer(v(weakLink))) &  ~ zon.zlt.muis   & qf.tripletonV & ~ tripletonStrechedV & (zon.zlt.existOnPart) /*| (oneOfWeaklinkExtremityOld & ~zon.zlt.existOnPart ))*///au lieu d'utiliser un rand, on enleve celui qui est de l'autre coté du plus gros
+    //on fait pas si le tripleton est stretched @todo faudra se gaffer que ca peut faire disparaite les deux
      val mignonLosange:BoolV=   cisSummSumm & eq0(density ^const(Intof(3)))  //caractérise le centre d'un sommet en forme de losange, qui  a pour densité 3, et  avec un doubleton dans son centre, et vide sur les apex.
                                                                                   // on souhaite laisser tranquille les doubletons de ces mignons losanges.
     /**pour deplacer un doubleton suivant un axe perpendiculaire avec celui du doubleton:*/
     val perpendicularMoveOfDoubleton:BoolE=dgv.streched & existS[V,E](qf.doubletonV) &
       ~qf.doubleton & //on considére les edge qu'on peut ajouter, donc n dehors de celui du doubleton lui meme
-      ~existS[V,E](mignonLosange )  //removes simple situation were extending center is not appropriate
-    val perpendicularMoveOfDoubleton2:BoolE=perpendicularMoveOfDoubleton & existS[V,E](zon.zlt.muis)
-   val extendDoubletonToDoubletonCreate=(cisSummit & existS[E,V](perpendicularMoveOfDoubleton2)) //reforme un tripleton de l'autre cote de l'edge perpendicularMoveOfDoubleton2
-    val shortenDoubletonToDoubletonDelete:BoolV=qf.doubletonV & exist[F,V](apexV(f(perpendicularMoveOfDoubleton2))) //Il faudrait mieux assurer que la deletion et la creation se correspondent
-    val extendDoubletonToUnstableTripleton=(cisSummit & existS[E,V](perpendicularMoveOfDoubleton)& (~existS[E,V](potentialWeaLink) | zon.zlt.muis)&    ~center& ~isV) //reforme un tripleton
-    val extendDoubletonToTripletonApexBasculate=qf.doubletonV & shortenOrExtendApexToBasculate & zon.zlt.muis //on s'étends vers l'apex seulement si ca rapproche de zoneg[
+      ~existS[V,E](mignonLosange) & //removes simple situation were extending center is not appropriate
+      existS[V,E](zon.zlt.muis) //happen only in zone of smaller inner radius
+   val extend1DoubletonToDoubletonCreate=(cisSummit & existS[E,V](perpendicularMoveOfDoubleton)) //reforme un tripleton de l'autre cote de l'edge perpendicularMoveOfDoubleton2
+    val exshorten1DoubletonToDoubletonDelete:BoolV=qf.doubletonV & exist[F,V](apexV(f(perpendicularMoveOfDoubleton))) //Il faudrait mieux assurer que la deletion et la creation se correspondent
+    val density1=eq0(density ^const(Intof(1))) //density is only one, there is a single neigor summit
+    val singletonOnEdge:BoolE= existS[V,E](qf.singleton); //true if singleton on one side of the edge
+    val extend2SingletonToIsolatedDoubleton=cisSummit& existS[E,V](singletonOnEdge) &   density1 & ~isV //allows a center of one vertex adjacent to a single summit, to temporarily explore a nearby summit, needs  zone.zlt.muis
+    val exshortenCenterUsed: ASTLt[V, B] =exshorten1DoubletonToDoubletonDelete | exshorten2OneOfWeaklinkExtremity
+    val extendCenterUsed=  extend1DoubletonToDoubletonCreate|  (extend2SingletonToIsolatedDoubleton & zon.zlt.muis)   //|extendSingletonToStableDoubleton
 
-    //extension et retrecissement dans leur ordre d'apparition.
-    val density1=eq0(density ^const(Intof(1))) //density is only one
-    val extendSingletonToInstableDoubleton=cisSummit&exist(neighborsSym(e(qf.singleton))) &   density1 & ~isV //allows a center of one vertex to temporarily explore a nearby summit, needs  zone.zlt.muis
-    val shortendoubletonNotStreched2: BoolV = existS[E,V](qf.doubleton & ~dgv.streched ) //to let preceding force move singleton, the created doubleton must me able to subsequently shorten
-    val singletonOnEdge:BoolE= existS[V,E](qf.singleton)
-    val extendSingletonToStableDoubleton=existS[E,V](insideS[V,E](cisSummit)& dgv.streched & singletonOnEdge & bf.brdE) //this is always a smart move independantly of zon.zlt.muis
-    //but it creates a cycle, since the center is not modified, the created doubleton diseapeal at the next time step.
-    val extendCenter1=    (extendSingletonToInstableDoubleton& zon.zlt.muis) |   extendDoubletonToDoubletonCreate  //|extendSingletonToStableDoubleton
-    val shortenCenter1 =shortenDoubletonToDoubletonDelete | (shortenOneOfWeaklinkExtremity  & qf.tripletonV)
 
-    val shortenCenter =   shortenDoubletonToDoubletonDelete |shortendoubletonNotStreched2 |  shortenTripleton  //places within the center, to be removed from the center comming either from doubleton or from tripleton
-    val extendCenter=    (extendSingletonToInstableDoubleton& zon.zlt.muis) |    extendSingletonToStableDoubleton   |
-    /*  extendDoubletonToUnstableTripleton  |*/     extendDoubletonToTripletonApexBasculate & zon.zlt.muis | extendDoubletonToDoubletonCreate
-   // val updatedCenter= (center&  ~ shortenCenter) | extendCenter ///(center)
-    val updatedCenter= (center &  ~ shortenCenter1)| extendCenter1
+    val extend4SingletonToStrechedDoubleton=  zon.zlt.muis & //si on met pas zlt ca fait des petit cycles a la con
+      existS[E,V](insideS[V,E](cisSummit)& dgv.streched & singletonOnEdge & bf.brdE) //this seems a smart move independantly of zon.zlt.muis but then we want to not modifey center unless really necessary
+    // can create a cycle, since the center is not modified, the created doubleton diseapeal at the next time step.
+    val exshorten4doubletonNotStreched: BoolV = existS[E,V](qf.doubleton & ~dgv.streched ) //to let preceding force move singleton, the created doubleton must me able to subsequently shorten
+    val tripletonPeutBasculer:BoolE=inside[F,E](apexE(f(confirmedApexes)));  val exshorten3ApexToBasculate=exist[F,V](apexV(f(tripletonPeutBasculer)))
 
-    override def showMe: Unit = {shoow(shortenCenter,potentialWeaLink,perpendicularMoveOfDoubleton,perpendicularMoveOfDoubleton2,
-      shortenTripleton,extendDoubletonToDoubletonCreate,shortenDoubletonToDoubletonDelete,
-      tripletonPeutBasculer,tripletonStrechedV,shortenOrExtendApexToBasculate,vassalMin,updatedCenter,shortenCenter1,extendCenter1,
-     extendCenter, extendSingletonToStableDoubleton,extendSingletonToInstableDoubleton,extendDoubletonToUnstableTripleton,extendDoubletonToTripletonApexBasculate,
-      shortenOneOfWeaklinkExtremity,weakLink,losangeIncluded,
-     center,cisSummit,cqueen,cknight,meetV,cjoker,cisSummSumm,// losangeCenter,mignonLosange,losangeApexes,losangeIncluded,   randE,randV
+    val extend3DoubletonToTripletonApexBasculate=qf.doubletonV & exshorten3ApexToBasculate & zon.zlt.muis //on s'étends vers l'apex seulement si ca rapproche de zoneg[
+    val extend5DoubletonToUnstableTripleton=(cisSummit & existS[E,V](perpendicularMoveOfDoubleton)& (~existS[E,V](potentialWeaLink) | zon.zlt.muis)&    ~center& ~isV) //reforme un tripleton
+
+
+    /** contains another two more shorten we've been trying */
+    val exshortenCenterAll = exshortenCenterUsed | (qf.tripletonV & exshorten3ApexToBasculate )
+    // | exshorten4doubletonNotStreched  //we decide to trust the center, in order to avoid cycles.  //places within the center, to be removed from the center comming either from doubleton or from tripleton
+    /** contains three more  extends, we've been trying */
+
+    val extendCenterALL=  extendCenterUsed | extend3DoubletonToTripletonApexBasculate & zon.zlt.muis // |  extend4SingletonToStableDoubleton   |    extend5DoubletonToUnstableTripleton  //this last one was long not used.
+    //val updatedCenter= (center &  ~ exshortenCenterUsed)| extendCenterUsed
+     val updatedCenter= (center&  ~ exshortenCenterAll) | extendCenterALL ///(center)
+    override def showMe: Unit = {shoow(exshortenCenterAll,potentialWeaLink,perpendicularMoveOfDoubleton,exshorten4doubletonNotStreched,
+      extend1DoubletonToDoubletonCreate,exshorten1DoubletonToDoubletonDelete,qpointOk,confirmedApexes,
+      tripletonPeutBasculer,tripletonStrechedV,exshorten3ApexToBasculate,vassalMin,updatedCenter,exshortenCenterUsed,extendCenterUsed,
+     extendCenterALL, extend4SingletonToStrechedDoubleton,extend2SingletonToIsolatedDoubleton,extend5DoubletonToUnstableTripleton,extend3DoubletonToTripletonApexBasculate,
+      exshorten2OneOfWeaklinkExtremity,weakLink,losangeIncluded,mignonLosange,
+     center,cisSummit,cqueen,cknight,meetV,cjoker2,cisSummSumm,// losangeCenter,mignonLosange,losangeApexes,losangeIncluded,   randE,randV
     )}
   }}
 
