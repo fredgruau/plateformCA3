@@ -15,13 +15,13 @@ import compiler.ASTLt.ConstLayer
 import compiler.repr.nomE
 import dataStruc.{BranchNamed, Named}
 import progOfmacros.Topo.brdin
-import sdn.{Blob, BlobV, BlobVFields, BlobVe, Compar, Compar3, addBlobVfields, carrySysInstr}
+import sdn.{Blob,  BlobVe, BloobV, BloobVFields, Compar, Compar3, addBlobVfields, carrySysInstr}
 
 
 /** same as GrowVorV but based on a boolVe support  MARCHE PAS*/
 class GrowBlobVe() extends Layer[(V, B)](1, "global") with BoolV  with carrySysInstr with BranchNamed with Named {
   val is:BoolV=delayedL(this)
-  val bf=new BlobVFields(this)
+  val bf=new BloobVFields(this,this)
   val edge: ASTLt[E, B] =borderS(is)
   val brd=brdin(edge,is)
   val b=new BlobVe(this,bf.brdE,bf.brdVeIn)
@@ -76,8 +76,8 @@ class Grow extends Layer[(E, B)](1, "global") with ASTLt[E, B] {
 
 /** uses plain  blobV computation to grow seed into Voronoi region,  by stoping the growth just before merge happens */
 class GrowVor() extends Layer[(V, B)](1, "global") with BoolV  with carrySysInstr with BranchNamed {
-  val bf=new BlobVFields(this)
-  val b=new BlobV(this,bf)
+  val bf=new BloobVFields(this,this)//here the muis for printing is the same as the muis for which we want to compute blob features
+  val b=new BloobV(this,bf)
    override val next: AST[(V, B)] = this | bf.brdV & ~b.meet//we extend the blob around the border brdV, except for meeting meeting points
   show(this)
   b.showMe

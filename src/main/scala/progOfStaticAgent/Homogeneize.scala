@@ -55,9 +55,15 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.vor.b.showMe;   part.vor.bf.showMe;  part.showMe
   part.bf.showMe;  part.b.showMe;  part.bve.showMe;  part.d.showMe; part.dgv.showMe
   part.shoowText(part.ri.muis,List()); part.ri.showMe;
-// part.gc.showme;
+  // part.sm.showme; //does not work, because sm is not taking part i the computation.
+ // part.shoow(part.sm.muis, part.sm.b.meetiE, part.sm.b.meetiV, part.sm.b.ctr, part.sm.b.isDoubleton)
+  part.shoow(part.summit.centerZlt,part.summit.meetiE,part.summit.meetiV,part.summit.nbcc3,part.summit.twoNeighbor,part.summit.isTripleton,
+    part.summit.meetiEselected,part.summit.loosangeIncluded,part.summit.losangeApexes,part.summit.rhombusShouldFlip,part.summit.losangeApexToRemoveFromCtr,
+    part.summit.meetEblockingZltmeetE,part.summit.weakMeetE,part.summit.meetEblockingZltnbcc3,part.summit.raand)
+ part.shoowText(part.summit.density, List())
   part.prop.showMe
   part.centr.showMe
+  part.ceentr.showMe
   part.zon.showMe
   part.qf.showMe
   //part.shoow(part.sf.isSummit)
@@ -87,7 +93,7 @@ trait stat{ self:Homogen=>  staat(bve.meet, d.muis);  staat(bve.meetV, d.muis)
 
 /**adds distance, gabriel center, voronoi distance to voronoi, and then finally repulsive force from voronoi*/
 class Homogen() extends Seed with addDist with addGcenter // with keepOutsideForce
-  with addVor with addDistVor with stat
+  with addVor with addDistVor  with stat
 {  /** seed should not overlap gCenters */
 
    val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
@@ -105,10 +111,10 @@ class Homogen() extends Seed with addDist with addGcenter // with keepOutsideFor
  *  */
 
 class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addRect
-  with addZone with addProp  with addCenter
+  with addZone with addProp  with addCenter with addSommet
   with addLeader /*: we stopped using zone*/
 {  /** seize applique la force qui cible le  centre si et seulement si le radius est uniforme */
-  val seize:Force=restrictF(cibler(centr.center),zon.zeqOnSeed)
+
 
 
  val uniformizeRadius:Force= repulsePropagate(zon.zgt.muis) | attractPropagate(zon.zlt.muis)
@@ -129,7 +135,10 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
 
 //  val adjustedCentr3= adjustedCentr2 | centr.centerForMovingSingleton updatedCenter
 //val seizeCenter=cibler(centr.adjustCenter4ForYMove) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
-  val seizeCenter=cibler(centr.updatedCenter) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
+//val seizeCenter=cibler(centr.updatedCenter) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
+
+  val seizeCenter2:Force=restrictF(cibler(summit.centerZlt),zon.zeqOnSeed)
+  val seizeCenter=cibler(summit.centerZlt) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
   //val blockIfStreched:Force=stabilizeNotEmpty(streched)
   //val next2mature:BoolV=exist(neighborsSym(e(qf.doubletonV& ~zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
  // val next2immature:BoolV=exist(neighborsSym(e(zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement

@@ -24,7 +24,7 @@ trait carrySysInstr{
 trait hasMuisSysInstr{
   val muis:ASTLg with carrySysInstr}
 
-/** si une classe posséde un muis qui a une liste de sysinstr, on peut faire les shoow, bugif, showtext, en les rangeant dans cette liste */
+/** si une classe commme attribut, posséde un muis qui a une liste de sysinstr, on peut faire les shoow, bugif, showtext, en les rangeant dans cette liste */
 trait shoow{
   self:hasMuisSysInstr=>
   def buugif(v: AST[_]) = {muis.syysInstr ::= CallProc("bug", List(), List(v))  }

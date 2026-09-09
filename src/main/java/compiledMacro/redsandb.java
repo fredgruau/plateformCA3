@@ -71,4 +71,18 @@ for (int i = 1; i < ppFE$do.length -1; i++) {
   ;
 p.prepareBit(redsandbfeR)
  ;
+  }
+public static int ef_1_1GateCount=4;
+ public static void ef_1_1(PrShift p,int [][] ppEF,int [][] redsandbefR){
+ int[] redsandbefR$do=redsandbefR[0],redsandbefR$up=redsandbefR[1],ppEF$h=ppEF[0],ppEF$d=ppEF[1],ppEF$ad=ppEF[2];
+
+// initialisation 
+ int auxL143=0,auxL144=0,auxL145=0,redsandbef=0,redsandbeftm1=0;
+for (int i = 1; i < ppEF$h.length -1; i++) {
+ redsandbefR$do[i-1]=(( auxL145  &  auxL144 ) & ( auxL143  <<  1 ));auxL145= ppEF$d[i] ;auxL144= ppEF$h[i] ;auxL143= ppEF$ad[i] ;
+ redsandbef=( redsandbeftm1  & ( auxL144  >>>  1 ));redsandbeftm1=( auxL143  &  auxL145 );redsandbefR$up[i-1]= redsandbef ;
+  }
+  ;
+p.prepareBit(redsandbefR)
+ ;
   }}

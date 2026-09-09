@@ -46,7 +46,7 @@ class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter wi
     /** we have to consider sym to finally retrieve the new leader. */
     override val next: BoolV = (startE | startV | exist(p.d.slopgt & neighborsSym(e(pred))
       //avoid propagation to start in one voronoi cell and propagate to an adjacent voronoi cell,
-      &       ~(transfer(v(p.vor.b.meeEfilled )))))   &  //by crossing a thick voronoi wall
+      &       ~(transfer(v(p.vor.b.meetEfilled )))))   &  //by crossing a thick voronoi wall
     ~   (p.vor.b.meetV & p.vor.isV)// by crossing a thin voronoi wall, which is voronoi and nbcc2
 
 
