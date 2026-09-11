@@ -128,7 +128,8 @@ class BloobV(val muis:BoolV with carrySysInstr,f:BloobVFields) extends Blob  {
   override  def showMe={super.showMe }
 }
 
-/** adds some field to bloobV so as to compute the center */
+/** adds some field to bloobV, of topological nature,  so as to compute the center */
+/*
 class BloobVctr (override val muis:BoolV with carrySysInstr, bfields:BloobVFields,z:sdntool.Zone) extends BloobV(muis,bfields){
   val meetiV=(meetV|nbcc0) & bfields.otherThanMuis
   val meetiEselected=meetEfilled & existS[V,E](muis)
@@ -164,6 +165,7 @@ val meetEV=meetiE|meetiV // we need to consider also elongated particles.
     isDoubleton | isTripleton | (nbcc3 & ~losangeApexToRemoveFromCtr/* & ~meetEblockingZltnbcc3 trop fort cui la*/)
   override  def showMe={super.showMe }
 }
+*/
 
 /** endows a movableAgentV with the blob meeting points */
 trait addBloobV{ self: MovableAgV with addBlobVfields =>val b=new BloobV(muis,bf)}
@@ -217,24 +219,112 @@ trait addGcenter{
   }
 } //todo verifier que override fonctionne
 
-/** endows an agent having a vonoi with a summit */
-trait addSommet{
-  self: MovableAgV with addCenter with addDistVor with addZone =>
-  /** computes blobV fields with respect fo being summit or not */
-  val isSummitBlob=new BloobVFields(muis,~  (~ centr.cisSummit))
-
-  val summit=new BloobVctr(muis,isSummitBlob, zon.zlt){
-    val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//vrai avec trois chance sur quatre
-    val weakMeetE=dgv.streched & insideS(centr.cisSummit) & existS(meetiV)
-    val centerZlt= ctr | (/*existS[E,V](weakMeetE ) &*/centr.cisSummit &  zon.zlt.muis & raand) //idee ici est qu'on explore aleatoirement le sommet en allant ver la zone ou rmin est plus grand
+/** provides just the summit, that's difficult enough to justify an attribute for this */
+trait addSummit{
+  self: MovableAgV  with addDistVor =>
+  val thiiismuis=muis;
+  val sum=new Attributs {
+    override def showMe: Unit = {}
+    override val muis: ASTLg with carrySysInstr = thiiismuis
+    val particuleAuVoisinage=neighborsSym(e(isV)) //y a une particule au voisinage
+    //on peut etre sommet tout en ayant un dgv slopt, car proche de la particule
+    val isSummit1: BoolV =  isV |
+      (  ~exist(dgv.slopgt & particuleAuVoisinage)  & //y a pas de particule au voisinage, plus loin
+        exist (~dgv.slopgt & particuleAuVoisinage) )//y a une particule au voisinage a la meme distance ou plus pres
+    /** etends la detection des sommet un vertex plus loin */
+    val isSummit2=isSummit1 |  exist (~dgv.slopgt & neighborsSym(e(isSummit1)) )
   }
-/*  val sm=new DetectedAgV(centr.cisSummit) with  addBlobVfields {
-    val b=new BlobVctr(muis,bf)
-    override def inputNeighbors: List[MuStruct[_ <: Locus, _ <: Ring]] = List(dgv)
-  }*/
+}
+
+/**
+ * Calcule une zone remarquable inclue dans summit, de 1,2, ou 3 vertex, appelée centre, qu'on pense que c'est la zone
+ * a envahir par la qseed, pour se trouver impeccablement au centre du voronoi, dans le cas de cellule de Voronoi pas trop allongée
+ * fait des calculs assez compliqué pour occuper le sommet le mieux possible par rapport
+ * a sa forme spécifique , ces calculs résultent d'une étude à la main*/
+trait addBlobsm {
+  self: MovableAgV with addDistVor with addSummit with QpointConstrain  with addZone => //on utilise prop.tripletonstreched
+  val muissssSelf = this.muis
+  val bfi = new BloobVFields(muis, sum.isSummit2)
+  val blobsm = new BloobV(muissssSelf, bfi) {
+    //we add here he stuff computed using blobs and summit.
+    /** true for vertice to be in center because Vmeeting point or isolated singleton */
+    val meetiV = (meetV | nbcc0) & bfi.otherThanMuis
+    /** true for meeting edges which are next to a particules, and therefore likely to participate to the center */
+    val meetiEselected = meetEfilled & existS[V, E](muis)
+    val meetiE: BoolV = existS[E, V](meetiEselected) & bfi.otherThanMuis
+    val meetEV = meetiE | meetiV
+    /** faces splitting the summit in three */
+    val nbcc3F = insideS[E, F](meetEfilled)
+    /** summits part of a face splitting the summit in three */
+    val nbcc3 = existS[F, V](nbcc3F)
+    /** true if there are two competing splitting-in-3 face */
+    val loosangeIncluded: BoolE = insideS[F, E](nbcc3F)
+    /** if there is a rhombus, then we compute the apex so as to be able to remove them
+     * in order to orchestrate a switch from one split3 tripleton, to the other */
+    val losangeApexes: BoolV = exist[F, V](apexV(f(loosangeIncluded)))
+    /** faces with three vertice within the  summit */
+    val insideFace: BoolF = insideS[V, F](bfi.otherThanMuis)
+    /** number of neighbor summits */
+    val density: UintVx = addLt(countNeighbors(addSym(e(bfi.otherThanMuis)).sym))
+    /** summits having a single neighbor */
+    val oneNeighbor = bfi.otherThanMuis & (~(density > 1)) & neq(density)
+    /** isolated doubleton,  two connected vertice have a single neighbor */
+    val isDoubleton = existS[E, V](insideS[V, E](oneNeighbor))
+    /** summits having exactly two  neighbors */
+    val twoNeighbor = bfi.otherThanMuis & (~(density > 2)) & neq(density) & ~oneNeighbor
+    /** true for the inside face of an isolated tripleton (the neighbors have all exactly two neighbors */
+    val isTripletonF: BoolF = insideS[V, F](existS[F, V](insideFace) & twoNeighbor)
+    /** vertices of an isolated tripleton */
+    val isTripleton = existS[F, V](isTripletonF) //true if the summits form a triangle.
+    /** split-in-3 tripleton are predominant over Vmeeting points and Emeeting points. */
+    val shadowedNbcc3 = exist[E, V](neighborsSym(e(nbcc3)))
+    /** we will consider meeting point not shadowed by a split-in-3 face */
+    val meetiEnotShadowed = meetiE & ~shadowedNbcc3
+    /** we will consider meeting point not shadowed by a split-in-3 face */
+    val meetiVnotShadowed = meetiV & ~shadowedNbcc3
+  }
+  }
+/** using blobsm, adds somme zlt info, and randomness in order to compute an accurate center, also able to penetrate */
+  trait addCenter {
+    self: MovableAgV with addDistVor with addSummit with QpointConstrain with addBlobsm with addZone => //on utilise prop.tripletonstreched
+    val muuiis:BoolV with carrySysInstr =self.muis
+    val ctr=new Attributs {
+      override def showMe: Unit = {   }
+      override val muis: BoolV with carrySysInstr = muuiis
+    /** check that the rhombus ' apexes are indeed either ocupied by a particle or by a zlt. */
+    val rhombusFilled=blobsm.losangeApexes & (zon.zlt.muis | muis )  //le coté vide est celui proche de zonegt
+    val rhombusShouldFlip=inside[F,E](apexE(f(rhombusFilled)))
+    val losangeApexToRemoveFromCtr=blobsm.losangeApexes & ~zon.zlt.muis & muis & exist[F, V](apexV(f(rhombusShouldFlip)))
+    //meme formule utiliser pour shorten ou extend
+    val meetEblockingZltnbcc3=blobsm.nbcc3 & ~zon.zlt.muis & exist[E,V](neighborsSym(e(blobsm.nbcc3 & zon.zlt.muis)))
+    val raaand:BoolV= root4naming.addRandBit().asInstanceOf[BoolV] //vrai avec trois chance sur quatre
+    val meetEblockingZltmeetE=raaand & blobsm.meetEV & ~zon.zlt.muis & exist[E,V](neighborsSym(e(blobsm.meetEV & zon.zlt.muis))) //on randomize l'attraction vers zonelt, pour creer du jitter
+    val ctr1=((blobsm.meetiVnotShadowed | blobsm.meetiEnotShadowed) & ~ meetEblockingZltmeetE)|
+      blobsm.isDoubleton | blobsm.isTripleton | (blobsm.nbcc3 & ~losangeApexToRemoveFromCtr/* & ~meetEblockingZltnbcc3 trop fort cui la*/)
+
+      val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit
+      /** was intended for restricting exploration of zon.zlt to agent already strecing weakly in that direction, turned out to be to restrictive */
+      val weakMeetE:BoolE=dgv.streched & insideS(sum.isSummit2) & existS(blobsm.meetiV)
+      val ctr2= ctr1 | (/*existS[E,V](weakMeetE ) &*/zon.zlt.muis & sum.isSummit2 &  raand) //let the seed explore zon.zlt, but along the summit, and with a random bit to create a jitter.
+
+
+    }
+
 }
 
 
+/** endows an agent having a vonoi with a summit */
+/*trait addSommet{
+  self: MovableAgV with addDistVor with addSummit with addZone =>
+  /** computes blobV fields with respect fo being summit or not */
+  val isSummitBlob=new BloobVFields(muis,sum.isSummit2)
+  val summit=new BloobVctr(muis,isSummitBlob, zon.zlt){
+    val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit
+    /** was intended for restricting exploration of zon.zlt to agent already strecing weakly in that direction, turned out to be to restrictive */
+    val weakMeetE:BoolE=dgv.streched & insideS(sum.isSummit2) & existS(meetiV)
+    val centerZlt= ctr | (/*existS[E,V](weakMeetE ) &*/zon.zlt.muis & sum.isSummit2 &  raand) //let the seed explore zon.zlt, but along the summit, and with a random bit to create a jitter.
+  }
+}*/
 
 /** avoid simultaneous emtpy and invade  that can result in creating holes */
 trait blobConstrTrou{
@@ -314,126 +404,7 @@ trait addProp{
 
   }
 }
-/**
- * Calcule une zone remarquable inclue dans summit, de 1,2, ou 3 vertex, appelée centre, qu'on pense que c'est la zone
- * a envahir par la qseed, pour se trouver impeccablement au centre du voronoi, dans le cas de cellule de Voronoi pas trop allongée
- * fait des calculs assez compliqué pour occuper le sommet le mieux possible par rapport
- * a sa forme spécifique , ces calculs résultent d'une étude à la main*/
-trait addCenter {
-  self: MovableAgV with addDistVor with QpointConstrain with addProp with addZone=> //on utilise prop.tripletonstreched
-  val muissSelf= this.muis
 
-  val centr=new Attributs() { //su==summitFields
-    override val muis: ASTLg with carrySysInstr = muissSelf
-    val isSummitOld: BoolV = ~exist(dgv.slopgt) & adjacentBall(isV)
-    val particuleAuVoisinage=neighborsSym(e(isV)) //y a une particule au voisinage
-    //on peut etre sommet tout en ayant un dgv slopt, car proche de la particule
-    val isSummit1: BoolV =  isV |
-      (  ~exist(dgv.slopgt & particuleAuVoisinage)  & //y a pas de particule au voisinage, plus loin
-          exist (~dgv.slopgt & particuleAuVoisinage) )//y a une particule au voisinage a la meme distance ou plus pres
-    /** etends la detection des sommet un vertex plus loin */
-    val cisSummit=isSummit1 |  exist (~dgv.slopgt & neighborsSym(e(isSummit1)) )
-    /** number of summit in immediate neighborhood */
-    val density: UintVx = addLt(countNeighbors(addSym(e(cisSummit)).sym))
-    /** summits of local highest density */
-    val cisSummSumm = cisSummit & ~exist(transfer(density.gt) & neighborsSym(e(cisSummit)))
-    /** true if there is a single sumsum */
-    val singleSumSum = cisSummSumm & ~exist(transfer(v(density.eq)) & neighborsSym(e(cisSummit)))
-    val isSummitN = neighborsSym(e(cisSummit))
-    val vassalN = shrinkshrink(isSummitN)
-    val vassal2N = shrinkshrink(vassalN)
-    val isNullVassal2N = ~exist(vassal2N)
-    val vassalMin = cond(e(isNullVassal2N), vassalN, vassal2N)
-    /**  voisin   */
-    val queenOld = exist(neighborsSym(vassalMin & e(singleSumSum)))
-    /** voisin de sumsum , et   chaque sumsum voisin dois correspondre a un vassal min*/
-    val cqueen=cisSummit & exist(neighborsSym(e(cisSummSumm)) )& inside(neighborsSym(imply(e(cisSummSumm),vassalMin)))
-    val cknight: BoolV = cisSummit & (~cisSummSumm) & exist(transfer(density.lt) & neighborsSym(e(cqueen)))
-
-    val nbCC: UintV = nbccV(insideS(~cisSummSumm & ~cqueen & cisSummit))
-    val meetV = nbCC > fromInt(1)//utilisé pour pouvoir inscrire un losange dans le centre, oui mais cela dysimetrise, c'est donc peut etre pas indiqué.
-    val center1 = cisSummSumm | cknight | cqueen //manque encore le jocker qui peut couper en trois
-    val nbCC2: UintV = nbccV(insideS(cisSummit& ~center1))
-    val cjoker = nbCC2 > fromInt(1)
-    val center1N=neighborsSym(e(center1))
-    val qpointOk=exist(shrinkEF(center1N)) // vrai pour les cases adjacente de deux case de centre1, de sorte qu'ensemble il vont former un quasipoint
-    val cjoker2=cjoker&qpointOk //restreint les joker a ceux qui forment un quasipoint avec le reste du centre.
-
-    /** neighbor of vassal with higher density of vassal that is not sumsum */
-   /** neighbor of vassal with higher or equal density of vassal that is not sumsum */
-    //val queeneq: BoolV = isSummit & (~isSummSumm) & exist(transfer(~ density.gt) & neighborsSym(e(isVassal)))
-    /** aboutissement de tout ces calculs et d'identifier "center", zone du sommet qu'on souhaite occuper */
-    val center = center1 | cjoker2// isSummSumm | knight | queen  | meetV //| meetV2//
-    val triangleIncluded:BoolF=insideS(center);   val losangeIncluded:BoolE=insideS(triangleIncluded) //ya une macro pour rhombus
-    /** if losange and tripleton, tripleton is removed the apex and becomes a doubleton, so that it can move avaint further */
-    val  losangeApexes:BoolV = exist[F, V](apexV(f(losangeIncluded))) //on calcul les apex du losange, afin de pouvoir bouger le tripleton en les enlevant
-    //on verifie que les deux apex sont soient égale a meetV2, soient occupée par la particules
-   // val confirmedApexes=losangeApexes & (isV|(cjoker & zon.zlt.muis))  //le coté vide est celui proche de zonegt
-    val confirmedApexes=losangeApexes & (isV|( zon.zlt.muis))  //le coté vide est celui proche de zonegt
-    //meme formule utiliser pour shorten ou extend
-    val weakLink:BoolE=bf.insideE & ~dgv.streched //true for edges located between two vertice, one of them could be removed from center because link is not streched
-    val potentialWeaLink:BoolE=bf.brdE & ~dgv.streched //if vertice is filled on one side, it will create a weak link
-    val randV:BoolV=root4naming.addRandBit().asInstanceOf[BoolV];   val randE: BoolE = borderS[V, E, B](randV);   val randEv: BoolEv = send[E, V, B](List(randE, ~randE)) //selects on of the vertices of a weak link
-    /** true for one of the two summits of a tripleton linked  by a weakedge, iff that tripleton is no streched */
-    val oneOfWeaklinkExtremityOld=exist(transfer(v(weakLink)&randEv))
-    val tripletonStrechedV= existS[F,V](prop.tripletonStreched)
-
-    /** it is better to apply the following not randomly */
-    val exshorten2OneOfWeaklinkExtremity=exist(transfer(v(weakLink))) &  ~ zon.zlt.muis   & qf.tripletonV & ~ tripletonStrechedV & (zon.zlt.existOnPart) /*| (oneOfWeaklinkExtremityOld & ~zon.zlt.existOnPart ))*///au lieu d'utiliser un rand, on enleve celui qui est de l'autre coté du plus gros
-    //on fait pas si le tripleton est stretched @todo faudra se gaffer que ca peut faire disparaite les deux
-     val mignonLosange:BoolV=   cisSummSumm & eq0(density ^const(Intof(3)))  //caractérise le centre d'un sommet en forme de losange, qui  a pour densité 3, et  avec un doubleton dans son centre, et vide sur les apex.
-                                                                                  // on souhaite laisser tranquille les doubletons de ces mignons losanges.
-    /**pour deplacer un doubleton suivant un axe perpendiculaire avec celui du doubleton:*/
-    val perpendicularMoveOfDoubleton:BoolE=dgv.streched & existS[V,E](qf.doubletonV) &
-      ~qf.doubleton & //on considére les edge qu'on peut ajouter, donc n dehors de celui du doubleton lui meme
-      ~existS[V,E](mignonLosange) & //removes simple situation were extending center is not appropriate
-      existS[V,E](zon.zlt.muis) //happen only in zone of smaller inner radius
-   val extend1DoubletonToDoubletonCreate=(cisSummit & existS[E,V](perpendicularMoveOfDoubleton)) //reforme un tripleton de l'autre cote de l'edge perpendicularMoveOfDoubleton2
-    val exshorten1DoubletonToDoubletonDelete:BoolV=qf.doubletonV & exist[F,V](apexV(f(perpendicularMoveOfDoubleton))) //Il faudrait mieux assurer que la deletion et la creation se correspondent
-    val density1=eq0(density ^const(Intof(1))) //density is only one, there is a single neigor summit
-    val singletonOnEdge:BoolE= existS[V,E](qf.singleton); //true if singleton on one side of the edge
-    val extend2SingletonToIsolatedDoubleton=cisSummit& existS[E,V](singletonOnEdge) &   density1 & ~isV //allows a center of one vertex adjacent to a single summit, to temporarily explore a nearby summit, needs  zone.zlt.muis
-    val exshortenCenterUsed: ASTLt[V, B] =exshorten1DoubletonToDoubletonDelete | exshorten2OneOfWeaklinkExtremity
-    val extendCenterUsed=  extend1DoubletonToDoubletonCreate|  (extend2SingletonToIsolatedDoubleton & zon.zlt.muis)   //|extendSingletonToStableDoubleton
-
-
-    val extend4SingletonToStrechedDoubleton=  zon.zlt.muis & //si on met pas zlt ca fait des petit cycles a la con
-      existS[E,V](insideS[V,E](cisSummit)& dgv.streched & singletonOnEdge & bf.brdE) //this seems a smart move independantly of zon.zlt.muis but then we want to not modifey center unless really necessary
-    // can create a cycle, since the center is not modified, the created doubleton diseapeal at the next time step.
-    val exshorten4doubletonNotStreched: BoolV = existS[E,V](qf.doubleton & ~dgv.streched ) //to let preceding force move singleton, the created doubleton must me able to subsequently shorten
-    val tripletonPeutBasculer:BoolE=inside[F,E](apexE(f(confirmedApexes)));  val exshorten3ApexToBasculate=exist[F,V](apexV(f(tripletonPeutBasculer)))
-
-    val extend3DoubletonToTripletonApexBasculate=qf.doubletonV & exshorten3ApexToBasculate & zon.zlt.muis //on s'étends vers l'apex seulement si ca rapproche de zoneg[
-    val extend5DoubletonToUnstableTripleton=(cisSummit & existS[E,V](perpendicularMoveOfDoubleton)& (~existS[E,V](potentialWeaLink) | zon.zlt.muis)&    ~center& ~isV) //reforme un tripleton
-
-
-    /** contains another two more shorten we've been trying */
-    val exshortenCenterAll = exshortenCenterUsed | (qf.tripletonV & exshorten3ApexToBasculate )
-    // | exshorten4doubletonNotStreched  //we decide to trust the center, in order to avoid cycles.  //places within the center, to be removed from the center comming either from doubleton or from tripleton
-    /** contains three more  extends, we've been trying */
-
-    val extendCenterALL=  extendCenterUsed | extend3DoubletonToTripletonApexBasculate & zon.zlt.muis // |  extend4SingletonToStableDoubleton   |    extend5DoubletonToUnstableTripleton  //this last one was long not used.
-    //val updatedCenter= (center &  ~ exshortenCenterUsed)| extendCenterUsed
-     val updatedCenter= (center&  ~ exshortenCenterAll) | extendCenterALL ///(center)
-    override def showMe: Unit = {shoow(exshortenCenterAll,potentialWeaLink,perpendicularMoveOfDoubleton,exshorten4doubletonNotStreched,
-     // extend1DoubletonToDoubletonCreate,exshorten1DoubletonToDoubletonDelete,qpointOk,confirmedApexes,
-      //tripletonPeutBasculer,tripletonStrechedV,exshorten3ApexToBasculate,vassalMin,exshortenCenterUsed,extendCenterUsed,
-      // extendCenterALL, extend4SingletonToStrechedDoubleton,extend2SingletonToIsolatedDoubleton,extend5DoubletonToUnstableTripleton,extend3DoubletonToTripletonApexBasculate,
-      // exshorten2OneOfWeaklinkExtremity,weakLink,losangeIncluded,mignonLosange,
-     center,updatedCenter,cisSummit,cqueen,cknight,meetV,cjoker2,cisSummSumm,// losangeCenter,mignonLosange,losangeApexes,losangeIncluded,   randE,randV
-    )}
-  }
-  /** on se lance dans une  autre facon de définir le centre, bassée sur les meeting point de blob. */
-  val ceentr=new Attributs() {
-    override val muis: ASTLg with carrySysInstr = muissSelf
-    //val bbf=new BlobVFields(centr.cisSummit)
-
-    override def showMe(): Unit = {
-
-    }
-
-  }
-}
 
 /** field needed to compute the constraints of  a quasipoint, and possibly elsewehere */
 trait addQpointFields {

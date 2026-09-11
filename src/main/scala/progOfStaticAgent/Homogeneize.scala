@@ -57,13 +57,10 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoowText(part.ri.muis,List()); part.ri.showMe;
   // part.sm.showme; //does not work, because sm is not taking part i the computation.
  // part.shoow(part.sm.muis, part.sm.b.meetiE, part.sm.b.meetiV, part.sm.b.ctr, part.sm.b.isDoubleton)
-  part.shoow(part.summit.centerZlt,part.summit.meetiE,part.summit.meetiV,part.summit.nbcc3,part.summit.twoNeighbor,part.summit.isTripleton,
+/*  part.shoow(part.summit.centerZlt,part.summit.meetiE,part.summit.meetiV,part.summit.nbcc3,part.summit.twoNeighbor,part.summit.isTripleton,
     part.summit.meetiEselected,part.summit.loosangeIncluded,part.summit.losangeApexes,part.summit.rhombusShouldFlip,part.summit.losangeApexToRemoveFromCtr,
     part.summit.meetEblockingZltmeetE,part.summit.weakMeetE,part.summit.meetEblockingZltnbcc3,part.summit.raand)
- part.shoowText(part.summit.density, List())
-  part.prop.showMe
-  part.centr.showMe
-  part.ceentr.showMe
+ part.shoowText(part.summit.density, List())*/
   part.zon.showMe
   part.qf.showMe
   //part.shoow(part.sf.isSummit)
@@ -76,7 +73,7 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoow(part.inbl.muis) //;  part.inbl.showMe
  // part.shoow(part.doubletonImplyStreched)
   //part.shoow(part.next2strechedDoubleton)
-  part.shoow(part.hyperStretchedTripleton)
+  //part.shoow(part.hyperStretchedTripleton)
 
   //part.shoow(part.zon.zlt.muis,part.rect); part.shoow(part.zon.zgt.muis);
  // part.zon.zlt.showMe;    part.zon.zgt.showMe
@@ -111,7 +108,9 @@ class Homogen() extends Seed with addDist with addGcenter // with keepOutsideFor
  *  */
 
 class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addRect
-  with addZone with addProp  with addCenter with addSommet
+  with addZone
+ // with addSommet
+  with addSummit with addBlobsm with addCenter
   with addLeader /*: we stopped using zone*/
 {  /** seize applique la force qui cible le  centre si et seulement si le radius est uniforme */
 
@@ -126,19 +125,19 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
  // val doubletonImplyStreched=(prop.doubletonStreched & dgv.streched) | ~  qf.doubletoon  //achanger
   //val next2DoubletonAndStreched:BoolV= existS (doubletonAndStreched)
   //val next2strechedDoubleton:BoolV=isV& ~qf.singleton & insideS(doubletonImplyStreched)
-  val tripletonImplyStreched= prop.tripletonStreched | ~qf.tripleton
+  //val tripletonImplyStreched= prop.tripletonStreched | ~qf.tripleton
   //val streched2:BoolV=isV& ~qf.singleton&insideS(doubletonImplyStreched)
   //val streched3:BoolV=isV& ~qf.singleton&insideS(tripletonImplyStreched)
   //val streched2=qf.doubletonV & insideS(doubletonImplyStreched)
-  val hyperStretchedTripleton=qf.tripletonV & insideS(tripletonImplyStreched)// vrai si les trois doubleton inclus ont tous dgv.streched
+  //val hyperStretchedTripleton=qf.tripletonV & insideS(tripletonImplyStreched)// vrai si les trois doubleton inclus ont tous dgv.streched
  // val streched=  streched2 | streched3all
 
 //  val adjustedCentr3= adjustedCentr2 | centr.centerForMovingSingleton updatedCenter
 //val seizeCenter=cibler(centr.adjustCenter4ForYMove) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
 //val seizeCenter=cibler(centr.updatedCenter) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
 
-  val seizeCenter2:Force=restrictF(cibler(summit.centerZlt),zon.zeqOnSeed)
-  val seizeCenter=cibler(summit.centerZlt) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
+ // val seizeCenter2:Force=restrictF(cibler(summit.centerZlt),zon.zeqOnSeed)
+  val seizeCenter=cibler(ctr.ctr2) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
   //val blockIfStreched:Force=stabilizeNotEmpty(streched)
   //val next2mature:BoolV=exist(neighborsSym(e(qf.doubletonV& ~zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
  // val next2immature:BoolV=exist(neighborsSym(e(zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
@@ -146,7 +145,11 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
   //  val blockIfStreched:Force=stabilizeNotEmpty(next2DoubletonAndStreched)
   /** explore moves as much as possible. We have called it called "fly" because flies move without purpose, we should modulate it with probability */
  // force(introduceNewPriority(), "explore",'O', Force.total.inflechi(centr.center))
-  force(introduceNewPriority(), "explore",'O', Force.total)
+
+ //si ca se trouve j'ai pas besoin du tout de explore
+  //force(introduceNewPriority(), "explore",'O', Force.total)
+
+
   // force(introduceNewPriority(), "stabilize",'z', blockIfStable)
  // force(introduceNewPriority(), "size",'z', seize)
  // force(introduceNewPriority(), "size",'z', blockIfStreched)
