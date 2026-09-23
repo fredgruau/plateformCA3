@@ -32,10 +32,10 @@ public class Util {
     }
     /**
      * @param shouldBeZero should allways be false
-     * @param bugV         accumulates vertic bug
+     * @param bugV         accumulates vertex bug
      * @param bugName      identifies the bug
      * @param bugs         stores detected bug
-     *                     records bugName in bugs, should toBeTested be not null
+     *                     records bugName in bugs, should toBeTested to be not zero
      *                     updates the bugV field whish shows all the bug,
      */
     public static void bug(int[] shouldBeZero, int[] bugV, String bugName, ArrayList<String> bugs) {
@@ -44,11 +44,24 @@ public class Util {
             bug = bug || (shouldBeZero[i] )!= 0;
             bugV[i] |= shouldBeZero[i];
         }
-
         if (bug){
             bugs.add(bugName);
             printMat(shouldBeZero);
         }
+
+    }
+
+    public static void live(int[] shouldBeNonZero, int[] liveV, String liveName,ArrayList<String> notLive) {
+        boolean liveIf = false;
+        for (int i = 2; i < shouldBeNonZero.length-2; i++) {//on zappe les deux premieres et la derniére ligne,elle sont des copies
+            liveIf = liveIf || (shouldBeNonZero[i] )!= 0;
+            liveV[i] |= shouldBeNonZero[i];
+        }
+        if (liveIf==true){ //y a un live parmis tous, qui s'est "eteint", on enregistre.
+            //printMat(shouldBeNonZero);
+            notLive.add(liveName);
+        }
+
 
     }
 

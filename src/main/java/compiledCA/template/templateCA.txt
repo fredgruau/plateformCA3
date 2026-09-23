@@ -9,15 +9,28 @@ import simulator.PrShift;
 import java.util.ArrayList;
 import java.util.HashMap;
 import static simulator.Util.*;
+import scala.collection.immutable.List;
 
 public final class {{NAMECA}}CA implements CAloops2 {
 {{ANONYMOUSLOOP}}
 public int CAmemWidth() {return {{MEMWIDTH}};}
 
-@Override public ArrayList<String> theLoops(PrShift p,int[][] m) {ArrayList<String> bugs=new ArrayList<>();
+
+@Override public List<ArrayList<String>> theLoops(PrShift p, int[][] m) {
+
+
+ArrayList<String> bugs=new ArrayList<>();
+ArrayList<String> livesIf=new ArrayList<>();
 {{ANCHORNAMED}}{{ANCHORNOTNAMED}}
 {{PREPAREBITS}}
-{{LISTCALL}} return bugs;}
+{{LISTCALL}}
+    List<ArrayList<String>> conteneur =
+        scala.collection.immutable.List$.MODULE$.empty();
+    conteneur = conteneur.$colon$colon(livesIf);
+    conteneur = conteneur.$colon$colon(bugs);
+    return(conteneur);
+
+ }
 
 
 @Override public HashMap<String, List<String>> textOfFields() {HashMap<String, List<String>> map = new HashMap<>();

@@ -52,8 +52,6 @@ object LinePainting extends SimpleSwingApplication {
         p.addPoint((j + 50 * Math.cos(i * 2 * Math.PI / 5)).toInt, (k + 50 * Math.sin(i * 2 * Math.PI / 5)).toInt)
       }
       p
-
-
     }
 
     override def paintComponent(g: Graphics2D): Unit = {

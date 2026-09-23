@@ -67,8 +67,7 @@ trait encodeGt extends encodeByInt {
     }
 
     def mirror(mem: Array[Int]): Unit =
-      {
-        mirrorCopyFast(mem)
+      {    mirrorCopyFast(mem)
        // assert(isMirrorSafe(mem)) //la verif coute cher en temps, on la remet en cas de pb
       }
 

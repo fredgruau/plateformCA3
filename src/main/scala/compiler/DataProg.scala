@@ -192,7 +192,7 @@ object DataProg {
     /** adding bug layers */
     if (isRootMainVar) {
       isRootMainVar = false //the next dataProg will therefore not execute the comming code
-      layers = bugLayers(instrs) ++ layers.asInstanceOf[List[Layer[_]]] //we add the bug layers, we must find out firt on what kind of locus we do have possible bugs.
+      layers = bugLayers(instrs) ++ livLayers(instrs)++ layers.asInstanceOf[List[Layer[_]]] //we add the bug layers, we must find out firt on what kind of locus we do have possible bugs.
       layers=constlayer.toList++layers
     }
     /** Symbol table  */
@@ -205,6 +205,7 @@ object DataProg {
     newProg
   }
 
+  /** computes a list of layers, with one layers containing all the bugs for a given kind of locus */
   def bugLayers(lesInstr: List[CallProc]): List[Layer[_]] = {
     val bugInstr = lesInstr.filter(_.procName == "bug")
     //we add the bug layers, we must find out firt on what kind of locus we do have possible bugs.
@@ -217,6 +218,21 @@ object DataProg {
       la
     }).toList
   }
+
+  /** computes a list of layers, with one layers containing all the lives for a given kind of locus */
+  def livLayers(lesInstr: List[CallProc]): List[Layer[_]] = {
+    val livInstr = lesInstr.filter(_.procName == "live")
+    //we add the bug layers, we must find out firt on what kind of locus we do have possible bugs.
+    var locusLiv: Set[Locus] = livInstr.map(_.exps.head.mym.name.asInstanceOf[(Locus, Ring)]._1).toSet
+    //we artificially add V, so as to be able to identify the main entry point by testing it has a llbugV
+    locusLiv = locusLiv + V()
+    locusLiv.map((l: Locus) => {
+      val la = (ASTLt.constLayerBool("false")(new repr(l))).asInstanceOf[Layer[_]]
+      la.setName("ive" + l.shortName);
+      la
+    }).toList
+  }
+
 
   def allLayerFromCompiledMacro(procName:String): List[String] ={
     //calcul des layers de la macro appellée

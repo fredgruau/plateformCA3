@@ -23,7 +23,7 @@ public interface CAloops2 {
      * applies a set of loops realizing one iteration on the CA.
      */
 
-    ArrayList<String> theLoops(PrShift p, int[][] m);
+    List<ArrayList<String>> theLoops(PrShift p, int[][] m);
 
 
 

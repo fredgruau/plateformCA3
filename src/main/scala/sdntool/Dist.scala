@@ -105,6 +105,11 @@ class MuDist(bitSize:Int, val source: MuStruct[V, B])
       ag.addConstraint("slow",'w',slow)
     case _ =>
   }
+  val hasChanged: ASTLt[V, B] = ~(muis.pred == delayedL( muis.munext))
+
+  override def showMe: Unit = {
+    super.showMe; shoow(hasChanged);liiveif(hasChanged)
+  };
   // a deplacer dans un trait.
 
  /* override def showMe={super.showMe; shoow(testLevel)}

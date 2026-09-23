@@ -432,7 +432,7 @@ case class CallProc(var procName: String, names: List[String], exps: List[AST[_]
   override def codeGenInstr(heap: Vector[String], funs: iTabSymb[DataProgLoop[_]], occupied: Int, allCoalesc: iTabSymb[String]):
   List[CallProc] =
     procName match { //specific processing of the system calls
-      case "memo" | "bug" | "show" | "copy"| "stat" =>
+      case "memo" | "bug" | "show" | "copy"| "stat" | "live"=>
         val l = List(this.coalesc(allCoalesc).asInstanceOf[CallProc])
         l
       case _ =>
@@ -462,7 +462,7 @@ case class CallProc(var procName: String, names: List[String], exps: List[AST[_]
   def codeGenInstrOld(heap: Vector[String], funs: iTabSymb[DataProgLoop[_]], occupied: Int, allCoalesc: iTabSymb[String]):
   List[CallProc] =
     procName match { //specific processing of the system calls
-      case "memo" | "bug" | "show" | "copy" | "stat" =>
+      case "memo" | "bug" | "show" | "copy" | "stat"|"live" =>
         val l = List(this.coalesc(allCoalesc).asInstanceOf[CallProc])
         l
       case _ => val fun: DataProgLoop[_] = funs(procName) //we get the dataProgLoop
@@ -809,7 +809,7 @@ object Instr {
   val isBoolean = (r: Instr) => a(r).exp.asInstanceOf[ASTBg].ring == B()
 
   /** used to identify system instructions show, bugif, memo... */
-  val sysInstr = HashSet("ret", "bug", "sho", "mem","sta")
+  val sysInstr = HashSet("ret", "bug", "sho", "mem","sta","liv")
 
   /**
    * @return true for callProc that will not need to store their result in storedField, but instead are executed directly
@@ -817,7 +817,6 @@ object Instr {
    **/
   def isProcessedInMacro(p: String) = p == "memo" //TODO programmer memo comme une sous classe de callProc
   //|| p.startsWith("bug") we decided to keep call to bug outside loopCA
-
 
   /**
    * @param f name of a procedure
@@ -837,7 +836,6 @@ object Instr {
 
   def reduceR(a1: ASTBg, a2: ASTBg, opred: redop[Ring], m: repr[Ring]) =
     new Call2(opred._1, a1, a2)(m) with ASTBt[Ring]
-
 
   /** utility used to align instruction when printed */
   def pad(s: String, n: Int): String = s + " " * (n - s.length())

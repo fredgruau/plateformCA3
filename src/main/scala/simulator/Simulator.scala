@@ -5,7 +5,7 @@ import compiler.Circuit.{compiledCA, findPackage, naameCA, pkgCA}
 import compiler.DataProg.{nameDirCompilLoops, nameDirProgLoops}
 import dataStruc.Util.{CustomClassLoader, existInJava, getProg, hasBeenReprogrammed, loadClass}
 
-import java.awt.{Font, FontMetrics}
+import java.awt.{Font, FontMetrics, Image}
 import java.io.File
 //import simulator.Simulator.SimulatorUtil.envs
 import simulator.SimulatorUtil._
@@ -170,7 +170,8 @@ object Simulator extends SimpleSwingApplication {
        /** height of the pannel of displaying the CA */
         val CaHeight=env.medium.boundingBox.height
         val stat = new Label("stat : 0")
-        env.caPannel = new CApannel(controller.CAwidth,CaHeight /*controller.CAheight*/, env, progCA) // the number of CAlines is 1/ sqrt(2) the number of CA colomns.
+        val adjustedWidth=2*controller.CAwidth //faudrait faire intervenir le nombre de colonne, .... j'ai pas réussi a rerentrer dans GridBagPanel
+        env.caPannel = new CApannel(adjustedWidth, CaHeight /*controller.CAheight*/, env, progCA) // the number of CAlines is 1/ sqrt(2) the number of CA colomns.
           /** allows to add widjet for each CA, such as the time */ {
 
 
@@ -226,6 +227,10 @@ object ExampleData {
   val backwardIcon: ImageIcon = Icon("src/ressources/skip_backward_black.gif")
   val initIcon: ImageIcon = Icon("src/ressources/rewind_black.gif")
   val closeBoxIcon: ImageIcon = Icon("src/ressources/zoom_in_small.png")
+  val printerIcon: ImageIcon = Icon("src/ressources/printer.png")
+  val printerIconSmall=new ImageIcon(printerIcon.getImage.getScaledInstance(32, 32, Image.SCALE_SMOOTH))
+
+
 }
 
 object SimulatorUtil {

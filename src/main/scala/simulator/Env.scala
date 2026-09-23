@@ -12,7 +12,7 @@ import triangulation.Utility.halve
 import scala.collection.JavaConverters._
 import java.awt.Color
 import java.lang.Thread.sleep
-import scala.collection.convert.ImplicitConversions.`map AsScala`
+import scala.collection.convert.ImplicitConversions.{`map AsScala`, `seq AsJavaList`}
 import scala.collection.immutable.{HashMap, HashSet}
 import scala.collection.{immutable, mutable}
 import scala.swing._
@@ -30,7 +30,20 @@ import scala.util.Random
 class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, initName: HashMap[String, String],val t0:Int) {
   /** current time */
   var t = -1 //incoherent value, should be initialized
+  @volatile private var threadRunning = false
+  @volatile private var stopRequested = false
 
+  @volatile var bugFound = false
+  @volatile var noneAlive = false
+  @volatile private var workerThread: Thread = null
+
+  var density: Int = controller.densityInitial
+
+  def isThreadRunning: Boolean = threadRunning
+
+  def requestStop(): Unit = {
+    stopRequested = true
+  }
   val medium: Medium with encodeByInt with InitSelect = arch match {
     case "christal" => christal(nbLine, nbCol, controller.CAwidth) //default medium is christal
   }
@@ -44,7 +57,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   val cache=new dataStruc.Cache[Array[Array[Int]]]
   /** associated pannel */
   var caPannel: CApannel = null //to be set latter due to mutual recursive definition
-  val iterationLabel=new Label(""+t)
+  val iterationLabel = new Label(s"t=$t density=$density")
   //init() // this initialization is to be called after creation, because pannes cannot be set at creation
   // at runtime, when the user restarts the whole simulation from the restart button
 
@@ -63,8 +76,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     val toto=controller.progCA.init().keys
     for (layerName: String <- controller.progCA.init().keys) { //iterate over the layers to be initalized
       /** fields layerName's components */
-        if(layerName.startsWith("llhomogeneizePartVorIsv"))
-          println("llhomogeneizePartVorIsv")
+      if(layerName.startsWith("llhomogeneizePartVorIsv"))
+        println("llhomogeneizePartVorIsv")
 
       val memFields2Init: Seq[Array[Int]] = memFields(layerName) //gets the memory plane
       val initNameFinal = initName.getOrElse(layerName, controller.initName(layerName)) //either it is the root layer or we find it in env
@@ -75,7 +88,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       val initMethod: Init = medium.initSelect(finalInitMethodName,
         controller.locusOfDisplayedOrDirectInitField(layerName), // locus is passed. It is used in def/center/yaxis
         controller.bitSizeDisplayedOrDirectInitField.getOrElse(layerName, 1),
-        controller.density ,inverted     ) // bitsize  is passed.
+        density ,inverted     ) // bitsize  is passed.
       if(layerName.startsWith("llhomogeneizePartVorIsv"))
         println("lldefVe")
       initMethod.init(memFields2Init.toArray)
@@ -92,14 +105,14 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
         val locus = controller.locusOfDisplayedOrDirectInitField(layerName)
         if(locus == compiler.Locus.locusV && ! layerName.startsWith("lldef")) //lldef are used to detect bugs, therefore they should not undergo preparebits.
         {
-           p.mirror(memoryPlane)
-           p.prepareBit(memoryPlane)}
-          //miror comes before preparebit
-       /* if(locus == compiler.Locus.locusV && layerName.startsWith("lldef")){
-          val matBool = Array.ofDim[Boolean](nbLine, nbCol)
-          medium.decode(memoryPlane, matBool)
-          printMat(matBool)
-        }*/
+          p.mirror(memoryPlane)
+          p.prepareBit(memoryPlane)}
+        //miror comes before preparebit
+        /* if(locus == compiler.Locus.locusV && layerName.startsWith("lldef")){
+           val matBool = Array.ofDim[Boolean](nbLine, nbCol)
+           medium.decode(memoryPlane, matBool)
+           printMat(matBool)
+         }*/
         val testMiror = false //to be set to true if you want to test miror
         if (locus == locusV && testMiror) {
           val matBool = Array.ofDim[Boolean](nbLine, nbCol)
@@ -110,15 +123,16 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       }
     }
   }
-  def init(): Unit = {
-    println("coucooooooou")
+  private val caLock = new AnyRef
+
+  def init(): Unit = caLock.synchronized {
     medium.initRandom(controller.randomRoot) //we reinitialize the random number in order to reproduce exactly the same random sequence
-   // medium.middleClosure(controller.currentProximityLocus)  //alternative way of building quickly voronoi.
-     //controller.progCA.copyLayer(mem) plus besoin pisque je fais un forward
+    // medium.middleClosure(controller.currentProximityLocus)  //alternative way of building quickly voronoi.
+    //controller.progCA.copyLayer(mem) plus besoin pisque je fais un forward
     if (medium.theVoronois.isEmpty)
       medium.voronoise(controller.displayedLocus, controller.currentProximityLocus) //we have to compute the voronoi upon medium's creation
     initMemCA() //invariant stipulates that memory should be filled so we fill it already right when we create it
-// System.out.println( medium.pointSet(V()).size)
+    // System.out.println( medium.pointSet(V()).size)
     initMiror()
     t= -1
     cache.reset()
@@ -129,9 +143,10 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     computeStatistics()
     computeVoronoirColors() // for the initial painting
     //computeVoronoirInt32() // for the initial painting
-    repaint() //  cannot be called now, because the associated pannel has not been created yet.
-    if (controller.isPlaying) //lauch the threads
-      play(true)
+
+    //repaint() //  cannot be called now, because the associated pannel has not been created yet.
+    //   if (controller.isPlaying) play(true)//lauch the threads
+
   }
 
   /**
@@ -168,13 +183,13 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   private def sumInt32VoronoiPartial(locus: Locus, bitPlanesIsdefined: List[Array[Int]], bitPlanesValue: List[Array[Int]]): Unit = {
     assert (bitPlanesValue.size == medium.locusPlane(locus).length, "number of bit planes for values should be locus density")
     assert (bitPlanesIsdefined.size == medium.locusPlane(locus).length, "number of bit planes for is defined should be locus density")
-      bitPlanesIsdefined.zip (bitPlanesValue). zip (medium.locusPlane(locus)) .foreach{
-        case((isDefinedPlane,valuePlane),points)=>
+    bitPlanesIsdefined.zip (bitPlanesValue). zip (medium.locusPlane(locus)) .foreach{
+      case((isDefinedPlane,valuePlane),points)=>
         //we do a dot iteration simultaneously on pointsPlane, and bitPlane
-      //   decodeInterleavRot(nbLineCA, nbColCA, plane, sandBox) //we convert the compact encoding on Int32, into simple booleans
-      medium.decode(valuePlane, bitPlaneBuffer) //we convert the compact encoding on Int32, into simple booleans
-           medium.decode(isDefinedPlane, bitPlaneBufferIsDef)
-          medium.sumBitVoronoiPartial(bitPlaneBufferIsDef,bitPlaneBuffer, points)
+        //   decodeInterleavRot(nbLineCA, nbColCA, plane, sandBox) //we convert the compact encoding on Int32, into simple booleans
+        medium.decode(valuePlane, bitPlaneBuffer) //we convert the compact encoding on Int32, into simple booleans
+        medium.decode(isDefinedPlane, bitPlaneBufferIsDef)
+        medium.sumBitVoronoiPartial(bitPlaneBufferIsDef,bitPlaneBuffer, points)
     }
   }
 
@@ -192,7 +207,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
 
   /** computes the text associated to an int32 on each voronoi */
   private def textify(locus: Locus, ls:List[String]): Unit = {
-     for (points <- medium.locusPlane(locus))   medium.textify( points,ls)
+    for (points <- medium.locusPlane(locus))   medium.textify( points,ls)
   }
 
   /** iterate through all the layers to be displayed */
@@ -238,7 +253,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   /** iterate through all the layers for which we should compute statistics */
   def computeStatistics():Boolean = {
     var text=""
-    var converged=false
+    var uniformized=false
     for (isDefined <- controller.partial.keys) { //process fiedls to be displayed, one by one we do all the stat
       medium.resetColorTextVoronoi(controller.displayedLocus)
       val valueDefined=controller.partial(isDefined)
@@ -259,88 +274,175 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
         //we decompose an int into its  bits, first bit are strongest bit
         /** bitiof locus's arity is locus density */
         val bitiOfValue: List[Array[Int]] = (0 until locusDefined.density).map(j => bitPlaneValue(i + j * bitSizeInt)).toList
-          //we generate an int32, but only if defined
-          sumInt32VoronoiPartial(locusDefined,bitIsDefined,  bitiOfValue) //genere and int 32 bits on each voronoi if defined
-       }
+        //we generate an int32, but only if defined
+        sumInt32VoronoiPartial(locusDefined,bitIsDefined,  bitiOfValue) //genere and int 32 bits on each voronoi if defined
+      }
       /** computes the text associated to an int32 on each voronoi */
-        val integers=statistics(locusDefined, bitIsDefined)
+      val integers=statistics(locusDefined, bitIsDefined)
       println(integers)
-        if(integers.nonEmpty)
+      if(integers.nonEmpty)
       {val (mean, stdNorm, minVal, maxVal)=stats(integers)
-          text += " "+namesState+":" +f"$stdNorm%.2f"+"/"+ f"$mean%.1f" +  " " +minVal+"<"+maxVal
-          if(lastSegment(isDefined)=="Meet") { //global assesmentt
-             converged=(stdNorm *10 < 2 && stdNorm > 0.01  )
-             if(converged==true)
-               println("tata")
-          }
+        text += " "+namesState+":" +f"$stdNorm%.2f"+"/"+ f"$mean%.1f" +  " " +minVal+"<"+maxVal
+        if(lastSegment(isDefined)=="Meet") { //global assesmentt
+          uniformized=(stdNorm *10 < 2 && stdNorm > 0.01  )
+          if(uniformized==true)
+            println("tata")
+        }
         //
-      //aprés je calcule les stats pour de vrai, ecart type patin coufin
-       // for (points <- medium.locusPlane(locusDefined))          medium.statistics( bitIsDefined, points)
+        //aprés je calcule les stats pour de vrai, ecart type patin coufin
+        // for (points <- medium.locusPlane(locusDefined))          medium.statistics( bitIsDefined, points)
       }
       caPannel.updateStat(text) //on veut deux décimale sur standard deviation
 
     }
 
-    converged
-       //at this stage, the int32 where is defined is true, are set we can collect the values in a list, and then compute statistics
+    uniformized // the inner radius is the same everywhere
+    //at this stage, the int32 where is defined is true, are set we can collect the values in a list, and then compute statistics
 
 
   }
 
+  def stopAndWait(): Unit = {
 
+    stopRequested = true
+
+    val thread = workerThread
+
+    if (thread != null && thread != Thread.currentThread()) {
+      thread.join()
+    }
+  }
   /** contains a thread which iterates the CA, while not asked to pause */
-  def play(fwd:Boolean): Unit = {
+  def play(fwd:Boolean): Unit = synchronized {
+    // Il y a déjà un thread : surtout ne pas en créer un deuxième.
+    if (isThreadRunning)
+      return
+    stopRequested = false
+    threadRunning = true
     val thread = new Thread {
       override def run(): Unit = {
         var converged=false
-        while (controller.isPlaying) //no pause asked by the user, no bugs detected
-        { var nbIter = 0;
-          val nbLoops=math.pow(2,controller.speedSlider.value)
-          while (controller.isPlaying && nbIter < nbLoops ) // display every 2^speedSlider.value
-          {if(fwd) converged=forward()
-          else backward(1);
-            nbIter+=1
-            if (bugs.size > 0)
-              controller.isPlaying = false;
-          }
-          repaint(); sleep(50);
+        bugFound=false
+        noneAlive=false
+        try {
+          while(
+            !stopRequested &&
+              !bugFound &&
+              (( density<33  && fwd ) || !fwd)
+          )
+            // { while (controller.isPlaying) //no pause asked by the user, no bugs detected
+          {
+            var nbIter = 0;
+            val nbLoops = math.pow(2, controller.speedSlider.value)
+            /*
+      * On effectue un paquet de forward.
+      *
+      * noneAlive arrête uniquement ce paquet :
+      * il ne tue PAS le thread.
+      */
 
-          // // slows down the loop  a bit
+            while (!stopRequested &&
+              !bugFound &&
+              !noneAlive &&
+              (nbIter < nbLoops || nbLoops >= 256)
+            ) // display every 2^speedSlider.value or  at convergence, if speed>255
+            {
+              if (fwd) converged = forward()
+              else backward(1);
+              nbIter += 1
+              // if (bugs.size > 0 ) controller.bugFound=true
+              // if( isalives.isEmpty ) controller.noneAlive=true
+            }
+            repaint()
+            if (
+              fwd &&
+                noneAlive &&
+                !bugFound &&
+                !stopRequested
+            ) {
+              density += 1
+/*              controller.densityInitList.peer.setSelectedIndex(density)
+              controller.densityInitList.peer.revalidate()
+              controller.densityInitList.peer.repaint()*/
+              repaint(); //peint pas souvent
+              sleep(50);
+              noneAlive = false
+              init()
+            }
+            //if (controller.bugFound)     controller.isPlaying = false
+
+            // // slows down the loop  a bit
+          }
+        } finally {
+
+          // Ici seulement on peut dire que le thread est réellement fini
+          threadRunning = false
+          workerThread = null
+          println(
+            "END PLAY THREAD = " +
+              Thread.currentThread().getName
+          )
         }
 
+
+
+
+
+
       }
+
     }
+
+    workerThread = thread
     thread.start()
   }
 
 
   var bugs: mutable.Buffer[String] = mutable.Buffer.empty
+  var isalives: mutable.Buffer[String] = mutable.Buffer.empty
   /** contains locus of bug */
   var lociBug:Set[Locus]=immutable.HashSet()
+  var lociLive:Set[Locus]=immutable.HashSet()
   /** does one CA iteration on the memory */
-  def forward(): Boolean = {
+  def forward(): Boolean = caLock.synchronized {
     //  controller.progCA.anchorFieldInMem(mem) //todo a refaire seulement si meme change (quand on display ou qu'on display plus)
-    bugs = controller.progCA.theLoops(medium.propagate4Shift, mem).asScala //we retrieve wether there was a bug
+    val conteneur = controller.progCA.theLoops(medium.propagate4Shift, mem) //we retrieve wether there was a bug
+    bugs=conteneur.get(0).asScala
+    isalives=conteneur.get(1).asScala
+    bugFound= bugs.nonEmpty
+    noneAlive = isalives.isEmpty
     t += 1
     val converged =computeStatistics()
     if (bugs.nonEmpty) {  //we set the locus of bugs
       for(bugName<-bugs) {
-       val  locusBug=controller.progCA.fieldLocus.asScala(bugName)
-       lociBug=lociBug+locusBug // pas sur qu'on doive pas plutot stoquer cela dans env
+        val  locusBug=controller.progCA.fieldLocus.asScala(bugName)
+        lociBug=lociBug+locusBug // pas sur qu'on doive pas plutot stoquer cela dans env
         val BugFieldName = "llbug"+locusBug.toString.dropRight(2)
         controller.colorDisplayedField+=(BugFieldName->Color.white)
-              }
+      }
       controller.checkNewLocus(lociBug) //marche meme si y a plusieurs bug différent détecté en meme temps.
       val i=0
     }
-    iterationLabel.text="t=" + t
+    /*if (isalives.isEmpty) {  //we set the locus of bugs
+      for(notliveName<-isalives) {
+        val  locusLive=controller.progCA.fieldLocus.asScala(notliveName)
+        lociLive=lociLive+locusLive // pas sur qu'on doive pas plutot stoquer cela dans env
+        val LiveFieldName = "llive"+locusLive.toString.dropRight(2)
+        controller.colorDisplayedField+=(LiveFieldName->Color.white)
+      }
+      controller.checkNewLocus(lociBug) ; controller.checkNewLocus(lociLive) //marche meme si y a plusieurs bug différent détecté en meme temps.
+      val i=0
+    }*/
+
+
+    iterationLabel.text = s"t=$t density=$density"
     cache.push(deepCopyArray( mem))
     converged
   }
 
   /** @param nbIter number of iteration steps
    * does backward steps using the cache */
-  def backward(nbIter:Int): Unit = {
+  def backward(nbIter:Int): Unit = caLock.synchronized  {
     // bugs = controller.progCA.theLoops(medium.propagate4Shift, mem).asScala //we retrieve wether there was a bug
     if(cache.top==null) return; //on backward pas sur la config initiale
     val timeTarget=t-nbIter
@@ -350,11 +452,16 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       forward()
   }
 
+  def reset(): Unit = caLock.synchronized {
+    density = controller.densityInitial
+    init()
+  }
+
   /** permet d'aller plus vite en arriére presque le meme code que backward, car "cache" peut prendre en parametre,
    *  le nombre d'itération que l'on souhaite reculer*/
-  def fastBackward(nbIter:Int): Unit ={
+  def fastBackward(nbIter:Int): Unit =caLock.synchronized {
     if(cache.top==null) return;
-     copyBasic(cache.pop(nbIter),mem)
+    copyBasic(cache.pop(nbIter),mem)
     t = cache.nextIndex
     iterationLabel.text="" + t
   }
@@ -368,5 +475,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     caPannel.revalidate()
     caPannel.repaint()
   }
+
+  def print(i:Int) = caPannel.print("/home/frederic/svgCA/toto"+i+".svg")
 
 }

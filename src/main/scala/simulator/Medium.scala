@@ -793,10 +793,10 @@ object Medium {
   def christal(nbLineCA: Int, nbColCA: Int, widthLt30: Int): Medium with encodeByInt with InitSelect with border= {
     val width = if (nbColCA < 30) widthLt30 else 2 * widthLt30 //we see that for 64 column we draw the CA in the full available width by using two cells.
     /** we compute radius so that the CA fills the available width on the pannel,*/
-    val radiusSqrt = Math.floor(width.toDouble / (2 * nbColCA - 1))   // normally we assume that the number of lines is the number of columns divided by sqrt(2)
+    val radius = Math.floor(width.toDouble / ( 2*nbColCA ))   // normally we assume that the number of lines is the number of columns divided by sqrt(2)
 
-    val radius: Double = if (nbLineCA * 1.1 < nbColCA) radiusSqrt //si y a pas trop de ligne, le rayon est décidé par la largeur
-       else (radiusSqrt * nbColCA) / (nbLineCA * 1.4)  //sinon c'est le nombre de lignes??
+    //val radius: Double =   if (nbLineCA * 1.1 < nbColCA) radiusSqrt //si y a pas trop de ligne, le rayon est décidé par la largeur
+    //   else (radiusSqrt * nbColCA) / (nbLineCA * 1.4)  //sinon c'est le nombre de lignes??
 
     //the height should be around 1/sqrt2 the width
     assert(radius > 0, "not enough space to draw voronoi")
@@ -824,8 +824,10 @@ object Medium {
           neighbors(d)(i)(j) =add2((i,j) , if (i % 2 == 0) even(d) else odd(d))
 
     //encoding and decoding differs , depending wether the number of columns is bigger than 30 or not
-    if (nbColCA >= 30)new Medium(nbLineCA, nbColCA, bb, vertices, neighbors) with encodeGt with InitSelect with border{}
-    else new Medium( nbLineCA, nbColCA, bb, vertices, neighbors) with encodeLt with InitSelect with border {}
+    if (nbColCA >= 30)
+      new Medium(nbLineCA, nbColCA, bb, vertices, neighbors) with encodeGt with InitSelect with border{}
+    else
+      new Medium( nbLineCA, nbColCA, bb, vertices, neighbors) with encodeLt with InitSelect with border {}
 
   }
 

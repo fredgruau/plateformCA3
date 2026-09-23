@@ -486,10 +486,12 @@ trait ProduceJava[U <: InfoNbit[_]] {
           theDisplayed += callCodeArg //sideeffect, update theDisplayed. display has allways a single arg which is the field to be displayed
           callCode += callCodeArg //in fact we could supress calls to show. We still leave them, just so that we can check those in the compiled java.
         case "stat" =>
-          val twoNames=call.usedVarsIncludingLayers().toList.map(radicalOfVar(_)).distinct //si y a trois bits, ca produit 4 element de base, s
-          val List(isDef,values)=twoNames
+          //val twoNames: Seq[String] =call.usedVarsIncludingLayers().toList.map(radicalOfVar(_)) //si y a trois bits, ca produit 4 element de base, s
+          val isDef =call.exps(0).symbolsIncludingLayers.head //le premier est un boolean
+          val values=radicalOfVar(call.exps(1).symbolsIncludingLayers.head)
+         // val List(isDef,values)=twoNames.distinct
            theStatified += (isDef -> values) //sideeffect, update theDisplayed. display has allways a single arg which is the field to be displayed
-          callCode += twoNames.mkString(",") //in fact we could supress calls to show. We still leave them, just so that we can check those in the compiled java.
+          callCode += List(isDef,values).mkString(",") //in fact we could supress calls to show. We still leave them, just so that we can check those in the compiled java.
 
         case "copy" => assert(paramsD.size == 1 && paramsR.size == 1) //we copy bit by bit, hence int by int.
           val pR: String = radicalOfVar(paramsR(0))
@@ -522,6 +524,11 @@ trait ProduceJava[U <: InfoNbit[_]] {
         case "bug" => val nameBug = radicalOfVar(call.exps.head.asInstanceOf[Read[_]].which) //on apelle bug avec un read, c'est obligé
           val locusBug = tSymbVar(nameBug).locus.toString.dropRight(2) //on regard le locus de la variable surveillée. dropRight enleve les deux parenthéses
           paramCode = List(nameBug, "llbug" + locusBug, "\"" + nameBug + "\"", "bugs").reverse
+          val uuu=0
+        case "live"=>val nameLive = radicalOfVar(call.exps.head.asInstanceOf[Read[_]].which) //on apelle bug avec un read, c'est obligé
+          val locusLive = tSymbVar(nameLive).locus.toString.dropRight(2) //on regard le locus de la variable surveillée. dropRight enleve les deux parenthéses
+          paramCode = List(nameLive, "llive" + locusLive, "\"" + nameLive + "\"", "livesIf").reverse
+
         //faudrait enregistrer la liste des locus de bug?
         case _ => //we now consider the interesting case: a call to a real CAloop
           paramCode = List("p") //this is a method PrShift that does a preliminary shift if radius is >0yyy

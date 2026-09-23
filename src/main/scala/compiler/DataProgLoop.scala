@@ -312,6 +312,7 @@ class DataProgLoop[U <: InfoNbit[_]](override val dagis: DagInstr, override val 
     allAdresses ++= (paramR zip (layerSpace to layerSpace + paramR.length)) //adresses of  result parameter to the mainRoot
     val nbGlobals = allAdresses.size //the number of variables allways in the heap,
     // where morover, the distincts bit planes are found in sequence in the heap
+    println("nombre de bit stocké dans des layers: "+nbGlobals)
     val shown = dagis.visitedL.flatMap({ case i: CallProc =>
       if (i.procName.eq("show")) i.exps.map(_.asInstanceOf[Read[_]].which) else List()
     case _ => List()

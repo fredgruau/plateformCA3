@@ -85,12 +85,13 @@ class Seed extends MovableAg[V]("global") with MovableAgV  with addBloobV with b
   with EmptyBag[sdn.MuStruct[_<: Locus,_<:Ring]]
 
 /** computes the average and variance of a partial SintV defined by a pair ( SintV ;BoolV )*/
-trait stat{ self:Homogen=>  staat(bve.meet, d.muis);  staat(bve.meetV, d.muis)
-  staat(muis, dgv.muis);  staat(bve.meetE2, d.muis)}
+trait stat{ self:Homogen with addLeader=> staat(lead.muis, dgv.muis)// staat(bve.meet, d.muis);;staat(bve.meetV, d.muis);  staat(bve.meetE2, d.muis)
+   }
+
 
 /**adds distance, gabriel center, voronoi distance to voronoi, and then finally repulsive force from voronoi*/
 class Homogen() extends Seed with addDist with addGcenter // with keepOutsideForce
-  with addVor with addDistVor  with stat
+  with addVor with addDistVor
 {  /** seed should not overlap gCenters */
 
    val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
@@ -111,7 +112,7 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
   with addZone
  // with addSommet
   with addSummit with addBlobsm with addCenter
-  with addLeader /*: we stopped using zone*/
+  with addLeader  with stat/*: we stopped using zone*/
 {  /** seize applique la force qui cible le  centre si et seulement si le radius est uniforme */
 
 

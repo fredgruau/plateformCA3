@@ -335,8 +335,9 @@ object AST {
 
     /** @param v field that should be false everywere unless a bug appears */
     def bugif(v: AST[_]) = sysInstr ::= CallProc("bug", List(), List(v))
+      def liveif(v: AST[_]) = sysInstr ::= CallProc("live", List(), List(v))
 
-    /** @return all the user system call, plus the memorized call which is automatically added
+      /** @return all the user system call, plus the memorized call which is automatically added
      *          must be launched after seting names */
     def oldDystInstr: List[CallProc] = CallProc("memo", List(Named.lify(name)), List(next)) :: sysInstr
 

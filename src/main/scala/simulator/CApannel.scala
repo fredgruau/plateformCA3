@@ -2,68 +2,107 @@ package simulator
 
 import compiler.Locus.{allLocus, locusEv, locusV}
 
-import java.awt.{BasicStroke, Color, Dimension, Graphics2D, Image, Point, Polygon, geom}
+import java.awt.{BasicStroke, Color, Font, Graphics2D, Image, Polygon, Rectangle}
 import simulator.CAtype._
 
 import scala.swing.Swing._
-import scala.swing.event._
-import scala.swing.{Dimension, Font, Frame, MainFrame, Panel, SimpleSwingApplication}
-import triangulation.{DelaunayTriangulator, NotEnoughPointsException, Triangle2D, Vector2D, Voroonoi}
-
-import scala.collection.JavaConverters._
+import scala.swing.{Dimension, Panel}
+import triangulation.{Triangle2D, Vector2D, Voroonoi}
 import triangulation.Utility._
 
 import Color._
-import compiler.{E, Locus}
+import compiler.Locus
 import dataStruc.Coord2D
 import simulator.CApannel.fitTextInPolygon
 
 import scala.collection.immutable
 import scala.collection.immutable.HashSet
-import scala.swing.MenuBar.NoMenuBar.font
 import scala.util.Random
-import java.awt.{Font, FontMetrics, Graphics2D, Polygon, Rectangle}
-object CApannel{
+import java.awt.image.BufferedImage
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 
+object CApannel {
 
-    def fitTextInPolygon(
-                          g: Graphics2D,
-                          text: String,
-                          polygon: Polygon,
-                          fontName: String = "SansSerif",
-                          fontStyle: Int = java.awt.Font.PLAIN,
-                          maxFontSize: Int = 12,
-                          minFontSize: Int = 6
-                        ): Option[(Font, Int, Int)] = {
-
-      val bounds: Rectangle = polygon.getBounds
-      val maxWidth = bounds.width
-      val maxHeight = bounds.height
-
-      // Iterate from large to small font size
-      val fittedFontOpt = (maxFontSize to minFontSize by -1).collectFirst {
-        case size =>
-          val font = new Font(fontName, fontStyle, size)
-          val fm: FontMetrics = g.getFontMetrics(font)
-          val textWidth = fm.stringWidth(text)
-          val textHeight = fm.getHeight
-
-          if (textWidth/2 <= maxWidth && textHeight/2 <= maxHeight)
-            Some((font, textWidth, textHeight))
-          else None
-      }.flatten
-
-      fittedFontOpt.map { case (font, textWidth, textHeight) =>
-        val margin = 1 // marge à gauche (modifiable)
-        val x = bounds.x + margin
-        //val x = bounds.x + (bounds.width - textWidth) / 2
-        val y = bounds.y + (bounds.height - textHeight) / 2 + font.getSize // approx baseline
-        (font, x, y)
+  /** Cherche la plus grande police qui respecte la condition `fits`. */
+  private def findFittedFont(
+                              g: Graphics2D,
+                              text: String,
+                              fontName: String,
+                              fontStyle: Int,
+                              maxFontSize: Int,
+                              minFontSize: Int
+                            )(
+                              fits: (Int, Int) => Boolean
+                            ): Option[(Font, Int, Int)] = {
+    (maxFontSize to minFontSize by -1).iterator
+      .map { size =>
+        val font = new Font(fontName, fontStyle, size)
+        val fm = g.getFontMetrics(font)
+        val textWidth = fm.stringWidth(text)
+        val textHeight = fm.getHeight
+        (font, textWidth, textHeight)
       }
+      .find {
+        case (_, textWidth, textHeight) => fits(textWidth, textHeight)
+      }
+  }
+
+  /** Retourne une police adaptée aux dimensions d'une cellule. */
+  def fitFontInCell(
+                     g: Graphics2D,
+                     text: String,
+                     maxWidth: Int,
+                     maxHeight: Int,
+                     fontName: String = "SansSerif",
+                     fontStyle: Int = Font.PLAIN,
+                     maxFontSize: Int = 24,
+                     minFontSize: Int = 6
+                   ): Option[Font] = {
+    findFittedFont(
+      g,
+      text,
+      fontName,
+      fontStyle,
+      maxFontSize,
+      minFontSize
+    ) { (textWidth, textHeight) =>
+      textWidth <= maxWidth && textHeight <= maxHeight
+    }.map(_._1)
+  }
+
+  /** Calcule la police et la position d'un texte dans un polygone. */
+  def fitTextInPolygon(
+                        g: Graphics2D,
+                        text: String,
+                        polygon: Polygon,
+                        fontName: String = "SansSerif",
+                        fontStyle: Int = Font.PLAIN,
+                        maxFontSize: Int = 12,
+                        minFontSize: Int = 6
+                      ): Option[(Font, Int, Int)] = {
+    val bounds: Rectangle = polygon.getBounds
+
+    val fittedFont = findFittedFont(
+      g,
+      text,
+      fontName,
+      fontStyle,
+      maxFontSize,
+      minFontSize
+    ) { (textWidth, textHeight) =>
+      // On conserve ici la condition du code d'origine.
+      textWidth / 2 <= bounds.width && textHeight / 2 <= bounds.height
     }
 
-
-
+    fittedFont.map {
+      case (font, _, textHeight) =>
+        val margin = 1
+        val x = bounds.x + margin
+        val y = bounds.y + (bounds.height - textHeight) / 2 + font.getSize
+        (font, x, y)
+    }
+  }
 }
 /**
  * pannel for drawing one CA , together with relevant information
@@ -74,7 +113,7 @@ abstract class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) ext
   background = Color.black
   preferredSize = (width, height)
   focusable = true
-  def updateStat(s:String )
+  def updateStat(s: String)
 
   /** when zooming on a sub part we need to draw only a small portion */
   private val subca: Dimension = null
@@ -82,50 +121,173 @@ abstract class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) ext
   private var imageBuffer: Image = null
 
 
+
+
+  /**
+   * Partie commune aux sorties écran et SVG.
+   * `metricG` sert uniquement à mesurer les textes.
+   */
+  private abstract class BaseGraphics2D(metricG: Graphics2D) extends myGraphics2D {
+    protected var currentColor: Color = Color.black
+
+    /** Seul le rendu effectif du texte dépend de la sortie. */
+    protected def renderText(s: String, x: Int, y: Int, font: Font): Unit
+
+    override def drawText(s: String, x: Int, y: Int): Unit = {
+      renderText(s, x, y, new Font("Serif", Font.PLAIN, 24))
+    }
+
+    /** Retourne une police adaptée aux dimensions des cellules. */
+    override def getFittedFontOpt: Option[Font] = {
+      CApannel.fitFontInCell(
+        metricG,
+        "zz",
+        width / env.medium.nbCol,
+        height / env.medium.nbLine
+      )
+    }
+
+    override def drawTextPoly(s: String, p: Polygon): Unit = {
+      fitTextInPolygon(metricG, s, p).foreach {
+        case (font, x, y) => renderText(s, x, y, font)
+      }
+    }
+  }
+
+  /** Échappe un texte afin qu'il puisse être inséré dans du XML. */
+  private def escapeXml(s: String): String = {
+    s.flatMap {
+      case '&'  => "&amp;"
+      case '<'  => "&lt;"
+      case '>'  => "&gt;"
+      case '"'  => "&quot;"
+      case '\'' => "&apos;"
+      case c    => c.toString
+    }
+  }
+
+  private def svgColor(c: Color): String = {
+    f"#${c.getRed}%02x${c.getGreen}%02x${c.getBlue}%02x"
+  }
+
+  private def svgAlpha(c: Color): Double = c.getAlpha.toDouble / 255.0
+
+  private def polygonPoints(p: Polygon): String = {
+    (0 until p.npoints)
+      .map(i => s"${p.xpoints(i)},${p.ypoints(i)}")
+      .mkString(" ")
+  }
+
+  /** Dessine l'automate dans un fichier SVG vectoriel. */
+  def print(fileName: String): Unit = {
+    val svg = new StringBuilder
+
+    // Ce Graphics2D invisible sert seulement au calcul des FontMetrics.
+    val metricImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
+    val metricG = metricImage.createGraphics()
+
+    svg ++= """<?xml version="1.0" encoding="UTF-8"?>"""
+    svg += '\n'
+    svg ++=
+      s"""<svg xmlns="http://www.w3.org/2000/svg"
+         |     width="$width"
+         |     height="$height"
+         |     viewBox="0 0 $width $height">
+         |""".stripMargin
+    svg ++=
+      s"""  <rect x="0" y="0" width="$width" height="$height"
+         |        fill="${svgColor(background)}"
+         |        fill-opacity="${svgAlpha(background)}" />
+         |""".stripMargin
+
+    val svgFig = new BaseGraphics2D(metricG) {
+      override def setColor(c: Color): Unit = {
+        currentColor = c
+      }
+
+      override def drawPoint(x: Int, y: Int, size: Int): Unit = {
+        val radius = size.toDouble / 2.0
+        svg ++=
+          s"""  <circle cx="$x" cy="$y" r="$radius"
+             |          fill="${svgColor(currentColor)}"
+             |          fill-opacity="${svgAlpha(currentColor)}" />
+             |""".stripMargin
+      }
+
+      override def drawLine(x: Int, y: Int, x2: Int, y2: Int): Unit = {
+        svg ++=
+          s"""  <line x1="$x" y1="$y" x2="$x2" y2="$y2"
+             |        stroke="${svgColor(currentColor)}"
+             |        stroke-opacity="${svgAlpha(currentColor)}"
+             |        stroke-width="1" />
+             |""".stripMargin
+      }
+
+      override def fillPolygon(p: Polygon): Unit = {
+        if (p.npoints > 0) {
+          svg ++=
+            s"""  <polygon points="${polygonPoints(p)}"
+               |           fill="${svgColor(currentColor)}"
+               |           fill-opacity="${svgAlpha(currentColor)}"
+               |           stroke="none" />
+               |""".stripMargin
+        }
+      }
+
+      override def drawPolygon(p: Polygon): Unit = {
+        if (p.npoints > 0) {
+          svg ++=
+            s"""  <polygon points="${polygonPoints(p)}" fill="none"
+               |           stroke="${svgColor(currentColor)}"
+               |           stroke-opacity="${svgAlpha(currentColor)}"
+               |           stroke-width="1" />
+               |""".stripMargin
+        }
+      }
+
+      override protected def renderText(
+                                         s: String,
+                                         x: Int,
+                                         y: Int,
+                                         font: Font
+                                       ): Unit = {
+        svg ++=
+          s"""  <text x="$x" y="$y"
+             |        fill="${svgColor(currentColor)}"
+             |        fill-opacity="${svgAlpha(currentColor)}"
+             |        font-family="${escapeXml(font.getFamily)}"
+             |        font-size="${font.getSize}">${escapeXml(s)}</text>
+             |""".stripMargin
+      }
+    }
+
+    try {
+      drawCA(svgFig, env)
+      svg ++= "</svg>\n"
+      Files.write(
+        Paths.get(fileName),
+        svg.toString().getBytes(StandardCharsets.UTF_8)
+      )
+      ()
+    } finally {
+      metricG.dispose()
+    }
+  }
+
   /** called by the system, in order to paint or repaint the pannel */
   override def paintComponent(g: Graphics2D): Unit = {
     super.paintComponent(g)
-    val gscreen = new myGraphics2D {
-      override def setColor(c: Color): Unit = g.setColor(c)
+    val gscreen = new BaseGraphics2D(g) {
+      override def setColor(c: Color): Unit = {
+        currentColor = c
+        g.setColor(c)
+      }
 
       override def fillPolygon(p: Polygon): Unit = g.fillPolygon(p)
 
       override def drawPolygon(p: Polygon): Unit = g.drawPolygon(p)
-      import java.awt.{Font}
 
-      override def drawText(s: String, i: Int, j: Int) = {
-        val font = new Font("Serif", Font.PLAIN, 24); // Remplace "Serif" par le nom de la police souhaitée et 24 par la taille de police désirée
-        g.setFont(font);
-        g.drawString(s, i, j)}
-
-
-      // Iterate from large to small font size
-      def getFittedFontOpt: Option[Font] = (24 to 6 by -1).collectFirst {
-        case size =>
-          val font = new Font("SansSerif",java.awt.Font.PLAIN, size)
-          val fm: FontMetrics = g.getFontMetrics(font)
-          val textWidth = fm.stringWidth("zz")
-          val textHeight = fm.getHeight
-          if (textWidth <= width/env.medium.nbCol && textHeight  <= height/env.medium.nbLine)
-            Some((font))
-          else None
-      }.flatten
-
-
-
-
-      /** compute the font size, according to the englobing polygon, and also where to print  */
-      override def drawTextPoly(s: String,p: Polygon) = {
-        val maybeFontPos: Option[(Font, Int, Int)] = fitTextInPolygon(g, s, p)
-         maybeFontPos.foreach { case (font, x, y) =>  //if not enough space , will not print anything
-          g.setFont(font)
-          g.drawString(s, x, y)
-        }
-
-
-      }
-
-      override def drawPoint(x: Int, y: Int, size:Int): Unit = {
+      override def drawPoint(x: Int, y: Int, size: Int): Unit = {
         g.setStroke(new BasicStroke(size))
         g.drawLine(x, y, x, y)
       }
@@ -134,9 +296,22 @@ abstract class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) ext
         g.setStroke(new BasicStroke(1))
         g.drawLine(x, y, x2, y2)
       }
+
+      override protected def renderText(
+                                         s: String,
+                                         x: Int,
+                                         y: Int,
+                                         font: Font
+                                       ): Unit = {
+        g.setFont(font)
+        g.drawString(s, x, y)
+      }
     }
     drawCA(gscreen, env)
   }
+
+
+
 
   /**
    *
@@ -173,8 +348,8 @@ abstract class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) ext
       for (t <- triangleSoup) {
         val lociSummit: Set[Locus] =HashSet(t.a,t.b,t.c).map (locusOfPoint(_))
         if(  targetLoci.subsetOf(lociSummit))
-        //g.setColor(randColor);
-        g.drawPolygon(toPolygon(t))
+          //g.setColor(randColor);
+          g.drawPolygon(toPolygon(t))
       }
     }
 
@@ -189,8 +364,8 @@ abstract class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) ext
 
     def drawEdges(c: Color) = {
       g.setColor(c);
-     // env.medium.resetLocusNeigbors
-     // for (p <- env.medium.displayedPoint)
+      // env.medium.resetLocusNeigbors
+      // for (p <- env.medium.displayedPoint)
       //  for (p2<- env.medium.locusNeighbors(p))
       //  g.drawLine(p.x.toInt,p.y.toInt,p2.x.toInt,p2.y.toInt)
       for(e<-env.medium.planarGraph.edges)
@@ -238,7 +413,7 @@ abstract class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) ext
       }
     }
 
-   /** remplis tout les points au centre des polygones du voronoi dont les seeds correspondent au displayed loci */
+    /** remplis tout les points au centre des polygones du voronoi dont les seeds correspondent au displayed loci */
     def drawPoints() = {
       for (p <- env.medium.displayedPoint) {
         val v2=env.medium.theVoronois(Coord2D(p.x,p.y))
@@ -257,19 +432,23 @@ abstract class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) ext
     def drawCAcolorVoronoi() = {
       //env.computeVoronoirColors() //painting allways need to recompute the colors, it would seem
       //for (v: Voroonoi <- env.medium.voronoi.values) {
-        for(p<-env.medium.displayedPoint){
-          val v2: Voroonoi =env.medium.theVoronois(Coord2D(p.x,p.y))
+      for(p<-env.medium.displayedPoint){
+        val v2: Voroonoi =env.medium.theVoronois(Coord2D(p.x,p.y))
         if (v2.polygon.npoints==0){ //we could not build the voronoi, we just draw a point.
           g.setColor(v2.color)
           g.drawPoint(p.x.toInt, p.y.toInt,10)
           g.drawPoint(p.x.toInt, p.y.toInt,1)} //on veut que le stroke revient a 1.
-        else if
-          (v2.color != Color.black || v2.corner.isDefined //we print the corners even it they are black, because they can overlap
-        ) {
+        else {
           g.setColor(v2.color)
           g.fillPolygon(v2.polygon)
         }
-        }
+/*          if
+        (v2.color != Color.black || v2.corner.isDefined //we print the corners even it they are black, because they can overlap
+        ) {
+          g.setColor(v2.color)
+          g.fillPolygon(v2.polygon)
+        }*/
+      }
     }
 
     /** remplis tout les  polygones du voronoi avec les textes qui correspondent au displayed loci */
@@ -284,36 +463,33 @@ abstract class CApannel(width: Int, height: Int, env: Env, progCA: CAloops2) ext
           g.setColor(Color.gray) //calculer la couleur du texte blanc ou noir pour que cela se voit bien
           g.drawTextPoly(v2.text,v2.polygon)
         }
-         // g.drawText(v2.text, 100, /*height -*/ 100) //fitte le texte dans le polygone.
-        }
+        // g.drawText(v2.text, 100, /*height -*/ 100) //fitte le texte dans le polygone.
       }
+    }
 
 
     //drawCAtestInit(env.medium.defInit(E()),red)
     drawCAcolorVoronoi()
     drawCATextVoronoi()
-   // drawCAinsideContour(gray)
-   // drawCA1DborderContour(white)
+    // drawCAinsideContour(gray)
+    // drawCA1DborderContour(white)
 
     //
 
-//     drawTriangles(blue,env.medium.triangleSoupDelaunay)
-   // drawTriangles(green,env.medium.triangleSoupGraph)
-   // drawEdges(red)
+    //     drawTriangles(blue,env.medium.triangleSoupDelaunay)
+    // drawTriangles(green,env.medium.triangleSoupGraph)
+    // drawEdges(red)
     drawPoints()
     drawText(white)
 
 
     //drawdebug(green)
-     if(env.controller.showMore) {drawCrossedFaces();drawFaces()}
+    if(env.controller.showMore) {drawCrossedFaces();drawFaces()}
 
-   // drawTriangles(blue,env.medium.triangleSoupDelaunay)
-  //   drawTrianglesVEv(blue,env.medium.triangleSoupDelaunay)
+    // drawTriangles(blue,env.medium.triangleSoupDelaunay)
+    //   drawTrianglesVEv(blue,env.medium.triangleSoupDelaunay)
     // drawOutsideFace() plante si y ajuste V()
   }
 
 }
-
-
-
 

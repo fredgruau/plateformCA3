@@ -39,7 +39,8 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   extends ToolBar() { //the controller inherits the toolBar, so that it can easily identifies which button was ckicqued, using the button's variable  name
   /** sometimes we try different random root, so as to explore different possible runs. */
   var randomRoot: Int = xInt(simulParam, "simul", "@randomRoot")
-  var density: Int = xInt(simulParam, "simul", "@density")
+  var selectedSpeed:Int=xInt(simulParam, "simul", "@selectedSpeed")
+  var densityInitial: Int = xInt(simulParam, "simul", "@density")
   var paramStat: Int = xInt(simulParam, "simul", "@paramStat")
   var darkness:Int= xInt(simulParam, "simul", "@darkness")
   //var t:Int=xInt(simulParam, "simul", "@t0")
@@ -130,14 +131,16 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
    * this will create plannar graph with face of degree 4, which thereafter should be correctly split.
    */
 
-  private def proximityLocus(loci:Set[Locus]): Map[Locus, Set[Locus]] =  christal(6, 8, 200).proximityLocus(loci)
+  private def proximityLocus(loci:Set[Locus]): Map[Locus, Set[Locus]] =   christal(6, 8, 200).proximityLocus(loci)
 
     /** we'll applies t0 iterations upon initialization to speed up going directly to the interesting cases */
  // val t0: Int = xInt(simulParam, "simul", "@t0")
   /** true if we start to play immediately */
-  var isPlaying: Boolean = xBool(simulParam, "simul", "@isPlaying")
+  var threadRunningInitial: Boolean = xBool(simulParam, "simul", "@isPlaying")
+  //var bugFound: Boolean = false
+  //var noneAlive : Boolean = false
+  @volatile  var playRequested = false
   var showMore:Boolean=true
-
   /** the layers which are already expanded are saved, so that we do  not need to expand them again from one run to the next */
   var expandedLayers: Set[String] = fromXMLasList((displayParam \\ "expandedLayer").head).toSet
   expandedLayers = expandedLayers.filter(progCA.displayableLayerHierarchy().contains(_)) //we remove layers no longer existing
@@ -182,7 +185,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
     })
     val newnewSimulparam = newSimulparam.asInstanceOf[Elem].copy(child = newSimulparam.child.map {
       case simul @ <simul>{_*}</simul> =>
-        simul.asInstanceOf[Elem] % Attribute(null, "density", density.toString, Null)
+        simul.asInstanceOf[Elem] % Attribute(null, "density", densityInitial.toString, Null)
       case other => other
     })
     val newnewnewSimulparam = newnewSimulparam.asInstanceOf[Elem].copy(child = newnewSimulparam.child.map {
@@ -190,7 +193,12 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
         simul.asInstanceOf[Elem] % Attribute(null, "darkness", darkness.toString, Null)
       case other => other
     })
-    XML.save("src/main/java/compiledCA/simulParam/" + nameSimulParam, newnewnewSimulparam)
+    val newnewnewnewSimulparam = newnewnewSimulparam.asInstanceOf[Elem].copy(child = newnewnewSimulparam.child.map {
+      case simul @ <simul>{_*}</simul> =>
+        simul.asInstanceOf[Elem] % Attribute(null, "selectedSpeed", selectedSpeed.toString, Null)
+      case other => other
+    })
+    XML.save("src/main/java/compiledCA/simulParam/" + nameSimulParam, newnewnewnewSimulparam)
   }
 
 
@@ -207,15 +215,15 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   val BackwardButton = new SimpleButton(backwardIcon) //myButton(forwardIcon, this)
   val FastForwardButton = new SimpleButton(fastForwardIcon) //myButton(forwardIcon, this)
   val FastBackwardButton = new SimpleButton(fastBackwardIcon) //myButton(forwardIcon, this)
-  val PlayPauseButton = new SimpleButton(if (isPlaying) pauseNormalIcon  else playNormalIcon)
+  val PlayPauseButton = new SimpleButton(if (playRequested) pauseNormalIcon  else playNormalIcon)
   val PlayReverseButton = new SimpleButton(playReverseIcon)
   val ShowCrossButton = new SimpleButton(closeBoxIcon)
-
+  val printerButton=new SimpleButton(printerIconSmall)
 
   val speedSlider = new Slider {
     min = 0
-    max = 18
-    value = 0
+    max = 8
+    value = selectedSpeed
     majorTickSpacing = 6
     minorTickSpacing = 2
     paintTicks = true
@@ -239,7 +247,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
     selection.item = randomRoot
   }
   val densityInitList = new ComboBox[Int](densityInitNames) {
-    selection.item = density
+    selection.item = densityInitial
   }
     val darknessInitList = new ComboBox[Int](darknessInitNames) {
     selection.item = darkness
@@ -256,7 +264,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   /** When we switch mode between pause and play, the icon of the PlayPause button toggles */
   private def togglePlayPauseIcon(): Unit = {
     PlayPauseButton.icon =
-      if (isPlaying) pauseNormalIcon
+      if (playRequested) pauseNormalIcon
       else playNormalIcon
   }
   def checkNewLocus(loci:Set[Locus]) {
@@ -335,24 +343,46 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
      layerTree.repaint()
      repaintEnv()
    case ButtonClicked(InitButton)  =>//| KeyReleased(_, Key.A, _, _)
-     val wasPlaying = isPlaying
+    /* val wasPlaying = isPlaying
      if (isPlaying) {
        PlayPauseButton.doClick()
-     } //we need a temporary pause of the computing thread, so as to avoid having two threads run simultaneously
+     } *///we need a temporary pause of the computing thread, so as to avoid having two threads run simultaneously
+     val restartAfter = playRequested
+     envList.foreach(_.stopAndWait())
+     playRequested = false
+     // init() prendra le caLock de chaque Env
      initEnv()
      repaintEnv()
      requestFocus() //necessary to enable listening to the keys again.
-     if (wasPlaying) PlayPauseButton.doClick()
+     if (restartAfter) {
+       playRequested = true
+       playEnv(true)
+     }
+
+     togglePlayPauseIcon()
+
+
+
+/*     initEnv()
+     repaintEnv()
+     requestFocus() //necessary to enable listening to the keys again.
+     if (wasPlaying) PlayPauseButton.doClick()*/
 
    case ButtonClicked(PlayPauseButton) =>//| KeyReleased(_, Key.Space, _, _) =>
-     isPlaying = !isPlaying
+     if (playRequested) {
+       playRequested = false
+       for (env <- envList)
+         env.requestStop()
+     } else {
+       playRequested=true
+       playEnv(true)
+     }
      togglePlayPauseIcon()
-     if (isPlaying)
-       playEnv(true) //lauch the threads
+
     case ButtonClicked(PlayReverseButton) =>//| KeyReleased(_, Key.Space, _, _) =>
-      isPlaying = !isPlaying
-      //togglePlayPauseIcon()
-      if (isPlaying)
+//      isPlaying = !isPlaying
+//      //togglePlayPauseIcon()
+//      if (isPlaying)
         playEnv(false) //lauch the threads
    case ButtonClicked(ForwardButton)=> //| KeyReleased(_, Key.Right, _, _)
      forwardEnv()
@@ -373,6 +403,9 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
      showMore= !showMore
      repaintEnv()
      //requestFocus()
+    case ButtonClicked(printerButton)  =>
+      printEnv()
+    case ButtonClicked(printerButton)  =>
 case SelectionChanged(`globalInitList`) =>
      initButtonClick()//InitButton.doClick()
      updateAndSaveXMLGlobalInit()
@@ -381,7 +414,7 @@ case SelectionChanged(`globalInitList`) =>
      initButtonClick()//InitButton.doClick()
      updateAndSaveXMLSimulParam()
     case SelectionChanged(`densityInitList`) =>
-      density = densityInitList.selection.item
+      densityInitial = densityInitList.selection.item
       initButtonClick()//InitButton.doClick()
       updateAndSaveXMLSimulParam()
     case SelectionChanged(`darknessInitList`) =>
@@ -389,20 +422,30 @@ case SelectionChanged(`globalInitList`) =>
     //  initButtonClick()//InitButton.doClick()
       updateAndSaveXMLSimulParam()
    case ValueChanged(`speedSlider`) =>
-     speed.text = s"Speed : ${speedSlider.value}"
+     {speed.text = s"Speed : ${speedSlider.value}"
+      selectedSpeed=speedSlider.value
+       updateAndSaveXMLSimulParam}
  }
 
  /** ca bug si je fait initButton.doClick(), je ne sais pas pourquoi peut etre parceque
   * j'ai bricolé des changement de sdk et de version de  donc j'ai ecrit le code séparément, la ca a l'ai d'aller*/
  def initButtonClick(): Unit = {
-   val wasPlaying = isPlaying
-   if (isPlaying) {
-     PlayPauseButton.doClick()
-   } //we need a temporary pause of the computing thread, so as to avoid having two threads run simultaneously
+   /* val wasPlaying = isPlaying
+    if (isPlaying) {
+      PlayPauseButton.doClick()
+    } *///we need a temporary pause of the computing thread, so as to avoid having two threads run simultaneously
+   val restartAfter = playRequested
+   envList.foreach(_.stopAndWait())
+   playRequested = false
+   // init() prendra le caLock de chaque Env
    initEnv()
    repaintEnv()
    requestFocus() //necessary to enable listening to the keys again.
-   if (wasPlaying) PlayPauseButton.doClick()
+   if (restartAfter) {
+     playRequested = true
+     playEnv(true)
+   }
+   togglePlayPauseIcon()
  }
  focusable = true
  requestFocus
@@ -424,9 +467,15 @@ case SelectionChanged(`globalInitList`) =>
 
 
  //2^speedSlider.value
+ private def printEnv(): Unit = {
+   var i:Int=0
+   for (env <- envList) {
+     env.print(i)
+     i+=1
+   }
+ }
 
-
- private def forwardEnv(): Unit =
+  private def forwardEnv(): Unit =
    for (env <- envList)
      env.forward()
  private def backwardEnv(): Unit =
@@ -442,7 +491,7 @@ case SelectionChanged(`globalInitList`) =>
 
  private def initEnv(): Unit =
    for (env <- envList)
-     env.init()
+     env.reset()
 }
 
 import java.awt.Color._
