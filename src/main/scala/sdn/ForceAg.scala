@@ -29,6 +29,7 @@ import scala.collection.mutable
 sealed trait Impact
 /** constraint is applied whether it is empty or not */
 case class Both() extends Impact
+
 /**  constraint will prevent filling (resp emptying), if noFill is true (resp. false)*/
 case class
 One(noFill: Boolean) extends Impact //on veut pouvoir calculer le complementaire d'une contraint, forbid et oblige sont complementaire

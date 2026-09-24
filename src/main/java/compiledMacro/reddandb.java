@@ -61,4 +61,16 @@ for (int i = 1; i < ppVF$dop.length -1; i++) {
   ;
 p.prepareBit(reddandbfvR)
  ;
+  }
+public static int fe_1_1GateCount=4;
+ public static void fe_1_1(PrShift p,int [][] ppEF,int [][] reddandbfeR){
+ int[] reddandbfeR$do=reddandbfeR[0],reddandbfeR$up=reddandbfeR[1],ppEF$dob=ppEF[0],ppEF$dos1=ppEF[1],ppEF$dos2=ppEF[2],ppEF$upb=ppEF[3],ppEF$ups1=ppEF[4],ppEF$ups2=ppEF[5];
+
+
+for (int i = 1; i < ppEF$dob.length -1; i++) {
+ reddandbfeR$do[i]=(( ppEF$dob[i]  &  ppEF$dos1[i] ) &  ppEF$dos2[i] );reddandbfeR$up[i]=(( ppEF$upb[i]  &  ppEF$ups1[i] ) &  ppEF$ups2[i] );
+  }
+  ;
+p.prepareBit(reddandbfeR)
+ ;
   }}

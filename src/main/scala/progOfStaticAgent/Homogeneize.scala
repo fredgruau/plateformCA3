@@ -51,7 +51,7 @@ class Homogeneize() extends LDAG with Named with BranchNamed
    */
   part.shoow(part.lead.muis)
   part.shoow(part.muis)
-
+  part.vor.showMe
   part.vor.b.showMe;   part.vor.bf.showMe;  part.showMe
   part.bf.showMe;  part.b.showMe;  part.bve.showMe;  part.d.showMe; part.dgv.showMe
   part.shoowText(part.ri.muis,List()); part.ri.showMe;
@@ -63,6 +63,9 @@ class Homogeneize() extends LDAG with Named with BranchNamed
  part.shoowText(part.summit.density, List())*/
   part.zon.showMe
   part.qf.showMe
+  part.sum.showMe
+  part.ctr.showMe
+  part.blobsm.showMe
   //part.shoow(part.sf.isSummit)
  // part.shoowText( part.sf.density,List())
 //  part.shoow(part.centr.notCentrForallize)
@@ -111,7 +114,7 @@ class Homogen() extends Seed with addDist with addGcenter // with keepOutsideFor
 class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addRect
   with addZone
  // with addSommet
-  with addSummit with addBlobsm with addCenter
+  with addSummit with addBlobSummit with addCenter
   with addLeader  with stat/*: we stopped using zone*/
 {  /** seize applique la force qui cible le  centre si et seulement si le radius est uniforme */
 

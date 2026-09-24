@@ -119,6 +119,7 @@ class BloobV(val muis:BoolV with carrySysInstr,f:BloobVFields) extends Blob  {
   val nbCc=nbccV(f.brdE)
   val meetV=nbCc>1
   val nbcc0= ~neq(nbCc)
+  val nbcc1= ~nbcc0 & ~meetV  //une seule composante connexe au voisinage
   val twoAdjBlob: BoolE = insideS[V, E](f.brdV) //third use of brdE, check that there is two adjacent blobs next to the empty rhombus
   val emptyRhomb: BoolE = ~rhombusExist(f.brdE) // true if center of a NON-totally empty rhombus
   val meetE=twoAdjBlob & emptyRhomb
@@ -127,45 +128,6 @@ class BloobV(val muis:BoolV with carrySysInstr,f:BloobVFields) extends Blob  {
   /** */
   override  def showMe={super.showMe }
 }
-
-/** adds some field to bloobV, of topological nature,  so as to compute the center */
-/*
-class BloobVctr (override val muis:BoolV with carrySysInstr, bfields:BloobVFields,z:sdntool.Zone) extends BloobV(muis,bfields){
-  val meetiV=(meetV|nbcc0) & bfields.otherThanMuis
-  val meetiEselected=meetEfilled & existS[V,E](muis)
-  val nbcc3F=insideS[E,F](meetEfilled)  //true where faces splits the summit in three
-  val nbcc3=existS[F,V](nbcc3F ) //true where faces splits the summit in three
-  val loosangeIncluded:BoolE=insideS[F,E](nbcc3F)
- val  losangeApexes:BoolV = exist[F, V](apexV(f(loosangeIncluded))) //on calcul les apex du losange, afin de pouvoir bouger le tripleton en les enlevant
-  //on doit verifie que les deux apex sont oubien occupée par la particules ou bien dans zlt
-  val rhombusFilled=losangeApexes & (muis | z.muis)  //le coté vide est celui proche de zonegt
-val rhombusShouldFlip=inside[F,E](apexE(f(rhombusFilled)))
-  val losangeApexToRemoveFromCtr=losangeApexes & ~z.muis & muis & exist[F, V](apexV(f(rhombusShouldFlip)))
-  //meme formule utiliser pour shorten ou extend
-
-
-  val faceFull:BoolF=insideS[V,F](bfields.otherThanMuis) //true for faces with three vertice withing summit
-  val density: UintVx = addLt(countNeighbors(addSym(e(bfields.otherThanMuis)).sym))
-  val oneNeighbor= bfields.otherThanMuis & (~(density>1)) &  neq(density)
-  val twoNeighbor=bfields.otherThanMuis & (~(density>2)) &  neq(density) & ~oneNeighbor
-  val isTripletonF=insideS[V,F](existS[F,V](faceFull) & twoNeighbor)
-  val isTripleton=existS[F,V](isTripletonF)  //true if the summits form a triangle.
-  val meetiE:BoolV=existS[E,V](meetiEselected) & bfields.otherThanMuis
-
-  val shadowedNbcc3=exist[E,V](neighborsSym(e(nbcc3)))
-  val meetiEnotShadowed=meetiE & ~ shadowedNbcc3
-  val meetiVnotShadowed=meetiV & ~ shadowedNbcc3
-  val isDoubleton=existS[E,V](insideS[V,E](oneNeighbor)) //an edge represents a doubleton, if the two connected vertice have a single neighbor
-val meetEV=meetiE|meetiV // we need to consider also elongated particles.
-   val meetEblockingZltnbcc3=nbcc3 & ~z.muis & exist[E,V](neighborsSym(e(nbcc3 & z.muis)))
-  val raaand:BoolV= root4naming.addRandBit().asInstanceOf[BoolV] //vrai avec trois chance sur quatre
-  val meetEblockingZltmeetE=raaand & meetEV & ~z.muis & exist[E,V](neighborsSym(e(meetEV & z.muis))) //on randomize l'attraction vers zonelt, pour creer du jitter
-
-  val ctr=((meetiVnotShadowed | meetiEnotShadowed) & ~ meetEblockingZltmeetE)|
-    isDoubleton | isTripleton | (nbcc3 & ~losangeApexToRemoveFromCtr/* & ~meetEblockingZltnbcc3 trop fort cui la*/)
-  override  def showMe={super.showMe }
-}
-*/
 
 /** endows a movableAgentV with the blob meeting points */
 trait addBloobV{ self: MovableAgV with addBlobVfields =>val b=new BloobV(muis,bf)}
@@ -184,8 +146,11 @@ class BlobVe(val muis:BoolV with carrySysInstr,brdE:BoolE, brdVe:BoolVe) extends
   val brdEsrc=exist(transfer(e(muis)))
   val selle=upwardSelle&downwardSelle & ~brdEsrc //selle cannot hapen next to seed. (it could if we did not explicitely forbid it, due to a specific artefact of simultaneously extending and diminishin a doubleton seed, fuck.
    val emptyRhomb:BoolE= ~rhombusExist(brdE) //il y a un gros plateau de distance sur tout le rhombus
-  val meetE= selle | emptyRhomb //ca n'est pas un vrai gcenter avec emptyrhomb
-//used to initiate propagation from the gcenter towards particles
+  val emptyRhomb3:BoolF=inside(transfer( f(emptyRhomb)))
+  val emptyRhombAdjusted:BoolE=emptyRhomb & ~exist(transfer(e(emptyRhomb3)))
+  val meetE= selle | emptyRhombAdjusted //ca n'est pas un vrai gcenter avec emptyrhomb
+
+  //used to initiate propagation from the gcenter towards particles
 
   /** true if insidie a gcenter edge */  val brdGe=transfer(v(meetE))
   /** true if next to a gcenter vertice */  val brdGv:BoolVe=neighborsSym(e(meetV))
@@ -194,7 +159,7 @@ class BlobVe(val muis:BoolV with carrySysInstr,brdE:BoolE, brdVe:BoolVe) extends
  /** shows the fields related to blobVe meeting points*/
   override def showMe: Unit = {
     super.showMe
-    shoow(upwardSelle,downwardSelle,emptyRhomb)
+    shoow(upwardSelle,downwardSelle,emptyRhomb,emptyRhomb3,emptyRhombAdjusted)
     //;shoow(emptyRhomb);shoow(meetE2)
   }
 }
@@ -224,7 +189,6 @@ trait addSummit{
   self: MovableAgV  with addDistVor =>
   val thiiismuis=muis;
   val sum=new Attributs {
-    override def showMe: Unit = {}
     override val muis: ASTLg with carrySysInstr = thiiismuis
     val particuleAuVoisinage=neighborsSym(e(isV)) //y a une particule au voisinage
     //on peut etre sommet tout en ayant un dgv slopt, car proche de la particule
@@ -233,6 +197,7 @@ trait addSummit{
         exist (~dgv.slopgt & particuleAuVoisinage) )//y a une particule au voisinage a la meme distance ou plus pres
     /** etends la detection des sommet un vertex plus loin, y a un summit1 au voisinage a la meme distance ou plus pres */
     val isSummit2=isSummit1 |  exist (~dgv.slopgt & neighborsSym(e(isSummit1)) )
+    override def showMe: Unit = {shoow(isSummit1,isSummit2)}
   }
 }
 
@@ -241,7 +206,7 @@ trait addSummit{
  * a envahir par la qseed, pour se trouver impeccablement au centre du voronoi, dans le cas de cellule de Voronoi pas trop allongée
  * fait des calculs assez compliqué pour occuper le sommet le mieux possible par rapport
  * a sa forme spécifique , ces calculs résultent d'une étude à la main*/
-trait addBlobsm {
+trait addBlobSummit {
   self: MovableAgV with addDistVor with addSummit with QpointConstrain  with addZone => //on utilise prop.tripletonstreched
   val muissssSelf = this.muis
   /** computes blob fields of summit */
@@ -282,14 +247,15 @@ trait addBlobsm {
     /** we will consider meeting point not shadowed by a split-in-3 face */
     val meetEVnotShadowed = meetEV & ~shadowedNbcc3
 
+    override def showMe: Unit = {super.showMe;shoow( nbcc3F)}
   }
   }
 /** using blobsm, adds somme zlt info, and randomness in order to compute an accurate center, also able to penetrate */
   trait addCenter {
-    self: MovableAgV with addDistVor with addSummit with QpointConstrain with addBlobsm with addZone => //on utilise prop.tripletonstreched
+    self: MovableAgV with addDistVor with addSummit with QpointConstrain with addBlobSummit with addZone => //on utilise prop.tripletonstreched
     val muuiis:BoolV with carrySysInstr =self.muis
     val ctr=new Attributs {
-      override def showMe: Unit = {   }
+
       override val muis: BoolV with carrySysInstr = muuiis
     /** true for rhombus  apexes wrongly occupied, i.e the seed does not occupy the zlt apex, */
     val rhombusWronglyOccupied=blobsm.losangeApexes & (zon.zlt.muis | muis )  //le coté vide est celui proche de zonegt
@@ -297,24 +263,34 @@ trait addBlobsm {
     val rhombusShouldFlip=inside[F,E](apexE(f(rhombusWronglyOccupied)))
       /** true where wrongly occupied apex should be removed  */
     val rhombusApexToRemoveFromCtr: BoolV=blobsm.losangeApexes & ~zon.zlt.muis & muis & exist[F, V](apexV(f(rhombusShouldFlip)))
-    /** turns out to be too strong removal: when progressing towards zlt zone, we should not remove hyperstreched tripleton */
-    val meetEblockingZltnbcc3=blobsm.nbcc3 & ~zon.zlt.muis & exist[E,V](neighborsSym(e(blobsm.nbcc3 & zon.zlt.muis)))
+      val raaand:BoolV= root4naming.addRandBit().asInstanceOf[BoolV]
+      /** turns out to be too strong removal: when progressing towards zlt zone, we should not remove hyperstreched tripleton */
+        val next2vor=  exist(neighborsSym(e(dgv.source.muis)))
+    val  removalNbcc3notZltNextToNbcc3onZlt=raaand & blobsm.nbcc3 & ~zon.zlt.muis & exist[E,V](neighborsSym(e(blobsm.nbcc3 & zon.zlt.muis))) &
+      ~next2vor & //on restreint cela car si la seed touche le mur ca empeche de converger
+      qf.tripletonV //sans ca on trouve que le sommet contient bien un tripleton hyperstreched, mais la particule cependant n'est pas dans un tripleton.
 
-    val raaand:BoolV= root4naming.addRandBit().asInstanceOf[BoolV]
       /** weak (meetEV) cutting point not sitting on zlt zone, but next to another weak cutting point on zlt zone,
        * should be removed from support, in order to allow progression towards zlt zone.
        * this removal, however, is subjected to randomization so that this progression happens at different pace, allowing  symetry breaking */
     val removalMeetEnotZltNextToMeetEonZlt=raaand & blobsm.meetEV & ~zon.zlt.muis & exist[E,V](neighborsSym(e(blobsm.meetEV & zon.zlt.muis)))
+
+      /** we target identifying thin support blobsm.meetV at the "point of" zlt  zon.b.nbcc1  */
+      val yetCloser=zon.b.nbcc1 & blobsm.meetV
+
      /** first approximation of center, includes not shadowed meetEV not blocking progression to zlt zone
       * raw doubleton and tripleton, and hyperstreched tripleton which do not need to flip orientation*/
     val ctr1=(blobsm.meetEVnotShadowed  & ~ removalMeetEnotZltNextToMeetEonZlt) |
-      blobsm.isDoubleton | blobsm.isTripleton | (blobsm.nbcc3 & ~rhombusApexToRemoveFromCtr/* & ~meetEblockingZltnbcc3 trop fort cui la*/)
-
+      blobsm.isDoubleton | blobsm.isTripleton | (blobsm.nbcc3 & ~rhombusApexToRemoveFromCtr & ~removalNbcc3notZltNextToNbcc3onZlt  /*trop fort cui la*/)
+      override def showMe: Unit = { shoow(ctr1,removalNbcc3notZltNextToNbcc3onZlt,yetCloser)  }
      // val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit not necessary, we reused raaand
       /** was intended for restricting exploration of zon.zlt to agent already streching weakly in that direction, turned out to be to restrictive */
       val weakMeetE:BoolE=dgv.streched & insideS(sum.isSummit2) & existS(blobsm.meetiV)
+      val ctr1bis=ctr1 & (~yetCloser | raaand)
       /** adds the possibility to directly move towards zlt, staying along the summit, randomized for symetry breaking */
-      val ctr2= ctr1 | (/*existS[E,V](weakMeetE ) &*/zon.zlt.muis /*& sum.isSummit2*/ &  raaand) //let the seed explore zon.zlt, but along the summit, and with a random bit to create a jitter.
+
+      val ctr2= ctr1bis | (/*existS[E,V](weakMeetE ) &*/zon.zlt.muis /*& sum.isSummit2*/ &  raaand) //let the seed explore zon.zlt, but along the summit, and with a random bit to create a jitter.
+    //  val ctr2= ctr1 | (/*existS[E,V](weakMeetE ) &*/zon.zlt.muis /*& sum.isSummit2*/ &  raaand) //let the seed explore zon.zlt, but along the summit, and with a random bit to create a jitter.
 
 
     }

@@ -9,7 +9,7 @@ import progOfStaticAgent.{Homogen, Seed, SpreadOnSummit}
 import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.{exist, existS, inside}
-import sdn.{Attributs, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, QpointConstrain, addGcenter, addVor, carrySysInstr}
+import sdn.{Attributs, BloobV, BloobVFields, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, QpointConstrain, addGcenter, addVor, carrySysInstr}
 /**
  *
  * @param d distance to particle
@@ -87,7 +87,11 @@ trait addZone {
   val me=this
   val zon = new Attributs() {
     override val muis: ASTLg with carrySysInstr = me.muis
-    val zlt = new Zone(me, ri.slopgt);
+    val zlt = new Zone(me, ri.slopgt)
+
+    val bf = new BloobVFields(me.muis, zlt.muis)
+    val b = new BloobV(me.muis, bf)
+
     val zgt = new Zone(me, ri.sloplt);
     val zneq: ASTLt[V, B] = zlt.muis | zgt.muis
     /** it is sufficient that one vertex of the particle support feels an difference in radius, for the whole support to feel it. */

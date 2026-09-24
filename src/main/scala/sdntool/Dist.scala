@@ -63,7 +63,7 @@ trait addRepulse{
       val oui = MoveC1( ag.muis & hasFurther & ~hasNearer, //empties iff there is a further but no nearer
         slopgt & ag.bf.brdVeIn) //extends towards increasing value of distances , on the border.
       val non = MoveC1(ag.muis & hasNearer, //we do not empty iff there is a nearer
-        sloplt & ag.bf.brdVeIn  ) //we do fill towards smaller values of distance
+        sloplt & ag.bf.brdVeIn  ) //we do not fill towards smaller values of distance
       MoveC2(oui, non)
     }}}
 trait addRepulseVor{

@@ -53,4 +53,16 @@ for (int i = 1; i < ppEV$e.length -1; i++) {
   p.mirror(reddorbveR);
 p.prepareBit(reddorbveR)
  ;
+  }
+public static int ef_1_1GateCount=3;
+ public static void ef_1_1(PrShift p,int [][] ppFE,int [][] reddorbefR){
+ int[] reddorbefR$h=reddorbefR[0],reddorbefR$d=reddorbefR[1],reddorbefR$ad=reddorbefR[2],ppFE$h1=ppFE[0],ppFE$h2=ppFE[1],ppFE$d1=ppFE[2],ppFE$d2=ppFE[3],ppFE$ad1=ppFE[4],ppFE$ad2=ppFE[5];
+
+
+for (int i = 1; i < ppFE$h1.length -1; i++) {
+ reddorbefR$h[i]=( ppFE$h1[i]  |  ppFE$h2[i] );reddorbefR$d[i]=( ppFE$d1[i]  |  ppFE$d2[i] );reddorbefR$ad[i]=( ppFE$ad1[i]  |  ppFE$ad2[i] );
+  }
+  ;
+p.prepareBit(reddorbefR)
+ ;
   }}

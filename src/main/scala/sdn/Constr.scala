@@ -29,7 +29,8 @@ abstract class Constr(val ags: Array[Agg], val impact: Impact, fliprio:PartialUI
    * defined has a method, in order allow definition prior to intanciation of needed field, such as flip.*/
   val where: BoolV //will use fields from the agent: flip, as well as this
 }
-class KeepFlipIf(a:Agg, i: Impact,val loc:BoolV,fliprio:PartialUI) extends Constr(Array(a), i,fliprio) { override val where: BoolV = {
+class KeepFlipIf(a:Agg, i: Impact,val loc:BoolV,fliprio:PartialUI) extends Constr(Array(a), i,fliprio) {
+  override val where: BoolV = {
   impact match {
     case Both() => loc    case One(v) =>  implique (if (v) ag.isV else (ag.notIsV),loc)   }
 }

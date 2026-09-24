@@ -6,7 +6,7 @@ import compiler.{Locus, V}
 import dataStruc.Util.{deepCopyArray, isEqualto, isMiror, lastSegment, printMat, stats}
 import simulator.CAtype.pointLines
 import simulator.Medium.christal
-import simulator.Util.copyBasic
+import simulator.Util.{copyBasic, toInts}
 import triangulation.Utility.halve
 
 import scala.collection.JavaConverters._
@@ -283,11 +283,12 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       if(integers.nonEmpty)
       {val (mean, stdNorm, minVal, maxVal)=stats(integers)
         text += " "+namesState+":" +f"$stdNorm%.2f"+"/"+ f"$mean%.1f" +  " " +minVal+"<"+maxVal
-        if(lastSegment(isDefined)=="Meet") { //global assesmentt
-          uniformized=(stdNorm *10 < 2 && stdNorm > 0.01  )
+      //  if(lastSegment(isDefined)=="Meet") { //global assesmentt
+          //uniformized=(stdNorm *10 < 2 && stdNorm > 0.01  )
+          uniformized=(minVal==maxVal)
           if(uniformized==true)
             println("tata")
-        }
+       // }
         //
         //aprés je calcule les stats pour de vrai, ecart type patin coufin
         // for (points <- medium.locusPlane(locusDefined))          medium.statistics( bitIsDefined, points)
@@ -312,91 +313,109 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       thread.join()
     }
   }
+
+
+  private def densityMax(nbCol: Int, nbLine: Int): Int = {
+    // même calcul de numLineUsed / numColUsed...
+    val r=Math.min( nbLine, nbCol)/3
+    r*(r-1)
+  }
+
   /** contains a thread which iterates the CA, while not asked to pause */
-  def play(fwd:Boolean): Unit = synchronized {
-    // Il y a déjà un thread : surtout ne pas en créer un deuxième.
+  def play(fwd: Boolean): Unit = synchronized {
+
     if (isThreadRunning)
       return
+
     stopRequested = false
     threadRunning = true
+
     val thread = new Thread {
+
+      var timeSinceNonalive = 0
+
+      def converged(): Boolean =
+        timeSinceNonalive > 100
+
       override def run(): Unit = {
-        var converged=false
-        bugFound=false
-        noneAlive=false
+
+        bugFound = false
+        noneAlive = false
+        var convergenceSansRiUniformized = false
         try {
-          while(
+          while (
             !stopRequested &&
               !bugFound &&
-              (( density<33  && fwd ) || !fwd)
-          )
-            // { while (controller.isPlaying) //no pause asked by the user, no bugs detected
-          {
-            var nbIter = 0;
+              !convergenceSansRiUniformized &&
+              ((density <= densityMax(nbCol, nbLine) && fwd) || !fwd)
+          ) {
+            var nbIter = 0
             val nbLoops = math.pow(2, controller.speedSlider.value)
-            /*
-      * On effectue un paquet de forward.
-      *
-      * noneAlive arrête uniquement ce paquet :
-      * il ne tue PAS le thread.
-      */
+            val goesToConverged=nbLoops>= 128
+            val iterateThroughDensity=nbLoops>= 256 | true //for the moment we iterate allways
+            var riUniformized = false
+            while (
+              !stopRequested &&
+                !bugFound &&
+                !convergenceSansRiUniformized &&
+                !converged() &&
+                (nbIter < nbLoops || goesToConverged)
+            ) {
 
-            while (!stopRequested &&
-              !bugFound &&
-              !noneAlive &&
-              (nbIter < nbLoops || nbLoops >= 256)
-            ) // display every 2^speedSlider.value or  at convergence, if speed>255
-            {
-              if (fwd) converged = forward()
-              else backward(1);
+              if (fwd) {
+
+                riUniformized = forward()
+
+                if (noneAlive)
+                  timeSinceNonalive += 1
+                else
+                  timeSinceNonalive = 0
+              } else {
+                backward(1)
+              }
               nbIter += 1
-              // if (bugs.size > 0 ) controller.bugFound=true
-              // if( isalives.isEmpty ) controller.noneAlive=true
             }
             repaint()
             if (
               fwd &&
-                noneAlive &&
+                converged() &&
                 !bugFound &&
                 !stopRequested
             ) {
-              density += 1
-/*              controller.densityInitList.peer.setSelectedIndex(density)
-              controller.densityInitList.peer.revalidate()
-              controller.densityInitList.peer.repaint()*/
-              repaint(); //peint pas souvent
-              sleep(50);
-              noneAlive = false
-              init()
+              if (riUniformized && iterateThroughDensity) {
+                density += 1
+                repaint()
+                sleep(50)
+                noneAlive = false
+                timeSinceNonalive = 0
+                init()
+              } else {
+                convergenceSansRiUniformized = true
+                println(
+                  "STOP: convergence sans RI uniformisé, ou bien parcequ'on veut voir" +
+                    "density=" + density +
+                    " t=" + t
+                )
+              }
             }
-            //if (controller.bugFound)     controller.isPlaying = false
-
-            // // slows down the loop  a bit
           }
+
         } finally {
 
-          // Ici seulement on peut dire que le thread est réellement fini
           threadRunning = false
           workerThread = null
+
           println(
             "END PLAY THREAD = " +
               Thread.currentThread().getName
           )
         }
-
-
-
-
-
-
       }
-
     }
 
     workerThread = thread
     thread.start()
   }
-
 
   var bugs: mutable.Buffer[String] = mutable.Buffer.empty
   var isalives: mutable.Buffer[String] = mutable.Buffer.empty
