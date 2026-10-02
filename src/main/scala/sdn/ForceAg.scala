@@ -281,7 +281,8 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
 
 
    //val flipCancelLocal=  new scala.collection.mutable.LinkedHashMap[String,BoolV]() with Named {}
-   val highproba:BoolV= root4naming.addRandBit().asInstanceOf[BoolV] //vrai avec trois chance sur quatre
+
+   val highproba:BoolV= ~ (~ ( root4naming.addRandBit().asInstanceOf[BoolV] ))//vrai avec trois chance sur quatre
    //val highproba:BoolV= root4naming.addRandBit().asInstanceOf[BoolV]| root4naming.addRandBit().asInstanceOf[BoolV] //vrai avec trois chance sur quatre
 
    /** applies all the constraints on the move */

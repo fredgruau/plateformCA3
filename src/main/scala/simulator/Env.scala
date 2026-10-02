@@ -12,6 +12,7 @@ import triangulation.Utility.halve
 import scala.collection.JavaConverters._
 import java.awt.Color
 import java.lang.Thread.sleep
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.convert.ImplicitConversions.{`map AsScala`, `seq AsJavaList`}
 import scala.collection.immutable.{HashMap, HashSet}
 import scala.collection.{immutable, mutable}
@@ -28,6 +29,7 @@ import scala.util.Random
  * @param randomRoot so that we can reproduce same list of random numbers
  */
 class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, initName: HashMap[String, String],val t0:Int) {
+  @volatile private var currentInnerRadius: Int = -1
   /** current time */
   var t = -1 //incoherent value, should be initialized
   @volatile private var threadRunning = false
@@ -250,6 +252,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     }
     result
   }
+  @volatile private var lastStatText = ""
+
   /** iterate through all the layers for which we should compute statistics */
   def computeStatistics():Boolean = {
     var text=""
@@ -279,21 +283,23 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       }
       /** computes the text associated to an int32 on each voronoi */
       val integers=statistics(locusDefined, bitIsDefined)
-      println(integers)
+     // println(integers)
       if(integers.nonEmpty)
       {val (mean, stdNorm, minVal, maxVal)=stats(integers)
+
         text += " "+namesState+":" +f"$stdNorm%.2f"+"/"+ f"$mean%.1f" +  " " +minVal+"<"+maxVal
       //  if(lastSegment(isDefined)=="Meet") { //global assesmentt
           //uniformized=(stdNorm *10 < 2 && stdNorm > 0.01  )
           uniformized=(minVal==maxVal)
-          if(uniformized==true)
-            println("tata")
+        if (uniformized)
+          currentInnerRadius = minVal
+        //  if(uniformized==true)    println("tata")
        // }
         //
         //aprés je calcule les stats pour de vrai, ecart type patin coufin
         // for (points <- medium.locusPlane(locusDefined))          medium.statistics( bitIsDefined, points)
       }
-      caPannel.updateStat(text) //on veut deux décimale sur standard deviation
+      lastStatText = text// caPannel.updateStat(text) //on veut deux décimale sur standard deviation
 
     }
 
@@ -320,6 +326,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     val r=Math.min( nbLine, nbCol)/3
     r*(r-1)
   }
+  private def unitIncrease=Math.round( densityMax(nbCol, nbLine)/100)
 
   /** contains a thread which iterates the CA, while not asked to pause */
   def play(fwd: Boolean): Unit = synchronized {
@@ -332,62 +339,88 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
 
     val thread = new Thread {
 
+
       var timeSinceNonalive = 0
-
-      def converged(): Boolean =
-        timeSinceNonalive > 100
-
+      var timeWhileRiuniformized=0
+      def converged(): Boolean = timeSinceNonalive > 100
+      def convergedNew(): Boolean = (timeWhileRiuniformized >= 100)| t>28000
       override def run(): Unit = {
-
         bugFound = false
         noneAlive = false
+        var iterationsSinceDisplay = 0
         var convergenceSansRiUniformized = false
+        var riUniformized = false
         try {
-          while (
+          while ( //itére sur les densité
             !stopRequested &&
               !bugFound &&
               !convergenceSansRiUniformized &&
               ((density <= densityMax(nbCol, nbLine) && fwd) || !fwd)
           ) {
+2
             var nbIter = 0
             val nbLoops = math.pow(2, controller.speedSlider.value)
+            /*
+         * On ne rafraîchit jamais plus souvent
+         * que toutes les 16 itérations.
+         */
+            val displayEvery =   math.max(2, nbLoops)
             val goesToConverged=nbLoops>= 128
-            val iterateThroughDensity=nbLoops>= 256 | true //for the moment we iterate allways
-            var riUniformized = false
+            val iterateThroughDensity= (nbLoops>= 256) |true//for the moment we iterate allways
+            //itére un paquet de forward
             while (
               !stopRequested &&
                 !bugFound &&
                 !convergenceSansRiUniformized &&
-                !converged() &&
+                !convergedNew() &&
                 (nbIter < nbLoops || goesToConverged)
             ) {
+              if (fwd) { riUniformized = forward()
+                if (noneAlive)   timeSinceNonalive += 1
+                else     timeSinceNonalive = 0
+                if(riUniformized) timeWhileRiuniformized+=1
+                else timeWhileRiuniformized=0
 
-              if (fwd) {
-
-                riUniformized = forward()
-
-                if (noneAlive)
-                  timeSinceNonalive += 1
-                else
-                  timeSinceNonalive = 0
-              } else {
-                backward(1)
-              }
+              } else { backward(1)   }
               nbIter += 1
+              iterationsSinceDisplay += 1
             }
-            repaint()
+            /*
+             * Affichage beaucoup moins fréquent.
+             */
+            if (iterationsSinceDisplay >= displayEvery) {
+              repaint()
+              sleep(50)
+              iterationsSinceDisplay = 0
+            }
             if (
               fwd &&
-                converged() &&
+                convergedNew() &&
                 !bugFound &&
                 !stopRequested
             ) {
-              if (riUniformized && iterateThroughDensity) {
-                density += 1
+              if (/*riUniformized &&*/ iterateThroughDensity) {
+                val convergenceIteration = t - 100
+                ConvergenceLogger.append(
+                  nbLine,
+                  nbCol,
+                  density,
+                  convergenceIteration,
+                  currentInnerRadius
+                )
+
+                println(
+                  s"CONVERGENCE density=$density " +
+                    s"iterations=$convergenceIteration " +
+                    s"innerRadius=$currentInnerRadius"
+                )
+                density += unitIncrease
+
                 repaint()
                 sleep(50)
                 noneAlive = false
                 timeSinceNonalive = 0
+                timeWhileRiuniformized=0
                 init()
               } else {
                 convergenceSansRiUniformized = true
@@ -454,8 +487,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     }*/
 
 
-    iterationLabel.text = s"t=$t density=$density"
-    cache.push(deepCopyArray( mem))
+   // iterationLabel.text = s"t=$t density=$density" //todo je fais cela ou alors?
+   cache.push(deepCopyArray( mem))
     converged
   }
 
@@ -489,12 +522,115 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   def fastForward(nbIter:Int)=
     for(i<- 0 until nbIter) forward()
 
-  def repaint(): Unit = {
+  def repaintOld(): Unit = {
     computeVoronoirColors()
     caPannel.revalidate()
     caPannel.repaint()
   }
 
+  private val repaintPending =
+    new AtomicBoolean(false)
+
+  def repaint(): Unit = {
+
+    // Il y a déjà un affichage en attente :
+    // inutile d'en ajouter un autre dans la queue Swing.
+    if (!repaintPending.compareAndSet(false, true))
+      return
+    Swing.onEDT {
+      try {
+        caLock.synchronized {
+          computeVoronoirColors()
+          iterationLabel.text =
+            s"t=$t density=$density"
+          caPannel.updateStat(lastStatText)
+          caPannel.peer.paintImmediately(     0,          0,
+            caPannel.peer.getWidth,
+            caPannel.peer.getHeight
+          )
+        }
+      } finally {
+        repaintPending.set(false)
+      }
+    }
+  }
+
+  def repaint2Old(): Unit = {
+
+    Swing.onEDT {
+
+      caLock.synchronized {
+
+        /*
+         * On construit l'image à afficher pendant que
+         * le thread de calcul est bloqué.
+         */
+        computeVoronoirColors()
+
+        iterationLabel.text =
+          s"t=$t density=$density"
+
+        /*
+         * On peint immédiatement pendant qu'on possède
+         * encore le verrou.
+         *
+         * Ainsi forward()/computeStatistics() ne peut pas
+         * remettre à zéro les Voronoï au milieu du dessin.
+         */
+        caPannel.peer.paintImmediately(
+          0,
+          0,
+          caPannel.peer.getWidth,
+          caPannel.peer.getHeight
+        )
+      }
+    }
+  }
+
   def print(i:Int) = caPannel.print("/home/frederic/svgCA/toto"+i+".svg")
 
+}
+
+import java.io.{File, FileWriter, PrintWriter}
+
+object ConvergenceLogger {
+
+  private val file =
+    new File("results/convergence.csv")
+  println("CSV = " + file.getAbsolutePath)
+  def append(
+              nbLine: Int,
+              nbCol: Int,
+              density: Int,
+              iterations: Int,
+              innerRadius: Int
+            ): Unit = synchronized {
+
+    // crée le répertoire results s'il n'existe pas
+    file.getParentFile.mkdirs()
+
+    val writeHeader =
+      !file.exists() || file.length() == 0
+
+    val out =
+      new PrintWriter(
+        new FileWriter(file, true)
+      )
+
+    try {
+
+      if (writeHeader)
+        out.println(
+          "nbLine,nbCol,density,iterations,innerRadius"
+        )
+
+      out.println(
+        s"$nbLine,$nbCol,$density,$iterations,$innerRadius"
+      )
+
+    } finally {
+
+      out.close()
+    }
+  }
 }

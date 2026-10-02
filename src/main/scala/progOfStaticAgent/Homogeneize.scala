@@ -157,8 +157,10 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
   // force(introduceNewPriority(), "stabilize",'z', blockIfStable)
  // force(introduceNewPriority(), "size",'z', seize)
  // force(introduceNewPriority(), "size",'z', blockIfStreched)
-  force(introduceNewPriority(), "size",'z', seizeCenter)
 //force(introduceNewPriority(),"seize",'z',uniformizeRadius)  //c'est quand meme dgv qui prime sur seize.
+
+  force(introduceNewPriority(), "size",'z', seizeCenter)
+  // force(introduceNewPriority(),"repulse",'|',dgv.repulse)//dgv.repulse moves seed away from voronoi, in fact from gcenter,
   force(introduceNewPriority(),"repulse",'|',dgv.repulse)//dgv.repulse moves seed away from voronoi, in fact from gcenter,
   // because it is allowed to overlap voronoi, which should thereafter withdraw.
   // This overlapping is the key for ensuring uniformization of the radius.?? that remains to be investigated.

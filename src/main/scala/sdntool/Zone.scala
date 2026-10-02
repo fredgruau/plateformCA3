@@ -39,9 +39,6 @@ class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter wi
      ~p.rect //signals do not start on the mirror
   )
 
-
-
-
   override val muis: LayerS[V, B] = new LayerS[V, B](1, "false") {
     /** we have to consider sym to finally retrieve the new leader. */
     override val next: BoolV = (startE | startV | exist(p.d.slopgt & neighborsSym(e(pred))

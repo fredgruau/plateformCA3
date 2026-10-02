@@ -40,7 +40,7 @@ abstract class SiField(n:Int,  source: MuStruct[V, B],op:siFieldOperator) extend
   val vortex: BoolF =   chip.borderF.df & andR(transfer(cacEndomorph(xorRedop[B]._1, sloplt)))
 /** same story with gap*/   val gap2=gap & chip.borderE.df
    def showMe = { shoow(sloplt,slopgt,level); shoowText(muis, List());
-    // buugif( vortex) ;  buugif( gap2)
+     buugif( vortex) ;  buugif( gap2)
     shoow (vortex, gap2)
   }
 }
@@ -105,7 +105,7 @@ class MuDist(bitSize:Int, val source: MuStruct[V, B])
       ag.addConstraint("slow",'w',slow)
     case _ =>
   }
-  val hasChanged: ASTLt[V, B] = ~(muis.pred == delayedL( muis.munext))
+  val hasChanged: ASTLt[V, B] = ( ~(muis.pred == delayedL( muis.munext)))&chip.borderV.df
 
   override def showMe: Unit = {
     super.showMe; shoow(hasChanged);liiveif(hasChanged)
