@@ -12,7 +12,8 @@ import dataStruc.BranchNamed
 import dataStruc.DagNode.EmptyBag
 import progOfmacros.Comm.neighborsSym
 import progOfmacros.Wrapper.{borderS, exist, existS, unary2Bin, xorBin}
-import sdn.{ForceAg, Compar, carrySysInstr}
+import sdn.Force.cibler
+import sdn.{Compar, ForceAg, carrySysInstr}
 import sdn.Util.{addLt, addSym, randUintV}
 import sdntool.addDist
 
@@ -42,6 +43,8 @@ trait UtilVagent extends BranchNamed{
 trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with addBlobVfields{
   self:MovableAg[V] =>
   override val isV: BoolV = muis
+  /** well known voting rule */
+  def vote()= cibler(bf.dense | bf.tie)
   //override val NisV=  ~isV
   override def flip2next=  {
    //println("totototototototo");    println("totototototototo")

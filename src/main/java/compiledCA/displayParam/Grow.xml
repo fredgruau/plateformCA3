@@ -1,14 +1,16 @@
 <displayParam>
         <expandedLayer>
         <Layer>
-          grow
-        </Layer><Layer>
           growN
+        </Layer><Layer>
+          grow
         </Layer>
       </expandedLayer>
         <colorOfField>
-          <layer color="0x80FF00">
-            growN
+          <layer color="0xFF0080">
+            growNNf2
+          </layer><layer color="0x00FF80">
+            growNTest2
           </layer>
         </colorOfField>
       </displayParam>

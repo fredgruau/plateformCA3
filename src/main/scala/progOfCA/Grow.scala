@@ -9,13 +9,31 @@ import compiler.SpatialType.{BoolE, _}
 import compiler.ASTL._
 import compiler.Circuit.hexagon
 import compiler.{AST, ASTBfun, ASTLt, B, Circuit, E, F, T, UI, V, repr}
-import progOfmacros.Wrapper.{borderS, existS, insideS, transferMacro}
+import progOfmacros.Wrapper.{borderS, exist, existS, insideS, transferMacro}
 import compiler.ASTLfun._
 import compiler.ASTLt.ConstLayer
 import compiler.repr.nomE
 import dataStruc.{BranchNamed, Named}
 import progOfmacros.Topo.brdin
-import sdn.{Blob,  BlobVe, BloobV, BloobVFields, Compar, Compar3, addBlobVfields, carrySysInstr}
+import sdn.{Blob, BlobVe, BloobV, BloobVFields, Compar, Compar3, addBlobVfields, carrySysInstr}
+
+
+
+/** Growing  from E through F */
+class Grow extends Layer[(E, B)](1, "global") with ASTLt[E, B] with BranchNamed{
+//  val test:BoolV=iffpushed("toto")
+
+  // val broadcasted = f(this) //step 1 is broadcast
+  //  val transfered = transfer(broadcasted) //step 2 is transfer
+  // val nf: BoolF= orR(transfered) //(n,m,d) yzeté implicit killerest
+  val nf2: BoolF = existS(this);
+  override val next: BoolE = existS(nf2) //  make use of defVe brough to us implicitely,nb if overrid is not written, it does not work!
+  val test:BoolV=exist[F,V] (transfer(v(nf2)))
+  val test2:BoolV=   fromBool[V](true) ^test
+  show(this); show(nf2,test2)
+  //show(this, broadcasted, transfered, nf, next)
+}
+
 
 
 /** same as GrowVorV but based on a boolVe support  MARCHE PAS*/
@@ -60,18 +78,6 @@ class GrowVE extends Layer[(V, B)](1, "global") with ASTLt[V, B] with BranchName
   override val next: BoolV = existS(n) //   uses  defVe implicitely, the override keyword is mandatory
   show(this)
   // he name of root to arg(0).lowercase
-}
-
-
-/** Growing  from E through F */
-class Grow extends Layer[(E, B)](1, "global") with ASTLt[E, B] {
-// val broadcasted = f(this) //step 1 is broadcast
-//  val transfered = transfer(broadcasted) //step 2 is transfer
- // val nf: BoolF= orR(transfered) //(n,m,d) yzeté implicit killerest
-  val nf2: BoolF = existS(this);
-  override val next: BoolE = existS(nf2) //  make use of defVe brough to us implicitely,nb if overrid is not written, it does not work!
-  show(this)
-  //show(this, broadcasted, transfered, nf, next)
 }
 
 /** uses plain  blobV computation to grow seed into Voronoi region,  by stoping the growth just before merge happens */

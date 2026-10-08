@@ -1,12 +1,14 @@
 package sdn
 
-import compiler.ASTLfun.{cond, fromInt}
-import compiler.SpatialType.{BoolV, BoolVe, UintV}
+import compiler.ASTLfun.{cond, e, fromInt}
+import compiler.SpatialType.{BoolV, BoolVe, UintV, UintVx}
 import compiler.{AST, B, Locus, Ring, V, repr}
 import dataStruc.DagNode
 import dataStruc.DagNode.Singleton
 import progOfStaticAgent.Homogen
+import progOfmacros.Compute.countNeighbors
 import sdn.ForceAg.{Agg, Aggg}
+import sdn.Util.{addLt, addSym}
 import sdntool.addDist
 
 import scala.collection.mutable
@@ -62,6 +64,9 @@ abstract class BoundedAgV(init:String, val bounding: Aggg , val follows:Force )
 class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/ )
   extends BoundedAgV("globalInv", part.gc,part.gc.keepInside ) with MovableAgV with addBloobV with blobConstrain with blobConstrTrou
 {  override def inputNeighbors=List(part.gc,part.d)
+
+  force(introduceNewPriority(),"vote",'v',vote())//specific forces applied to Flies
+
   /** illustrates how to print stuff */var tmp:BoolV=null;
   /** priority of "obliged" force */
    force(introduceNewPriority(),"repulse",'|',part.d.repulseVor)//specific forces applied to Flies

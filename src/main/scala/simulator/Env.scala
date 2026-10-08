@@ -47,7 +47,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     stopRequested = true
   }
   val medium: Medium with encodeByInt with InitSelect = arch match {
-    case "christal" => christal(nbLine, nbCol, controller.CAwidth) //default medium is christal
+    case "christal" => christal(this,nbLine, nbCol, controller.CAwidth) //default medium is christal
   }
   /** Random number generator each medium has its copy */
   medium.initRandom(controller.randomRoot)
@@ -321,12 +321,14 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   }
 
 
-  private def densityMax(nbCol: Int, nbLine: Int): Int = {
+def densityMax(nbCol: Int, nbLine: Int): Int = {
     // même calcul de numLineUsed / numColUsed...
     val r=Math.min( nbLine, nbCol)/3
     r*(r-1)
   }
-  private def unitIncrease=Math.round( densityMax(nbCol, nbLine)/100)
+
+
+  private def unitIncrease=Math.max(1,Math.round( densityMax(nbCol, nbLine)/100))
 
   /** contains a thread which iterates the CA, while not asked to pause */
   def play(fwd: Boolean): Unit = synchronized {
@@ -406,7 +408,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
                   nbCol,
                   density,
                   convergenceIteration,
-                  currentInnerRadius
+                  currentInnerRadius,
+                  controller.randomRoot
                 )
 
                 println(
@@ -414,8 +417,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
                     s"iterations=$convergenceIteration " +
                     s"innerRadius=$currentInnerRadius"
                 )
-                density += unitIncrease
-
+                //density += unitIncrease
+controller.randomRoot+=1
                 repaint()
                 sleep(50)
                 noneAlive = false
@@ -434,7 +437,6 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
           }
 
         } finally {
-
           threadRunning = false
           workerThread = null
 
@@ -542,7 +544,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
         caLock.synchronized {
           computeVoronoirColors()
           iterationLabel.text =
-            s"t=$t density=$density"
+            s"t=$t density=$density r=${controller.randomRoot}"
           caPannel.updateStat(lastStatText)
           caPannel.peer.paintImmediately(     0,          0,
             caPannel.peer.getWidth,
@@ -603,7 +605,8 @@ object ConvergenceLogger {
               nbCol: Int,
               density: Int,
               iterations: Int,
-              innerRadius: Int
+              innerRadius: Int,
+              randomRoot: Int
             ): Unit = synchronized {
 
     // crée le répertoire results s'il n'existe pas
@@ -621,11 +624,11 @@ object ConvergenceLogger {
 
       if (writeHeader)
         out.println(
-          "nbLine,nbCol,density,iterations,innerRadius"
+          "nbLine,nbCol,density,iterations,innerRadius,RandomRoot"
         )
 
       out.println(
-        s"$nbLine,$nbCol,$density,$iterations,$innerRadius"
+        s"$nbLine,$nbCol,$density,$iterations,$innerRadius, $randomRoot"
       )
 
     } finally {

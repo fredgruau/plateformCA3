@@ -63,7 +63,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
 
   val globalInitNames: Array[String] = fromXMLasList((globalInit \\ "inits").head).toArray
   val selectedGlobalInit: Int = xInt(globalInit, "selected", "@rank") //which is the starting value for global init
-  val randomInitNames: Array[Int] = (0 to 9).toArray
+  val randomInitNames: Array[Int] = (0 to 99).toArray
   val densityInitNames: Array[Int] = (0 to 99).toArray
   val darknessInitNames: Array[Int] = (0 to 99 by  5).toArray
   val statInitNames: Array[String] = progCA.partial().map{case(k,v)=>lastSegment(k)+lastSegment(v)}.toArray
@@ -131,7 +131,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
    * this will create plannar graph with face of degree 4, which thereafter should be correctly split.
    */
 
-  private def proximityLocus(loci:Set[Locus]): Map[Locus, Set[Locus]] =   christal(6, 8, 200).proximityLocus(loci)
+  private def proximityLocus(loci:Set[Locus]): Map[Locus, Set[Locus]] =   christal(null,6, 8, 200).proximityLocus(loci)
 
     /** we'll applies t0 iterations upon initialization to speed up going directly to the interesting cases */
  // val t0: Int = xInt(simulParam, "simul", "@t0")

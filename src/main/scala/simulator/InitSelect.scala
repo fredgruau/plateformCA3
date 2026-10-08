@@ -33,8 +33,8 @@ trait InitSelect {
       case "0" => zeroInit
       case "true" => unInit
       case "center" => centerInit
-      case "blackHole" =>
-        blackHoleInit(density,inverted)
+      case "blackHole" =>     blackHoleInit(density,inverted)
+      case "cloud" =>     cloudInit(inverted)
       case "debug" => zeroInit
       case "sparse" => sparseInitInside(l, nbit)
       case "randinside" => randInitInside(l, nbit)
@@ -52,7 +52,10 @@ trait InitSelect {
   }
   /** Random number generator each medium has its copy */
   private var  rand:Random =null
-  def initRandom(r:Int):Unit=rand=new Random(r)
+  def initRandom(r:Int):Unit={
+    val seed = new Random(env.controller.randomRoot.toLong).nextLong()
+    rand = new Random(seed)
+  }
   //geometric primitive fields used to construct initial configurations
   private val origin = new Vector2D(0, 0)
   private val center = new Vector2D(nbLine / 2, nbCol / 2)
@@ -160,7 +163,7 @@ trait InitSelect {
       }
   }
 
-  /** contains material used for InitMaald */
+  /** contains material, a big array of booleans,  used for InitMaald */
   trait BoolVField {
     /** represent the initial value of a boolV field */
     val boolVField: Array[Array[Boolean]] = Array.ofDim[Boolean](nbLine, nbCol)
@@ -175,7 +178,86 @@ trait InitSelect {
       boolVField(i)(j) = true
     def flipBoolVField(i: Int, j: Int): Unit =
       boolVField(i)(j) = !boolVField(i)(j)
+
+
+
+  import scala.util.Random
+
+  def remplirSansContact(n: Int ): Unit = {
+    val  maxEssais: Int = 100
+    val nbLine = boolVField.length
+    val nbCol = if (nbLine == 0) 0 else boolVField(0).length
+
+    require(boolVField.forall(_.length == nbCol),
+      "Le tableau doit être rectangulaire")
+    val nbCasesInterieures =
+      math.max(0, nbLine - 2).toLong * math.max(0, nbCol - 2)
+
+    require(n >= 0 && n.toLong <= nbCasesInterieures,
+      "Nombre de particules supérieur au nombre de cases intérieures")
+
+    require(maxEssais > 0, "maxEssais doit être positif")
+
+    def vider(): Unit =
+      boolVField.foreach(ligne =>
+        java.util.Arrays.fill(ligne, false)
+      )
+
+    def libre(l: Int, c: Int): Boolean = {
+      // Sur une ligne impaire, les voisins des lignes adjacentes
+      // sont aux colonnes c et c+1 ; sinon, c-1 et c.
+      val decalage = if (l % 2 == 0) -1 else 1
+
+      val voisins = Array(
+        (l,     c - 1),
+        (l,     c + 1),
+        (l - 1, c),
+        (l - 1, c + decalage),
+        (l + 1, c),
+        (l + 1, c + decalage)
+      )
+
+      !boolVField(l)(c) && voisins.forall { case (lv, cv) =>
+        lv < 0 || lv >= nbLine ||
+          cv < 0 || cv >= nbCol ||
+          !boolVField(lv)(cv)
+      }
+    }
+
+    val cases = (for {
+      l <- 2 until (nbLine - 2)
+      c <- 2 until (nbCol - 2)
+    } yield (l, c)).toVector
+
+    vider()
+    if (n == 0) return
+
+    for (_ <- 0 until maxEssais) {
+      vider()
+      var places = 0
+
+      // Chaque case est testée une seule fois, dans un ordre aléatoire.
+      val candidats = rand.shuffle(cases).iterator
+
+      while (candidats.hasNext && places < n) {
+        val (l, c) = candidats.next()
+
+        if (libre(l, c)) {
+          boolVField(l)(c) = true
+          places += 1
+        }
+      }
+      if (places == n) return
+    }
+    vider()
+    throw new IllegalStateException(
+      s"Impossible de placer $n particules après $maxEssais essais."
+    )
   }
+
+  }
+
+
 
   /** initalize all the scalar component of a locus in the same way */
   private class InitMaald(val nbit: Int) extends Init with BoolVField {
@@ -244,6 +326,24 @@ trait InitSelect {
    * @param density nombre de point crées
    * @return creates a blackhole, i.e a rectangle of nearby points
    */
+  private def cloudInit(inverted:Boolean): InitMaald = new InitMaald(1) {
+     initRandom(env.controller.randomRoot)
+    val max=env.densityMax(nbCol, nbLine)
+    val maxln2 = rand.between(1.0, math.log(max) / math.log(2))
+    val n: Int = math.pow(2, maxln2).toInt
+    env.density=n
+     remplirSansContact(n)
+    if(inverted)
+      for(i<-0 until nbLine)
+        for(j<-0 until  nbCol)
+          flipBoolVField(i,j)
+
+  }
+  /**
+   *
+   * @param density nombre de point crées
+   * @return creates a blackhole, i.e a rectangle of nearby points
+   */
   private def blackHoleInit(density:Int,inverted:Boolean): InitMaald = new InitMaald(1) {
     val upperleft=new Vector2D(2, 2)
     val deltaY=3//nbCol/3 -4
@@ -251,7 +351,7 @@ trait InitSelect {
     /** nombre de point par ligne */
     val numColUsable=(nbCol-3)/3  //faudra faire fois 3  + 3
     val numLineUsable=(nbLine-3)/3  //faudra faire fois 3  +3
-   var k=0
+    var k=0
     var maxSquareSize=Math.min(numColUsable,numLineUsable)
     while (maxSquareSize*maxSquareSize>density)
     {maxSquareSize-=1}
@@ -259,7 +359,7 @@ trait InitSelect {
     var numColUsed=maxSquareSize
     //case landscape grid nbColUsable> nbLineUsable
     while(numColUsed*numLineUsed<density &&  numColUsed<numColUsable-1)
-      {numColUsed+=1}
+    {numColUsed+=1}
 
     for(i<-0 to numLineUsable)
       for(j<-0 to numColUsed) {
@@ -273,5 +373,4 @@ trait InitSelect {
           flipBoolVField(i,j)
 
   }
-
 }

@@ -4,7 +4,7 @@ package sdn
 import compiler.AST.{Call2, Fundef2}
 import compiler.ASTL.{sym, transfer}
 import compiler.ASTLfun.{cond, e, v}
-import compiler.{AST, ASTB, ASTBfun, ASTBt, ASTLfun, B, E, Locus, Ring, T, V, repr}
+import compiler.{AST, ASTB, ASTBfun, ASTBt, ASTLfun, ASTLt, B, E, Locus, Ring, T, V, repr}
 import compiler.SpatialType.{BoolE, BoolEv, BoolV, BoolVe, UintVx}
 import dataStruc.{BranchNamed, Named}
 import progOfmacros.Comm.neighborsSym
@@ -115,9 +115,23 @@ abstract class Force extends  Named {
      val rnd3= root4naming.addRandBit().asInstanceOf[BoolV]
      new Force {
       override def actionV(ag: MovableAgV): MoveC =
-        myThis.actionV(ag).asInstanceOf[MoveC1].inflechi(rnd&rnd2&rnd3,target) //marche seulement si le move est un moveC1
+        myThis.actionV(ag).asInstanceOf[MoveC1].restrict(rnd&rnd2&rnd3) //marche seulement si le move est un moveC1
     }
-  }}
+  }
+  /** apply the force but with a small proba */
+  def weaken():Force={
+    val myThis=this
+    val rnd= root4naming.addRandBit().asInstanceOf[BoolV]
+    val rnd2= root4naming.addRandBit().asInstanceOf[BoolV]
+    val rnd3= root4naming.addRandBit().asInstanceOf[BoolV]
+    new Force {
+      override def actionV(ag: MovableAgV): MoveC =
+        myThis.actionV(ag).asInstanceOf[MoveC1].restrict(exist[E,V](neighborsSym(e(rnd)))) //marche seulement si le move est un moveC1
+    }
+  }
+}
+
+
 
 
 
@@ -248,7 +262,21 @@ object Force{
       MoveC2(oui, non)
     }
   }
-
+  val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit
+  /** use density to favors occupancy of center of voronoi */
+  def vote(density:UintVx)=new Force{
+    override def actionV(ag:MovableAgV): MoveC= {
+       val notDense = density < fromInt(3)
+      val dense= ~(density<4)
+      val tie: BoolV = ~notDense & ~dense & raand
+      val oui=MoveC1( ag.muis  & (notDense|tie), //on vide si moins de trois voisins si on n'est pas dense
+         ag.bf.brdVeIn  & neighborsSym(e(dense| ~tie)) ) //on envahit si plus de trois voisins
+      //on va toujours remplir un vertice dont la densité est plus grande
+      //pour cibler des particules tripleton,
+      // on peut ou on peut ne pas autoriser  de vider si nombre de voisin est   3
+      oui
+    }
+  }
 
   /** we designed a random move that does not break the quasipoint property,
    * eliminating the need for checking gate-expensive mutex

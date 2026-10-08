@@ -35,26 +35,25 @@ class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter wi
   val startE:BoolV=delayedL( exist( p.bve.brdGe & rislope )
     & ~immersedInThickVor //probablement pas necessaire
     & p.vor.muis  & //should be on vornoi
-    p.vor.b.meetE2 &  //we test voronoi edge, to rule out starting a propagation in the initial stage, when there are large voronoi patch
+    //p.vor.b.meetE2 &  //we test voronoi edge, to rule out starting a propagation in the initial stage, when there are large voronoi patch
      ~p.rect //signals do not start on the mirror
   )
 
   override val muis: LayerS[V, B] = new LayerS[V, B](1, "false") {
     /** we have to consider sym to finally retrieve the new leader. */
-    override val next: BoolV = (startE | startV | exist(p.d.slopgt & neighborsSym(e(pred))
+
+    override val next: BoolV = (startE | startV | (exist(p.d.slopgt & neighborsSym(e(pred)) &
       //avoid propagation to start in one voronoi cell and propagate to an adjacent voronoi cell,
-      &       ~(transfer(v(p.vor.b.meetEfilled )))))   &  //by crossing a thick voronoi wall
-    ~   (p.vor.b.meetV & p.vor.isV)// by crossing a thin voronoi wall, which is voronoi and nbcc2
-
-
-
+      ~transfer(v(p.vor.b.meetEfilled ))))   &  //by crossing a thick voronoi wall
+    ~ (p.vor.b.meetV & p.vor.isV))// by crossing a thin voronoi wall, which is voronoi and nbcc2
     //import compiler.ASTLfun.fromBool //pour avoir la conversion implicite de boolean vers boolVe
     /** annule le mouvement si stable, donc seul no est défini */
   }
-  val existOnPart=p.existize(muis)
+ // val test=exist(p.d.slopgt & neighborsSym(e(muis)& ~transfer(v(p.vor.b.meetEfilled ))))
+
+  //val existOnPart=p.existize(muis)
   def showMe = {
-    shoow(startV,startE,
-      existOnPart,muis)
+    shoow(startV,startE,  muis)
     //shoow(zonegtInite,zonegtInitv,zoneltInitv,zoneeqInitv)
   }
 }
@@ -85,10 +84,8 @@ trait addZone {
   val zon = new Attributs() {
     override val muis: ASTLg with carrySysInstr = me.muis
     val zlt = new Zone(me, ri.slopgt)
-
-    val bf = new BloobVFields(me.muis, zlt.muis)
-    val b = new BloobV(me.muis, bf)
-
+    val bfzlt = new BloobVFields(me.muis, ~(~zlt.muis))
+    val bzlt = new BloobV(me.muis, bfzlt)
     val zgt = new Zone(me, ri.sloplt);
     val zneq: ASTLt[V, B] = zlt.muis | zgt.muis
     /** it is sufficient that one vertex of the particle support feels an difference in radius, for the whole support to feel it. */

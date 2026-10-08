@@ -80,8 +80,8 @@ trait addRepulseVor{
      *  we fill towards increasing value of distances, if it's empty */
     val oui = MoveC1(ag.muis & weWantItEmpty,
       neighborsSym(sloplt) & ag.bf.brdVeIn)
-    /** negative moves takes place is weWantItEmpty, and vertice was NOT occupied
-     * if it was occupied, we should first remove nearer if it has some nearer*/
+    /**no emptying is imposed if weWantItEmpty, and vertice was NOT occupied
+     * if vertice was occupied, we should first remove nearer if it has some nearer*/
     val non = MoveC1(cond(ag.muis,hasNearer,weWantItEmpty), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
     MoveC2(oui, non)
   }}}

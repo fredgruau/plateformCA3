@@ -3,9 +3,12 @@
         <init>
             center
         </init>
-        <init>
-            blackHole
-        </init>
+            <init>
+                cloud
+            </init>
+            <init>
+                blackHole
+            </init>
         <init>
             randinside
         </init>
@@ -30,5 +33,5 @@
         <init>
             true
         </init>
-    </inits><selected rank="1" seed="5"/>
+    </inits><selected rank="1" seed="44"/>
       </initMethod>

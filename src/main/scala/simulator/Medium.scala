@@ -47,7 +47,7 @@ import scala.swing.Swing.pair2Dimension
  *                    by listing the absolute coordinates of the neighbors
  *
  */
-abstract class Medium(val nbLine: Int, val nbCol: Int, val boundingBox: Dimension,
+abstract class Medium(val env:Env, val nbLine: Int, val nbCol: Int, val boundingBox: Dimension,
                       val vertice: pointLines, val neighborsAbs: Array[Array[Array[(Int, Int)]]] )
   extends  Rectangle with border {
   /** contains the information about faces. */
@@ -790,7 +790,7 @@ object Medium {
    * @param widthLt30 width of the pannel in which we draw
    * @return builds the non toroidal hexagonal grid for the CA pannel available, assuming we know the width of the CA pannel
    */
-  def christal(nbLineCA: Int, nbColCA: Int, widthLt30: Int): Medium with encodeByInt with InitSelect with border= {
+  def christal(env:Env, nbLineCA: Int, nbColCA: Int, widthLt30: Int): Medium with encodeByInt with InitSelect with border= {
     val width = if (nbColCA < 30) widthLt30 else 2 * widthLt30 //we see that for 64 column we draw the CA in the full available width by using two cells.
     /** we compute radius so that the CA fills the available width on the pannel,*/
     val radius = Math.floor(width.toDouble / ( 2*nbColCA ))   // normally we assume that the number of lines is the number of columns divided by sqrt(2)
@@ -825,9 +825,9 @@ object Medium {
 
     //encoding and decoding differs , depending wether the number of columns is bigger than 30 or not
     if (nbColCA >= 30)
-      new Medium(nbLineCA, nbColCA, bb, vertices, neighbors) with encodeGt with InitSelect with border{}
+      new Medium(env,nbLineCA, nbColCA, bb, vertices, neighbors) with encodeGt with InitSelect with border{}
     else
-      new Medium( nbLineCA, nbColCA, bb, vertices, neighbors) with encodeLt with InitSelect with border {}
+      new Medium(env, nbLineCA, nbColCA, bb, vertices, neighbors) with encodeLt with InitSelect with border {}
 
   }
 

@@ -71,7 +71,7 @@ class Homogeneize() extends LDAG with Named with BranchNamed
 //  part.shoow(part.centr.notCentrForallize)
  // part.shoow(part.centr.isSummit)
  // part.centr.showMe
-  part.shoow(part.bve.meetE2)
+//  part.shoow(part.bve.meetE2)
   part.shoow( part.vor.isForced)
   part.shoow(part.inbl.muis) //;  part.inbl.showMe
  // part.shoow(part.doubletonImplyStreched)
@@ -119,8 +119,13 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
 {  /** seize applique la force qui cible le  centre si et seulement si le radius est uniforme */
 
 
-
- val uniformizeRadius:Force= repulsePropagate(zon.zgt.muis) | attractPropagate(zon.zlt.muis)
+/** cette force exerce une poussé des particules vers les radisu plus grand
+ *  elle "prévient" les situation de campfire,
+ * idealement pour etre sur de solutionner les campfire, faudrait  mettreune priorité plus forte que repulse,
+ * mais cela devient trop instable.
+ * pour les transition de rayon, uniformize radius crée des instabilité
+ */
+ val uniformizeRadius:Force= repulsePropagate(zon.zgt.muis) // | attractPropagate(zon.zlt.muis)
  // val seizeWhileUniformizingRadius:Force= seize | uniformizeRadius
  //val blockIfStable: Force =stabilizeNotEmpty(prop.proped)
   //true for Edges separting two particles steched.
@@ -157,13 +162,14 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
   // force(introduceNewPriority(), "stabilize",'z', blockIfStable)
  // force(introduceNewPriority(), "size",'z', seize)
  // force(introduceNewPriority(), "size",'z', blockIfStreched)
-//force(introduceNewPriority(),"seize",'z',uniformizeRadius)  //c'est quand meme dgv qui prime sur seize.
 
   force(introduceNewPriority(), "size",'z', seizeCenter)
-  // force(introduceNewPriority(),"repulse",'|',dgv.repulse)//dgv.repulse moves seed away from voronoi, in fact from gcenter,
+  // force(introduceNewPriority(),"unif",'u',uniformizeRadius)
   force(introduceNewPriority(),"repulse",'|',dgv.repulse)//dgv.repulse moves seed away from voronoi, in fact from gcenter,
   // because it is allowed to overlap voronoi, which should thereafter withdraw.
   // This overlapping is the key for ensuring uniformization of the radius.?? that remains to be investigated.
+
+
  }
 
 

@@ -92,7 +92,13 @@ class BloobVFields(val muis:BoolV with carrySysInstr, val otherThanMuis:BoolV) e
   val lightConcave=( exist(shrink3(brdVeOut)) | (exist(shrink2(brdVeOut)) & rand) ) & ~  inside(brdVeOut)
   /** true for inner edges */
   val insideE: BoolE =inside(transfer(isVe))
-  override def showMe={ shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave)   }
+  val density: UintVx = addLt(countNeighbors(addSym(e(muis)).sym))
+  val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit
+  val notDense = density < fromInt(3)
+    val dense= ~(density<4)
+    val tie: BoolV = ~notDense & ~dense & raand
+
+  override def showMe={ shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave,dense, notDense) ; shoowText(density,List())  }
 }
 
 /** endows an Agent vertex with the feature needed to a blob stored in a class "bf" (shortname) */
@@ -126,7 +132,7 @@ class BloobV(val muis:BoolV with carrySysInstr,f:BloobVFields) extends Blob  {
   val meetEfilled=meetE & f.insideE
   val meetVfilled=meetV&f.otherThanMuis
   /** */
-  override  def showMe={super.showMe }
+  override  def showMe={super.showMe ; shoow(meetEfilled)}
 }
 
 /** endows a movableAgentV with the blob meeting points */
@@ -152,15 +158,16 @@ class BlobVe(val muis:BoolV with carrySysInstr,brdE:BoolE, brdVe:BoolVe) extends
 
   //used to initiate propagation from the gcenter towards particles
 
-  /** true if insidie a gcenter edge */  val brdGe=transfer(v(meetE))
-  val toto= brdGe & brdGe
-  /** true if next to a gcenter vertice */  val brdGv:BoolVe=neighborsSym(e(meetV))
+  /** true if insidie a gcenter edge */
+  val brdGe=transfer(v(meetE))
+  /** true if next to a gcenter vertice */
+  val brdGv:BoolVe=neighborsSym(e(meetV))
   /** combination , true if next to a gcenter */ //val brdG= brdGv // |brdGe
 
  /** shows the fields related to blobVe meeting points*/
   override def showMe: Unit = {
     super.showMe
-    shoow(upwardSelle,downwardSelle,emptyRhomb,emptyRhomb3,emptyRhombAdjusted,toto)
+    shoow(upwardSelle,downwardSelle,emptyRhomb,emptyRhomb3,emptyRhombAdjusted,brdGe,brdGv)
     //;shoow(emptyRhomb);shoow(meetE2)
   }
 }
@@ -211,7 +218,7 @@ trait addBlobSummit {
   self: MovableAgV with addDistVor with addSummit with QpointConstrain  with addZone => //on utilise prop.tripletonstreched
   val muissssSelf = this.muis
   /** computes blob fields of summit */
-  val bfi = new BloobVFields(muis, sum.isSummit2)
+  val bfi = new BloobVFields(muis, ~(~sum.isSummit2))
   val blobsm = new BloobV(muissssSelf, bfi) {
     //we add here he stuff computed using blobs and summit.
     /** true for vertice to be in center because either Vmeeting point or isolated singleton */
@@ -249,7 +256,7 @@ trait addBlobSummit {
     /** we will consider meeting point not shadowed by a split-in-3 face */
     val meetEVnotShadowed = meetEV & ~shadowedNbcc3
 
-    override def showMe: Unit = {super.showMe;shoow( nbcc3,isDoubleton,isTripleton,meetiE,meetiV,meetEV,meetEVnotShadowed,loosangeIncluded,losangeApexes)}
+    override def showMe: Unit = {super.showMe;shoow( nbcc3,isDoubleton,isTripleton,meetiE,meetiV,meetEV,meetEVnotShadowed,loosangeIncluded,losangeApexes,isLeton)}
   }
   }
 /** using blobsm, adds somme zlt info, and randomness in order to compute an accurate center, also able to penetrate */
@@ -265,59 +272,52 @@ trait addBlobSummit {
     val rhombusShouldFlip=inside[F,E](apexE(f(rhombusWronglyOccupied)))
       /** true where wrongly occupied apex should be removed  */
     val rhombusApexToRemoveFromCtr: BoolV=blobsm.losangeApexes & ~zon.zlt.muis & muis & exist[F, V](apexV(f(rhombusShouldFlip)))
-      val raaand:BoolV= root4naming.addRandBit().asInstanceOf[BoolV]
+      val raaand:BoolV= ~(~root4naming.addRandBit().asInstanceOf[BoolV])
       val raaand2:BoolV= root4naming.addRandBit().asInstanceOf[BoolV]
+      val raaand3:BoolV= root4naming.addRandBit().asInstanceOf[BoolV]
       val tinyrand:BoolV=inside[E,V](neighborsSym( e(raaand)))
-      val smallRand:BoolV= raaand & raaand2 //vrai avec trois chance sur quatre
+      val smallRand:BoolV= raaand & raaand2 & raaand3 //vrai avec trois chance sur quatre
 
       /** turns out to be too strong removal: when progressing towards zlt zone, we should not remove hyperstreched tripleton */
         val next2vor=  exist(neighborsSym(e(dgv.source.muis)))
-      val  removalNbcc3notZltNextToNbcc3onZlt=blobsm.nbcc3 & ~zon.zlt.muis & exist[E,V](neighborsSym(e(blobsm.nbcc3 & zon.zlt.muis)))
-      /** symetric for zgt */
-      val  removalNbcc3ZgtNextToNbcc3notZgt=blobsm.nbcc3 & zon.zgt.muis & exist[E,V](neighborsSym(e(blobsm.nbcc3 & ~zon.zgt.muis)))
-
-
-      // ~next2vor & //on restreint cela car si la seed touche le mur ca empeche de converger, ca devient instable
-      qf.tripletonV //sans ca on trouve que le sommet contient bien un tripleton hyperstreched, mais la particule cependant n'est pas dans le tripleton.
-
-      /** weak (meetEV) cutting point not sitting on zlt zone, but next to another weak cutting point on zlt zone,
+      /** true if should be removed for allowing go closer to fire particle site, not sitting on zlt zone, but next to another particle on zlt zone,
        * should be removed from support, in order to allow progression towards zlt zone.
        * this removal, however, is subjected to randomization so that this progression happens at different pace, allowing  symetry breaking */
-      val removalMeetEnotZltNextToMeetEonZlt=raaand & blobsm.meetEV & ~zon.zlt.muis & exist[E,V](neighborsSym(e(blobsm.meetEV & zon.zlt.muis)))
-      /** symetric for zgt */
-      val removalMeetEVZgtNextToMeetEnotZgt=raaand & blobsm.meetEV & zon.zgt.muis & exist[E,V](neighborsSym(e(blobsm.meetEV & ~zon.zgt.muis)))
+      def awayFromFire(initialCtr:BoolV)=initialCtr & ~zon.zlt.muis & exist[E,V](neighborsSym(e(initialCtr & zon.zlt.muis)))
+      /** symetric case for zgt, true if should be removed to get closer to zlt */
+      def awayFromZlt(initialCtr:BoolV)=initialCtr & zon.zgt.muis & exist[E,V](neighborsSym(e(initialCtr & ~zon.zgt.muis)))
+      /** same but randomised */
+      def closerToFireR(initialCtr:BoolV)= initialCtr & ~(awayFromFire(initialCtr)&raaand)
+      def closerToFireSR(initialCtr:BoolV)= initialCtr &  ~(awayFromFire(initialCtr)&smallRand)
+      def closerToZltSR(initialCtr:BoolV)= initialCtr & ~(awayFromZlt(initialCtr)&smallRand)
 
-
-
-      /** doubleton or triplteon not on zlt but next to anotther doubleton tripleton on zlt should also follow the same treatement */
-      val removalLetonnotZltNextToLetononZlt= raaand & blobsm.isLeton & ~zon.zlt.muis & exist[E,V](neighborsSym(e(blobsm.isLeton & zon.zlt.muis)))
-
-      val exploreAwayZgt=  smallRand & ~ zon.zgt.muis & sum.isSummit2&exist[E,V](neighborsSym(e(isV& zon.zgt.muis)))
-
-
-      /** we target identifying thin support blobsm.meetV at the "point of" zlt  zon.b.nbcc1  */
-      val yetCloser=zon.b.nbcc1 & blobsm.meetV
-      /** when a particle is located between two higher radius particle which pulls it in oppositie direction */
-      val ecartelee=forallize( zon.b.meet & isV)
-
+           // ~next2vor & //on restreint cela car si la seed touche le mur ca empeche de converger, ca devient instable
+      qf.tripletonV //sans ca on trouve que le sommet contient bien un tripleton hyperstreched, mais la particule cependant n'est pas dans le tripleton.
      /** first approximation of center, includes not shadowed meetEV not blocking progression to zlt zone
       * raw doubleton and tripleton, and hyperstreched tripleton which do not need to flip orientation*/
-    val ctr1=(blobsm.meetEVnotShadowed  & ~ removalMeetEnotZltNextToMeetEonZlt & ~ removalMeetEVZgtNextToMeetEnotZgt) |
-      (blobsm.isLeton& ~removalLetonnotZltNextToLetononZlt) |
-      (blobsm.nbcc3 & ~rhombusApexToRemoveFromCtr &  ~(removalNbcc3notZltNextToNbcc3onZlt& raaand &  tinyrand ) & ~(removalNbcc3ZgtNextToNbcc3notZgt& raaand)//&  ~ removalMeetEnotZltNextToMeetEonZlt  //nbcc3 is a subcase of meetEV, so we should also subject it to removalMeetEnotZltNextToMeetEonZlt
+       val ctr1=closerToFireR(blobsm.meetEVnotShadowed) & closerToZltSR(blobsm.meetEVnotShadowed) |
+         closerToFireR(blobsm.isLeton) |
+           (closerToFireSR(blobsm.nbcc3) & // on met une proba plus faible pour éviter des instabilité car NBCC3 est "strong"
+             closerToZltSR(blobsm.nbcc3) &   //nbcc3 is a subcase of meetEV, so we should also subject it to removalMeetEnotZltNextToMeetEonZlt
+             ~rhombusApexToRemoveFromCtr  )
+      val ctrNoZlt=blobsm.meetEVnotShadowed |   blobsm.isLeton |   (blobsm.nbcc3 & ~rhombusApexToRemoveFromCtr)
 
-     )
-      // val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit not necessary, we reused raaand
+      /** we target identifying thin support blobsm.meetV at the "pointe of" zlt  zon.b.nbcc1  */
+      val yetCloser=zon.bzlt.nbcc1 & blobsm.meetV
+      /** detect when a particle is located between two higher radius particle which pulls it in oppositie direction */
+      val ecartelee=forallize( zon.bzlt.meet & isV)
+
+      val ctr1bis=ctr1 & ((~yetCloser & ~ ecartelee )| raaand)
+      /**  on etend le centre au voisin de meme rayon, pour compresser un peu la zone de rayon supérieur, sommet, */
+      val exploreAwayZgt=  smallRand & ~zon.zgt.muis & sum.isSummit2&exist[E,V](neighborsSym(e(isV& zon.zgt.muis)))
+
+      /** adds the possibility to directly move towards zlt, staying along the summit, randomized for symetry breaking */
+       val ctr2=ctr1bis | zon.zlt.muis  &  raaand | exploreAwayZgt
       /** was intended for restricting exploration of zon.zlt to agent already streching weakly in that direction, turned out to be to restrictive */
       val weakMeetE:BoolE=dgv.streched & insideS(sum.isSummit2) & existS(blobsm.meetiV)
-      val ctr1bis=ctr1 & ((~yetCloser & ~ ecartelee )| raaand)
-      /** adds the possibility to directly move towards zlt, staying along the summit, randomized for symetry breaking */
 
-      val ctr2= ctr1bis | exploreAwayZgt |
-        (zon.zlt.muis /*& sum.isSummit2*/ &  raaand) //let the seed explore zon.zlt, but along the summit, and with a random bit to create a jitter.
-    //  val ctr2= ctr1 | (/*existS[E,V](weakMeetE ) &*/zon.zlt.muis /*& sum.isSummit2*/ &  raaand) //let the seed explore zon.zlt, but along the summit, and with a random bit to create a jitter.
-    override def showMe: Unit = { shoow(tinyrand,ctr1,ecartelee,removalMeetEnotZltNextToMeetEonZlt,ctr2,ctr1bis,rhombusApexToRemoveFromCtr,
-      rhombusShouldFlip,removalNbcc3notZltNextToNbcc3onZlt,removalNbcc3ZgtNextToNbcc3notZgt,exploreAwayZgt)  }
+      override def showMe: Unit = { shoow(tinyrand,ecartelee,ctr2,rhombusApexToRemoveFromCtr,
+      rhombusShouldFlip,exploreAwayZgt,raaand)  }
 
 
     }
