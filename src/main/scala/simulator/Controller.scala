@@ -342,12 +342,12 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
              naturalChoice = (naturalChoice + 1) % mainColors.length //look for the first main color not used yet
            colorDisplayedField + (s -> mainColors(naturalChoice))
          }
-         else {throw new Exception("non color left amongst the main colors")
+         else {throw new Exception("no color left amongst the main colors")
            colorDisplayedField
          } //we could not find a new color, the new field does not get a color! this won't happen supoesedly
        }
-     updateAndSaveXMLparamCA()
-     layerTree.hideRoot}
+     updateAndSaveXMLparamCA()}
+     layerTree.hideRoot
      layerTree.repaint()
      repaintEnv()
 

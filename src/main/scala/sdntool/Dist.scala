@@ -65,7 +65,8 @@ trait addRepulse{
       val non = MoveC1(ag.muis & hasNearer, //we do not empty iff there is a nearer
         sloplt & ag.bf.brdVeIn  ) //we do not fill towards smaller values of distance
       MoveC2(oui, non)
-    }}}
+    }}
+}
 trait addRepulseVor{
   self:SiField=>
   val repulseVor: Force = new Force() {

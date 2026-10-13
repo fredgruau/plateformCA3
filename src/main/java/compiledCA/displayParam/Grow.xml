@@ -1,9 +1,9 @@
 <displayParam>
         <expandedLayer>
         <Layer>
-          grow
-        </Layer><Layer>
           growN
+        </Layer><Layer>
+          grow
         </Layer>
       </expandedLayer>
         <colorOfField>

@@ -420,7 +420,7 @@ trait ProduceJava[U <: InfoNbit[_]] {
           " map.put(\"" + kv._1 + "\"," + kv._2 + ")").mkString(";\n") + ";"
       },
       "INPUTBUTTON"->{
-        inputButtonNames  .map(nom => s"""CAloops2.buttons.put("$nom", 0);""")
+        inputButtonNames  .map(nom => s"""CAloops2.buttons.put("$nom", -1);""")
           .mkString("\n")
       },
         "DISPLAYABLE" -> //theDisplayed contains two kinds of name:aux and segmented, first step should separate the segmented

@@ -292,7 +292,7 @@ sealed abstract class ASTL[L <: Locus, R <: Ring]()(implicit m: repr[(L, R)]) ex
 
   override def isCoonst =
     this.asInstanceOf[ASTL[_, _]] match {
-      case Coonst(cte, _, _) => cte.isConst
+      case Coonst(cte, _, _) => if(cte.isSemiConst) false else true// y a les constante entiere, pourleque on n'a pas forcement bien defini cte.iscte
       case _ => false
     }
   override def isHalfCoonst =

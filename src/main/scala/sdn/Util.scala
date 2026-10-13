@@ -52,7 +52,7 @@ class Root4naming() extends Named with BranchNamed {
    def myFalse=delayedL(rands(0).asInstanceOf[BoolV] & ~ rands(0).asInstanceOf[BoolV] ) //faut que y est du rand sinon ca merde
   /** adds a random boolean bit, which will be named */
   def addRandBit(): UintV = {
-    val res = new Rand().asInstanceOf[UintV]
+    val res = (new Rand() ).asInstanceOf[UintV]
     rands(rands.size) = res //add a new random bits to the already existing, its index is just the hashmap size
     res //random bit is returned
   }

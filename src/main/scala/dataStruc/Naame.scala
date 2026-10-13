@@ -90,6 +90,8 @@ trait BranchNamed
 
 
             val fieldHasMap=fields.filter(_._2.isInstanceOf[HashMap[_,_]])
+            if(fieldHasMap.nonEmpty)
+              printf("ya dela map")
 
             fieldsWithName.foreach { case (name, value) =>
               println(s"$name: $value")

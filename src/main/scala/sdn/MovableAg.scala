@@ -58,9 +58,7 @@ trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with addBlobVf
 /**  code  common to Movable agents which stores a support
  * and can directly apply the move on this support in order to modify it */
 abstract  class MovableAg[L <: Locus](init:String)(implicit m: repr[L]) extends  ForceAg[L] with vef[L]
-  {
-
-  override def allTriggered:UintV={
+  { override def allTriggered:UintV={
     moves.map(_.values.map(_.triggered).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
   }
 

@@ -321,11 +321,8 @@ trait addBlobSummit {
       val weakMeetE:BoolE=dgv.streched & insideS(sum.isSummit2) & existS(blobsm.meetiV)
 
       override def showMe: Unit = { shoow(tinyrand,ecartelee,ctr2,rhombusApexToRemoveFromCtr,
-      rhombusShouldFlip,exploreAwayZgt,raaand)  }
-
-
+      rhombusShouldFlip,exploreAwayZgt)  }
     }
-
 }
 
 

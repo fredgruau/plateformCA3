@@ -32,7 +32,7 @@ trait MyOpB[+R <: Ring] {
     def negSimplif(exp: ASTBt[B]) = exp match {
       case ASTB.False() => ASTB.True()
       case ASTB.True() => ASTB.False()
-      case Input()=> Input()
+      case Input(id)=> Input(id)
       case Neg(exp) => exp
       case _ =>
         Neg(this.asInstanceOf[ASTBt[B]])(repr.nomB).asInstanceOf[ASTBt[B]]

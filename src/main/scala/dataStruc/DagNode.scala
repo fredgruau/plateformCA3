@@ -71,7 +71,7 @@ trait DagNode[+T <: DagNode[T]] {
           "0 /*False*/"
         case True() =>
           "-1 /*True*/"
-        case ASTB.Input() => "buttons.get(\"test\")"
+        case ASTB.Input(i) => "buttons.get(\"test\")"+i
 
         // I have  put O instead of "/*False*/", it seems to work
           //"/*False*/" //by simplification a whole expression may reduce to false after simplification.

@@ -89,7 +89,7 @@ object MoveC{
   def push(where:BoolVe)=MoveC1(root4naming.myFalse, where)
 }
 /** a force is exerted on an's  support and generates a movement */
-abstract class Force extends  Named {
+abstract class Force extends  Named  {
   /**
    * @return an agent-centered move   * when applied, the movement produced is already centered on the agents.
    */
@@ -118,8 +118,17 @@ abstract class Force extends  Named {
         myThis.actionV(ag).asInstanceOf[MoveC1].restrict(rnd&rnd2&rnd3) //marche seulement si le move est un moveC1
     }
   }
+  def restrict(condition:BoolV):Force={
+    val myThis=this
+    new Force {
+      override def actionV(ag: MovableAgV): MoveC =
+        myThis.actionV(ag).restrict(condition) //marche seulement si le move est un moveC1
+    }
+  }
+
   /** apply the force but with a small proba */
-  def weaken():Force={
+  def weaken():Force=
+  {
     val myThis=this
     val rnd= root4naming.addRandBit().asInstanceOf[BoolV]
     val rnd2= root4naming.addRandBit().asInstanceOf[BoolV]

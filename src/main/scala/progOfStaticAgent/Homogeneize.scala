@@ -55,6 +55,7 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.vor.baba.showMe;   part.vor.bf.showMe;  part.showMe
   part.bf.showMe;  part.baba.showMe;  part.bve.showMe;  part.d.showMe; part.dgv.showMe
   part.shoowText(part.ri.muis,List()); part.ri.showMe;
+  //part.shoow(part.moderators("repulse"))
   // part.sm.showme; //does not work, because sm is not taking part i the computation.
  // part.shoow(part.sm.muis, part.sm.b.meetiE, part.sm.b.meetiV, part.sm.b.ctr, part.sm.b.isDoubleton)
 /*  part.shoow(part.summit.centerZlt,part.summit.meetiE,part.summit.meetiV,part.summit.nbcc3,part.summit.twoNeighbor,part.summit.isTripleton,

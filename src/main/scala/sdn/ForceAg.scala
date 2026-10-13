@@ -4,7 +4,7 @@ import compiler.AST.Layer
 import compiler.ASTB.{False, Uint}
 import compiler.ASTBfun.{addRedop, derivative, ltUI2, orRedop, redop}
 import compiler.ASTL.{delayedL, send, transfer, unop}
-import compiler.ASTLfun.{allOne, andLB2R, b2SIL, cond, e, eq0, f,  fromInt, imply, lt2, ltSI, neighbors, neq, orScanRight, reduce, uI2SIL, v}
+import compiler.ASTLfun.{allOne, andLB2R, b2SIL, cond, e, eq0, f, fromInt, imply, inputBool, lt2, ltSI, neighbors, neq, orScanRight, reduce, uI2SIL, v}
 import compiler.SpatialType.{BoolE, BoolEv, BoolF, BoolV, BoolVe, BoolVf, IntE, IntEv, IntV, IntVe, UintV, UintVx}
 import compiler.repr.nomE
 import compiler.{AST, ASTLfun, ASTLt, B, E, F, Locus, SI, T, UI, V, chip, repr}
@@ -176,11 +176,21 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    val forces:ArrayBuffer[mutable.LinkedHashMap[String,Force]] = ArrayBuffer()
    /** will include also structuring forces, for bounding agent */
    def allForces=forces
+   val moderators:mutable.HashMap[String,BoolV]=new mutable.HashMap[String,BoolV] () with Named with BranchNamed {}
    protected def addForces(priority:Int, name:String, shortName:Char, f:Force ) = { //we may have to store set of moves, if we need add move of same priority.
      val ht=forces(priority)
      assert(!(ht.contains(name)), "each force must have a distinct priority");
-     forces(priority)(shortName+name)=f //le caractére identifiant la force est mis au début du nom, pour simplifier.
+     val condition:BoolV=inputBool
+     moderators.addOne(name, condition)
+     forces(priority)(shortName+name)=f.restrict(condition) //le caractére identifiant la force est mis au début du nom, pour simplifier.
+
    }
+   def showModerators={
+     for ((key, value) <- moderators)
+       shoow(value)
+   }
+
+
 
    /** moves are stored in centered form, so that we can restrict them. we store one hashmap for each priority. It two moves with identical names are added, we throw an exception */
    val moves:ArrayBuffer[mutable.LinkedHashMap[String,MoveC]] = ArrayBuffer() //empty at the beginning
@@ -363,6 +373,8 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    /** test que les var s'affiche bien */
    def showMe={
      showPositiveMoves;
-     showConstraint;showAllFlip;
+     showConstraint;
+     showAllFlip;
+     showModerators
    }
  }

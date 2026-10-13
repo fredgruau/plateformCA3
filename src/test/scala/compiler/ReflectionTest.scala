@@ -32,7 +32,7 @@ class ReflectionTest extends FunSuite with BeforeAndAfter {
   test("toto") {
   // Création d'une instance de MyClass
     val myInstance = new MyClass
-    //setAllName(myInstance,"racine")
+    setAllName(myInstance,"racine")
 
     // Vérification finale de la valeur du champ
     println(s"Nouvelle valeur du name de member: ${myInstance.meember.asInstanceOf[Named].name}")

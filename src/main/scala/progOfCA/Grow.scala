@@ -19,8 +19,10 @@ import sdn.{Blob, BlobVe, BloobV, BloobVFields, Compar, Compar3, addBlobVfields,
 
 /** uses plain  blobV computation to grow seed into Voronoi region,  by stoping the growth just before merge happens */
 class Grow() extends Layer[(V, B)](1, "global") with BoolV  with carrySysInstr with BranchNamed {
-  val buto= inputBool[V];  show(buto)
-  override val next: AST[(V, B)] = buto^ this //^ buto //we extend the blob around the border brdV, except for meeting meeting points
+  val butooooo= inputBool[V];
+  val bot= inputBool[V];
+  show(bot,butooooo)
+  override val next: AST[(V, B)] = butooooo^ this | bot//^ buto //we extend the blob around the border brdV, except for meeting meeting points
   show(this)
 }
 

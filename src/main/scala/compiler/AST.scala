@@ -323,8 +323,11 @@ object AST {
 
     /** @param v field to be displayed   */
     protected def show(v: AST[_]*) = {
-      for (f <- v)
+      for (f <- v) {
         sysInstr ::= CallProc("show", List(), List(f))
+
+      }
+      val u=0;
     }
       def showText(v: AST[_],ls:List[String])={
        sysInstr ::= CallProc("show", List(), List(v))
