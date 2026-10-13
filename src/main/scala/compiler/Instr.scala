@@ -785,13 +785,13 @@ case class Affect[+T](name: String, val exp: AST[T]) extends Instr {
 
     val tototo=exp.asInstanceOf[ASTBt[_ <: Ring]]
     val primitive=if(!tototo.isConst) "copy"
-    else tototo match {
+    else
+      tototo match {
       case True() => "set1"
       case False() => "reset0"
     }
     /** si on a une constante, tout est dans le nom set/reset, donc y a plus d'expression */
     val newexpr=if(!tototo.isConst)List(exp.asInstanceOf[ASTBt[_ <: Ring]].coalesc(allCoalesc)) else(List())
-
     val res =  List(CallProc(primitive, List(allCoalesc.getOrElse(name, name)),newexpr))
     //System.out.println("totototo"+ primitive)
     res

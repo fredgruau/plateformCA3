@@ -167,6 +167,23 @@ object Force{
       MoveC1(cible, ~toCible & ag.bf.brdVeIn ))
     }
   }
+  /**
+   *
+  * @param cible where we want our particle to be
+    * @return creates a generic force that will let the particle exactly fills cible */
+  def ciblerFaible(cible:BoolV):Force=new Force{
+    val toCible=neighborsSym(e(cible))
+    /** true if there is a target in the immediate neighborhood */
+    val next2cible=exist(toCible)
+    override def actionV(ag: MovableAgV): MoveC = {
+      //we empty non-target and forbid moving towards non-target, only if target is reachable, so as to avoid blocking situation
+      //  MoveC2(MoveC1(~cible & next2cible ,toCible & ag.bf.brdVeIn), on ne peut pas vider si on est pas a coté de la cible alors que faudrait vider en priorité dans ce cas
+      MoveC2(
+        MoveC1(root4naming.myFalse,toCible & ag.bf.brdVeIn),
+        //MoveC1(cible, ~(toCible&e(next2cible)) & ag.bf.brdVeIn ))
+        MoveC1(cible, e(root4naming.myFalse) ))
+    }
+  }
 
   /**
    *

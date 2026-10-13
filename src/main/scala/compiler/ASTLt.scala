@@ -68,7 +68,8 @@ trait ASTLt[L <: Locus, R <: Ring] extends AST[(L, R)] with MyAstlBoolOp[L, R] w
 
   def childSameBitSize: Set[ASTLg] = HashSet()
   def isRedop: Boolean = false
-   def isCoonst =false
+  def isCoonst =false
+  def isHalfCoonst =false
 
 
   def isBinopEdge: Boolean = false

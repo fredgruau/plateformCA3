@@ -12,7 +12,7 @@ import progOfmacros.RedT.{cac, shrink2min1to5, shrinkshrink}
 import progOfmacros.Topo.nbccV
 import progOfmacros.Wrapper
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, smoothen, smoothen2, testShrink}
-import sdn.Force.{attractPropagate, cibler, repulsePropagate, restrictF,  stabilizeNotEmpty}
+import sdn.Force.{attractPropagate, cibler, ciblerFaible, repulsePropagate, restrictF, stabilizeNotEmpty}
 import sdn.Globals.root4naming
 import sdn.MuStruct.{setFlipSynced, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
 import sdn.Util.{addLt, addSym}
@@ -52,8 +52,8 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.shoow(part.lead.muis)
   part.shoow(part.muis)
   part.vor.showMe
-  part.vor.b.showMe;   part.vor.bf.showMe;  part.showMe
-  part.bf.showMe;  part.b.showMe;  part.bve.showMe;  part.d.showMe; part.dgv.showMe
+  part.vor.baba.showMe;   part.vor.bf.showMe;  part.showMe
+  part.bf.showMe;  part.baba.showMe;  part.bve.showMe;  part.d.showMe; part.dgv.showMe
   part.shoowText(part.ri.muis,List()); part.ri.showMe;
   // part.sm.showme; //does not work, because sm is not taking part i the computation.
  // part.shoow(part.sm.muis, part.sm.b.meetiE, part.sm.b.meetiV, part.sm.b.ctr, part.sm.b.isDoubleton)
@@ -146,7 +146,7 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
 //val seizeCenter=cibler(centr.updatedCenter) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
 
  // val seizeCenter2:Force=restrictF(cibler(summit.centerZlt),zon.zeqOnSeed)
-  val seizeCenter=cibler(ctr.ctr2) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
+  val seizeCenter=ciblerFaible(ctr.ctr2) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
   //val blockIfStreched:Force=stabilizeNotEmpty(streched)
   //val next2mature:BoolV=exist(neighborsSym(e(qf.doubletonV& ~zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
  // val next2immature:BoolV=exist(neighborsSym(e(zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
@@ -156,7 +156,7 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
  // force(introduceNewPriority(), "explore",'O', Force.total.inflechi(centr.center))
 
  //si ca se trouve j'ai pas besoin du tout de explore
-  //force(introduceNewPriority(), "explore",'O', Force.total)
+  force(introduceNewPriority(), "explore",'O', Force.total)
 
 
   // force(introduceNewPriority(), "stabilize",'z', blockIfStable)

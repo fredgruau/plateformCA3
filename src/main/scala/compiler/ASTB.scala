@@ -44,6 +44,7 @@ sealed abstract class ASTB[R <: Ring]()(implicit m: repr[R]) extends ASTBt[R] {
       case Neg(_) | Xor(_, _) | Or(_, _) | And(_, _) => 1 + inputNeighbors.asInstanceOf[List[ASTBt[B]]].map(_.totalOp).reduce(_ + _)
       case AffBool(n, exp) => exp.totalOp
       case Shift(exp, b) => exp.totalOp
+      case Input()=> 0
       case False() => 0
       case True() => 0
       case _ =>
@@ -69,6 +70,7 @@ sealed abstract class ASTB[R <: Ring]()(implicit m: repr[R]) extends ASTBt[R] {
       case Tminus1(e) => Tminus1(e.boolExprNoIndex(nl, null, env))
       case False() => False()
       case True() => True()
+      case Input() =>Input()
       case _ =>
         throw new Exception("there should be only pure boolean operators here")
     }
@@ -209,6 +211,7 @@ sealed abstract class ASTB[R <: Ring]()(implicit m: repr[R]) extends ASTBt[R] {
         }
       case False() => False()
       case True() => True()
+      case Input() =>Input()
       case co@Concat2(exp1, exp2) =>
         val nbitExp1 = exp1.nBit(l.tSymbVar, l.coalesc, env)
         //val nbitExp2=exp2.nBit(gen,env)
@@ -234,6 +237,7 @@ sealed abstract class ASTB[R <: Ring]()(implicit m: repr[R]) extends ASTBt[R] {
       case Intof(v) => "" + v
       case True() => "truue"
       case False() => "faalse"
+      case Input() => "input"
       case Concat2(x, y) => "::"
       case Elt(i, x) => "Elt" + i
       case Extend(i, _) => "Extend" + i //+ mym.name
@@ -345,6 +349,7 @@ sealed abstract class ASTB[R <: Ring]()(implicit m: repr[R]) extends ASTBt[R] {
     case Concat2(arg1, arg2) => arg1.unfoldInt(t) ::: arg2.unfoldInt(t)
     case True()=>List(True())
     case False()=>List( False())
+    case Input()=>List( Input())
   }
 
 }
@@ -405,13 +410,18 @@ object ASTB {
 
   final case class True()(implicit n: repr[B]) extends ASTB[B] with EmptyBag[AST[_]] {
     override def isConst = true
-
   }
 
   final case class False()(implicit n: repr[B]) extends ASTB[B] with EmptyBag[AST[_]] {
     override def isConst = true
+  }
+
+  final case class Input()(implicit n: repr[B]) extends ASTB[B] with EmptyBag[AST[_]] {
+    override def isSemiConst = true
+    override def isConst = false
 
   }
+
 
   implicit def toBoolB(d: ASTBt[B]): Boolean = if (d == True()) true else if (d == False()) false else
     throw new Exception("pas boolean")
@@ -610,7 +620,7 @@ object ASTB {
 
     exp match {
       case Intof(n) => nbitCte(n, exp.mym.name.asInstanceOf[I])
-      case True() | False() => 1
+      case True() | False()  | Input() => 1
       case Call1(f, e) => nbitExpAndParam(nbitASTBParam +
         (f.p1 -> nbitExpAndParam(nbitASTBParam, e, paramBitIncrease)), f.arg, paramBitIncrease)
       case Call2(f, e, e2) =>
@@ -691,7 +701,7 @@ object ASTB {
 
     d match {
       case Intof(n) => nbitCte(n, d.mym.name.asInstanceOf[I])
-      case True() | False() => 1
+      case True() | False()| Input() => 1
       case Call1(f, e) => nbitExp2(nbitASTBParam + (f.p1 -> nbitExp2(nbitASTBParam, e, t, c)), f.arg, t, c)
       case Call2(f, e, e2) => nbitExp2(nbitASTBParam + (f.p1 -> nbitExp2(nbitASTBParam, e, t, c)) + (f.p2 -> nbitExp2(nbitASTBParam, e2, t, c)), f.arg, t, c)
       case e@Param(_) => nbitASTBParam(e)

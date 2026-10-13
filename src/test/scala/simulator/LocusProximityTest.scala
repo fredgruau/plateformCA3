@@ -12,7 +12,7 @@ class LocusProximityTest extends FunSuite with BeforeAndAfter {
     xs.foldLeft(Seq(Seq[A]())) {(sets, set) => sets ++ sets.map(_ :+ set)}
 
 
-  val medium= christal(6, 8, 200)
+  val medium= christal(null,6, 8, 200)
   val displayedLocus=allLocus.toSet
   var hasBigFaces:immutable.HashSet[Seq[Locus]]=HashSet()
   var hasCrossedFace:immutable.HashSet[Seq[Locus]]=HashSet()

@@ -36,11 +36,16 @@ class LayerTree(val xmlLayerTree: Node, val controller: Controller) extends Tree
     if (Named.isLayer(s)) "prev"
     else lastPathPart(s)
   renderer = Renderer.labeled[Node] { n => //
-    val icon =
-      if (controller.colorDisplayedField.contains(extractNodeText(n))) //test if the field is to be displayed
+    val icon = {
+      def iconBit(s:String)=controller.buttons2.get(s).intValue() match{case 0=>icon0 case -1 => icon1}
+      val nameTotal=extractNodeText(n)
+      if(controller.buttons2.containsKey(nameTotal))
+        iconBit(nameTotal)
+      else  if (controller.colorDisplayedField.contains(extractNodeText(n))) //test if the field is to be displayed
         new DiamondIcon(V(), controller.colorDisplayedField(extractNodeText(n)), true) //if so displays its color, diamond should be different depending on  locus
       else if (isLayer(n)) folderIcon //layers contains other layers, therefore they display as folder
       else fileIcon //those are not yet displayed field
+    }
     (icon, reducedText(extractNodeText(n))) //we also display layers or field's name
   }
   //hideRoot

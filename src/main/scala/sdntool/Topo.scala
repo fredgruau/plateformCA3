@@ -112,7 +112,8 @@ abstract class Blob extends Attributs {  val meetV:BoolV; val meetE:BoolE; val n
   def meetE2=existS[E,V](meetE)
   /** regroup all meeting points and so, all gabriel centers */
   val meet= ~ (~ delayedL(meetV | meetE2)) //double négation nécessaire pour nommer.
-override def showMe=shoow(meetV,meetE,nbCc,meet)}
+override def showMe=shoow(meet)//;shoowText(nbCc,List())
+}
 
 
 
@@ -123,7 +124,7 @@ override def showMe=shoow(meetV,meetE,nbCc,meet)}
  */
 class BloobV(val muis:BoolV with carrySysInstr,f:BloobVFields) extends Blob  {
   val nbCc=nbccV(f.brdE)
-  val meetV=nbCc>1
+  val meetV= (nbCc > 1)
   val nbcc0= ~neq(nbCc)
   val nbcc1= ~nbcc0 & ~meetV  //une seule composante connexe au voisinage
   val twoAdjBlob: BoolE = insideS[V, E](f.brdV) //third use of brdE, check that there is two adjacent blobs next to the empty rhombus
@@ -132,11 +133,13 @@ class BloobV(val muis:BoolV with carrySysInstr,f:BloobVFields) extends Blob  {
   val meetEfilled=meetE & f.insideE
   val meetVfilled=meetV&f.otherThanMuis
   /** */
-  override  def showMe={super.showMe ; shoow(meetEfilled)}
+  override  def showMe={super.showMe ; shoow(nbcc0,nbcc1,meetV); shoowText(nbCc,List())
+  }
 }
 
 /** endows a movableAgentV with the blob meeting points */
-trait addBloobV{ self: MovableAgV with addBlobVfields =>val b=new BloobV(muis,bf)}
+trait addBloobV{ self: MovableAgV with addBlobVfields =>
+  val baba=new BloobV(muis,bf)}
 
 /** endows  a  BoolVe COMPUTED AS THE SLOPELT OF  A DISTANCE,  with  its  meeting points
  * those meeting points correspond to the gabriel centers.
@@ -255,8 +258,9 @@ trait addBlobSummit {
     val shadowedNbcc3 = exist[E, V](neighborsSym(e(nbcc3)))
     /** we will consider meeting point not shadowed by a split-in-3 face */
     val meetEVnotShadowed = meetEV & ~shadowedNbcc3
+    val meetEnotShadowed = meetiE & ~shadowedNbcc3
 
-    override def showMe: Unit = {super.showMe;shoow( nbcc3,isDoubleton,isTripleton,meetiE,meetiV,meetEV,meetEVnotShadowed,loosangeIncluded,losangeApexes,isLeton)}
+    override def showMe: Unit = {super.showMe;shoow( nbcc3,isDoubleton,isTripleton,meetiE,meetiV,meetEV,meetEnotShadowed,loosangeIncluded,losangeApexes,isLeton)}
   }
   }
 /** using blobsm, adds somme zlt info, and randomness in order to compute an accurate center, also able to penetrate */
@@ -295,7 +299,7 @@ trait addBlobSummit {
       qf.tripletonV //sans ca on trouve que le sommet contient bien un tripleton hyperstreched, mais la particule cependant n'est pas dans le tripleton.
      /** first approximation of center, includes not shadowed meetEV not blocking progression to zlt zone
       * raw doubleton and tripleton, and hyperstreched tripleton which do not need to flip orientation*/
-       val ctr1=closerToFireR(blobsm.meetEVnotShadowed) & closerToZltSR(blobsm.meetEVnotShadowed) |
+       val ctr1=closerToFireR(blobsm.meetEnotShadowed) & closerToZltSR(blobsm.meetEnotShadowed) |
          closerToFireR(blobsm.isLeton) |
            (closerToFireSR(blobsm.nbcc3) & // on met une proba plus faible pour éviter des instabilité car NBCC3 est "strong"
              closerToZltSR(blobsm.nbcc3) &   //nbcc3 is a subcase of meetEV, so we should also subject it to removalMeetEnotZltNextToMeetEonZlt
@@ -312,7 +316,7 @@ trait addBlobSummit {
       val exploreAwayZgt=  smallRand & ~zon.zgt.muis & sum.isSummit2&exist[E,V](neighborsSym(e(isV& zon.zgt.muis)))
 
       /** adds the possibility to directly move towards zlt, staying along the summit, randomized for symetry breaking */
-       val ctr2=ctr1bis | zon.zlt.muis  &  raaand | exploreAwayZgt
+       val ctr2=(ctr1bis | zon.zlt.muis  &  raaand | exploreAwayZgt)&sum.isSummit2
       /** was intended for restricting exploration of zon.zlt to agent already streching weakly in that direction, turned out to be to restrictive */
       val weakMeetE:BoolE=dgv.streched & insideS(sum.isSummit2) & existS(blobsm.meetiV)
 
@@ -345,10 +349,10 @@ trait blobConstrTrou{
 trait  blobConstrain   {
   self: MovableAgV with addBloobV=>
   /** meetV points cannot flip */
-  val vmeet: PartialUI => Constr =  CancelFlipIf(this,Both(),b.meetV | b.nbcc0) _
+  val vmeet: PartialUI => Constr =  CancelFlipIf(this,Both(),baba.meetV | baba.nbcc0) _
   addConstraint("vmeet",'_',vmeet)
   /**a doubleton cannot flip both vertices*/
-  val emeet = MutKeepFlipIf(this,Both(),b.meetE) _ ;  addConstraint("emeet",'=',emeet);}
+  val emeet = MutKeepFlipIf(this,Both(),baba.meetE) _ ;  addConstraint("emeet",'=',emeet);}
 
 /** computes tripletonStreched
  * */

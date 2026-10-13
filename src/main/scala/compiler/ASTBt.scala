@@ -43,6 +43,8 @@ trait ASTBt[+R <: Ring] extends AST[R] with MyOpB[R] with MyOpIntB[R] {
 
 
   def isConst = false
+  /** used for input */
+  def isSemiConst = isConst
 
 
 

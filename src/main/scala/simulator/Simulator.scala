@@ -24,13 +24,6 @@ import BorderPanel.Position._
 import scala.collection.immutable.HashMap
 
 
-/*object mySim extends Simulator
-class AppletLauncher extends JFrame {
-  //super.("Eno");
-  val mySim2 = new Simulator();
-  mySim2.startup(Array("toto","tata"))
-  //getContentPane().add(mySim2.top;
-  }*/
 
 object Simulator extends SimpleSwingApplication {
 
@@ -531,10 +524,12 @@ object Simulator extends SimpleSwingApplication {
  * retrieve icons stored in the ressources directory
  */
 object ExampleData {
-
+  val icon0: ImageIcon =
+    Icon("src/ressources/chiffre_0.png")
+  val icon1: ImageIcon =
+    Icon("src/ressources/chiffre_1.png")
   val fileIcon: ImageIcon =
     Icon("src/ressources/file.png")
-
   val folderIcon: ImageIcon =
     Icon("src/ressources/folder.png")
 

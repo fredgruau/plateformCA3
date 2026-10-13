@@ -12,6 +12,14 @@ import static simulator.Util.*;
 import scala.collection.immutable.List;
 
 public final class {{NAMECA}}CA implements CAloops2 {
+   { {{INPUTBUTTON}}
+      //buttons.put("growNButo", -1);
+    }
+        //mettre tout les bouttons.
+    public HashMap<String, Integer> getbuttons() {  return (buttons); }
+
+
+
 {{ANONYMOUSLOOP}}
 public int CAmemWidth() {return {{MEMWIDTH}};}
 

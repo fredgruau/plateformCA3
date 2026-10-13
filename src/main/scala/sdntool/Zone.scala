@@ -44,8 +44,8 @@ class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter wi
 
     override val next: BoolV = (startE | startV | (exist(p.d.slopgt & neighborsSym(e(pred)) &
       //avoid propagation to start in one voronoi cell and propagate to an adjacent voronoi cell,
-      ~transfer(v(p.vor.b.meetEfilled ))))   &  //by crossing a thick voronoi wall
-    ~ (p.vor.b.meetV & p.vor.isV))// by crossing a thin voronoi wall, which is voronoi and nbcc2
+      ~transfer(v(p.vor.baba.meetEfilled ))))   &  //by crossing a thick voronoi wall
+    ~ (p.vor.baba.meetV & p.vor.isV))// by crossing a thin voronoi wall, which is voronoi and nbcc2
     //import compiler.ASTLfun.fromBool //pour avoir la conversion implicite de boolean vers boolVe
     /** annule le mouvement si stable, donc seul no est défini */
   }

@@ -38,6 +38,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
                  val progCA: CAloops2, val chosenDir: String, val mf: MainFrame)
   extends ToolBar() { //the controller inherits the toolBar, so that it can easily identifies which button was ckicqued, using the button's variable  name
   /** sometimes we try different random root, so as to explore different possible runs. */
+  val buttons2: util.HashMap[String, Integer] =CAloops2.getButtons()
   var randomRoot: Int = xInt(simulParam, "simul", "@randomRoot")
   var selectedSpeed:Int=xInt(simulParam, "simul", "@selectedSpeed")
   var densityInitial: Int = xInt(simulParam, "simul", "@density")
@@ -304,6 +305,13 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
       layerTree.repaint()
       mf.pack()
     case ToggleColorEvent(s) =>
+      //tester si c'est un bouton input, on change la valeur dans la hashmap jave avec toggle (au lieu de set ou reset)
+
+      if(buttons2.containsKey(s)) //faut toggler la valeur
+        buttons2.put(s,-1-buttons2.get(s)) //toggle entre 0 et -1
+        else{
+
+
       val l = locusOfDisplayedOrDirectInitField(s)
       colorDisplayedField =
         if (colorDisplayedField.contains(s)) //we supress a color
@@ -339,9 +347,10 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
          } //we could not find a new color, the new field does not get a color! this won't happen supoesedly
        }
      updateAndSaveXMLparamCA()
-     layerTree.hideRoot
+     layerTree.hideRoot}
      layerTree.repaint()
      repaintEnv()
+
    case ButtonClicked(InitButton)  =>//| KeyReleased(_, Key.A, _, _)
     /* val wasPlaying = isPlaying
      if (isPlaying) {

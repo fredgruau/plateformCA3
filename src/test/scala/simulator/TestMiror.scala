@@ -23,7 +23,7 @@ class TestMiror extends FunSuite with BeforeAndAfter {
   }
   /** takes a random grid of bits, encodes it, miror it, decodes it, checks its been mirored */
   test("smallMiror") {
-    val m = christal(12, 14, 30)
+    val m = christal(null,12, 14, 30)
     val lCAinput = Array.ofDim[Boolean](12, 14)
     for(i<- 1 to 100) {
       randomFill(lCAinput)
@@ -37,7 +37,7 @@ class TestMiror extends FunSuite with BeforeAndAfter {
   }
 
   test("smallerMiror") {
-    val m = christal(6, 8, 30)
+    val m = christal(null,6, 8, 30)
     val lCAinput = Array.ofDim[Boolean](6, 8)
     for(i<- 1 to 100) {
       randomFill(lCAinput)
@@ -54,7 +54,7 @@ class TestMiror extends FunSuite with BeforeAndAfter {
 
   /** takes a random memory,apply fast miror, check ismirored safe. the propagated bits should not interfere.  */
   test("smallMirorPropagated") {
-    val m = christal(12, 14, 30)
+    val m = christal(null,12, 14, 30)
     for(i<- 1 to 100) {
       val lCAmem = Array.ofDim[Int](10)
       randomFill( lCAmem)
@@ -64,7 +64,7 @@ class TestMiror extends FunSuite with BeforeAndAfter {
   }
   /** check that prepare bits does not modify grid content */
   test("Propagate") {
-    val m = christal(12, 14, 30)
+    val m = christal(null,12, 14, 30)
     val lCAinput = Array.ofDim[Boolean](12, 14)
     randomFill(lCAinput)
     val lCAoutput = Array.ofDim[Boolean](12, 14)
@@ -77,7 +77,7 @@ class TestMiror extends FunSuite with BeforeAndAfter {
 
   /** check that  propagate4shift is idempotent */
   test("smallMirorPropagate2") {
-    val m = christal(12, 14, 30)
+    val m = christal(null,12, 14, 30)
     val lCAinput = Array.ofDim[Boolean](12, 14)
     randomFill(lCAinput)
     val lCAoutput = Array.ofDim[Boolean](12, 14)
@@ -93,7 +93,7 @@ class TestMiror extends FunSuite with BeforeAndAfter {
 
 
   test("mediumMiror") {
-    val m = christal(12, 30, 30)
+    val m = christal(null,12, 30, 30)
     val lCAinput = Array.ofDim[Boolean](12, 30)
     randomFill(lCAinput)
     val lCAoutput = Array.ofDim[Boolean](12, 30)
@@ -116,7 +116,7 @@ class TestMiror extends FunSuite with BeforeAndAfter {
     //interleaveSpace(memCAint32, nbIntPerLine, nbLine)
   }
   test("largeMiror") {
-    val m = christal(12, 90, 300)
+    val m = christal(null,12, 90, 300)
     val lCAinput = Array.ofDim[Boolean](12, 90)
     val lCAoutput = Array.ofDim[Boolean](12, 90)
     val lCAmem = Array.ofDim[Int](48)
@@ -145,7 +145,7 @@ class TestMiror extends FunSuite with BeforeAndAfter {
     randomFill(lCAinput)
     val lCAoutput = Array.ofDim[Boolean](6, 8)
     val lCAmem = Array.ofDim[Int](6)
-    val m = Medium.christal(6, 8, 30)
+    val m = Medium.christal(null,6, 8, 30)
     m.encode(lCAinput, lCAmem)
     m.propagate4Shift.mirror(lCAmem)
     assert(m.isMirorSafe(lCAmem))
@@ -158,7 +158,7 @@ class TestMiror extends FunSuite with BeforeAndAfter {
     val lCAoutput = Array.ofDim[Boolean](6, 8)
     val lCAoutput2 = Array.ofDim[Boolean](6, 8)
     val lCAmem = Array.ofDim[Int](6)
-    val m = Medium.christal(6, 8, 30)
+    val m = Medium.christal(null,6, 8, 30)
     m.encode(lCAinput, lCAmem)
     m.propagate4Shift.mirror(lCAmem)
     assert(m.isMirorSafe(lCAmem))

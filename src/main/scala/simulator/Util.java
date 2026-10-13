@@ -113,6 +113,11 @@ public class Util {
         System.arraycopy(src, 0, dest, 0, src.length);
     }
 
+    public static void copy(int src, int[] dest) {
+        Arrays.fill(dest, src);
+
+    }
+
     /** reset to zero the line that are initialized by miror, but not covered by loop
      * oboqlete, we reprogram the bug detection in order to zap the first two and the last line. */
     public static void resetArrayFirst2LastLineToZero(int[][] a) {

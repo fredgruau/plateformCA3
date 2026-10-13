@@ -24,7 +24,7 @@ class TestTorusify  extends FunSuite with BeforeAndAfter {
     }
   }
   test("largeTorus") {
-    val m = christal(12, 90, 300)
+    val m = christal(null,12, 90, 300)
     val lCAinput = Array.ofDim[Boolean](12, 90)
 
     val lCAoutput = Array.ofDim[Boolean](12, 90)
@@ -60,7 +60,7 @@ class TestTorusify  extends FunSuite with BeforeAndAfter {
     randomFill(lCAinput)
     val lCAoutput: Array[Array[Boolean]] = Array.ofDim[Boolean](6, 8)
     val lCAmem = Array.ofDim[Int](6)
-    val m = Medium.christal(6, 8, 30)
+    val m = Medium.christal(null,6, 8, 30)
     m.encode(lCAinput, lCAmem)
     m.propagate4Shift.torusify(lCAmem)
     m.decode(lCAmem, lCAoutput)
@@ -69,7 +69,7 @@ class TestTorusify  extends FunSuite with BeforeAndAfter {
   }
 
   test("smallTorus") {
-    val m = christal(12, 14, 30)
+    val m = christal(null,12, 14, 30)
     val lCAinput = Array.ofDim[Boolean](12, 14)
     randomFill(lCAinput)
     val lCAoutput = Array.ofDim[Boolean](12, 14)

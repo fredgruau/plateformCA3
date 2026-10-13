@@ -217,6 +217,9 @@ trait ProduceJava[U <: InfoNbit[_]] {
     ))
   }
 
+
+  val inputButtonNames= scala.collection.mutable.Set[String]()
+
   /**
    *
    * @param codeLoopAnonymous code of the anonymous macros
@@ -416,7 +419,11 @@ trait ProduceJava[U <: InfoNbit[_]] {
         fieldBitSize(spatialOfffsetsInt.keys, layerSubProg2).map((kv: (String, Int)) =>
           " map.put(\"" + kv._1 + "\"," + kv._2 + ")").mkString(";\n") + ";"
       },
-      "DISPLAYABLE" -> //theDisplayed contains two kinds of name:aux and segmented, first step should separate the segmented
+      "INPUTBUTTON"->{
+        inputButtonNames  .map(nom => s"""CAloops2.buttons.put("$nom", 0);""")
+          .mkString("\n")
+      },
+        "DISPLAYABLE" -> //theDisplayed contains two kinds of name:aux and segmented, first step should separate the segmented
         {
           if (theDisplayed.isEmpty)
             throw (new Exception("you forgot to call show, no fields are displayed "))
@@ -466,6 +473,15 @@ trait ProduceJava[U <: InfoNbit[_]] {
     val theCalls = dagis.visitedL.reverse.asInstanceOf[List[CallProc]] //compiled calls
     var theCallCode: List[String] = List()
     for (call <- theCalls) { //rewrite the calls, by regrouping parameters
+
+if (!call.exps(0).isInstanceOf[Read[_]])
+  { //traitement de la valeur booléene "input"
+    val  fieldName=call.names(0)
+    val instrofInput="buttons.get(\""+fieldName +"\"),"
+    val copyInstr="copy("+instrofInput+ fieldName+");";
+    inputButtonNames+=fieldName
+    theCallCode = copyInstr:: theCallCode
+  } else{
       val paramsD: List[String] = call.exps.map(_.asInstanceOf[Read[_]].which) //names of parameters passed
       //on rajoute les layers si y en a
       val paramsR: List[String] = call.names;
@@ -650,7 +666,7 @@ trait ProduceJava[U <: InfoNbit[_]] {
       if (!callCode.equals(lastCallCode) && !call.locus.equals("show"))
         theCallCode = callCode :: theCallCode //in case of copy or memo of integer, several times the same call code will be generated
       lastCallCode = callCode //in which  case we keep only the first one by ignoring the following
-    }
+    }}
     (theCallCode, decompositionLocus, theDisplayed)
   }
 

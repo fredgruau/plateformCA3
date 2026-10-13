@@ -14,8 +14,15 @@ import java.util.HashMap;
  * for example information needed for memorization, for display
  */
 public interface CAloops2 {
+        HashMap<String, Integer> buttons = new HashMap<>();
+        static HashMap<String, Integer> getButtons() {
+            return buttons;
+        }
 
 
+
+
+    ;
     /**
      *
      * @param p prepare for a loop of radius one by doing the necessary shift

@@ -17,11 +17,26 @@ import dataStruc.{BranchNamed, Named}
 import progOfmacros.Topo.brdin
 import sdn.{Blob, BlobVe, BloobV, BloobVFields, Compar, Compar3, addBlobVfields, carrySysInstr}
 
+/** uses plain  blobV computation to grow seed into Voronoi region,  by stoping the growth just before merge happens */
+class Grow() extends Layer[(V, B)](1, "global") with BoolV  with carrySysInstr with BranchNamed {
+  val buto= inputBool[V];  show(buto)
+  override val next: AST[(V, B)] = buto^ this //^ buto //we extend the blob around the border brdV, except for meeting meeting points
+  show(this)
+}
 
-
+/** uses plain  blobV computation to grow seed into Voronoi region,  by stoping the growth just before merge happens */
+class GrowVor() extends Layer[(V, B)](1, "global") with BoolV  with carrySysInstr with BranchNamed {
+  val bf=new BloobVFields(this,this)//here the muis for printing is the same as the muis for which we want to compute blob features
+  val b=new BloobV(this,bf)
+  override val next: AST[(V, B)] = this | bf.brdV & ~b.meet//we extend the blob around the border brdV, except for meeting meeting points
+  show(this)
+  b.showMe
+  bf.showMe//show(b.meet) // brd,emptyRhomb1, emptyRhomb,twoAdjBlob,
+}
 /** Growing  from E through F */
-class Grow extends Layer[(E, B)](1, "global") with ASTLt[E, B] with BranchNamed{
-//  val test:BoolV=iffpushed("toto")
+
+class GrowEF extends Layer[(E, B)](1, "global") with ASTLt[E, B] with BranchNamed{
+  //  val test:BoolV=iffpushed("toto")
 
   // val broadcasted = f(this) //step 1 is broadcast
   //  val transfered = transfer(broadcasted) //step 2 is transfer
@@ -29,8 +44,10 @@ class Grow extends Layer[(E, B)](1, "global") with ASTLt[E, B] with BranchNamed{
   val nf2: BoolF = existS(this);
   override val next: BoolE = existS(nf2) //  make use of defVe brough to us implicitely,nb if overrid is not written, it does not work!
   val test:BoolV=exist[F,V] (transfer(v(nf2)))
-  val test2:BoolV=   fromBool[V](true) ^test
-  show(this); show(nf2,test2)
+  val buto= inputBool[V]
+  show(buto)
+  val test2:BoolV=  buto ^test
+  show(this);
   //show(this, broadcasted, transfered, nf, next)
 }
 
@@ -80,15 +97,6 @@ class GrowVE extends Layer[(V, B)](1, "global") with ASTLt[V, B] with BranchName
   // he name of root to arg(0).lowercase
 }
 
-/** uses plain  blobV computation to grow seed into Voronoi region,  by stoping the growth just before merge happens */
-class GrowVor() extends Layer[(V, B)](1, "global") with BoolV  with carrySysInstr with BranchNamed {
-  val bf=new BloobVFields(this,this)//here the muis for printing is the same as the muis for which we want to compute blob features
-  val b=new BloobV(this,bf)
-   override val next: AST[(V, B)] = this | bf.brdV & ~b.meet//we extend the blob around the border brdV, except for meeting meeting points
-  show(this)
-  b.showMe
-  bf.showMe//show(b.meet) // brd,emptyRhomb1, emptyRhomb,twoAdjBlob,
-}
 
 /** same as GrowVorV but based on a boolE support  *//*
 class GrowVorETest() extends Layer[(V, B)](1, "global") with BoolV  with BranchNamed {
