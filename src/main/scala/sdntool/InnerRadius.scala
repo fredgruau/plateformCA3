@@ -77,6 +77,11 @@ class InnerRadius(source: MuStruct[V, B], val d:MuDist, val dgv:MuDist)
   }
 }
 
+trait addRadius {
+  self: MovableAgV with  addDist with addDistVor=> //adds a distance to a LayerV , also limit its movement so as to avoid vortices
+  val ri = new InnerRadius(self,self.d,self.dgv.asInstanceOf[MuDist]);
+  //show(d); les show doivent etre fait dans le main
+}
 
 /**
  *
@@ -147,9 +152,3 @@ class InnerRadius ( val source:MuStruct [V,B], val d:MuDist2,val dgv:MuDist2) ex
 /** adds  inner Radius to particles */
 */
 
-
-trait addRadius {
-  self: MovableAgV with  addDist with addDistVor=> //adds a distance to a LayerV , also limit its movement so as to avoid vortices
-  val ri = new InnerRadius(self,self.d,self.dgv.asInstanceOf[MuDist]);
-  //show(d); les show doivent etre fait dans le main
-}

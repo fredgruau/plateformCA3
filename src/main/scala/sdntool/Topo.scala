@@ -92,6 +92,7 @@ class BloobVFields(val muis:BoolV with carrySysInstr, val otherThanMuis:BoolV) e
   val lightConcave=( exist(shrink3(brdVeOut)) | (exist(shrink2(brdVeOut)) & rand) ) & ~  inside(brdVeOut)
   /** true for inner edges */
   val insideE: BoolE =inside(transfer(isVe))
+  val outsideE: BoolE =inside(transfer(~isVe))
   val density: UintVx = addLt(countNeighbors(addSym(e(muis)).sym))
   val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit
   val notDense = density < fromInt(3)
@@ -131,6 +132,7 @@ class BloobV(val muis:BoolV with carrySysInstr,f:BloobVFields) extends Blob  {
   val emptyRhomb: BoolE = ~rhombusExist(f.brdE) // true if center of a NON-totally empty rhombus
   val meetE=twoAdjBlob & emptyRhomb
   val meetEfilled=meetE & f.insideE
+  val meetEempty=meetE & f.outsideE
   val meetVfilled=meetV&f.otherThanMuis
   /** */
   override  def showMe={super.showMe ; shoow(nbcc0,nbcc1,meetV); shoowText(nbCc,List())
@@ -212,6 +214,22 @@ trait addSummit{
   }
 }
 
+trait addTunnel {
+  self: MovableAgV with addSummit with addBlobSummit =>
+  val bfTn= new BloobVFields(muis, sum.isSummit2& ~ muis)
+  val bTn=new BloobV(muis, bfTn){
+   // val meeeetVp=meetV & sum.isSummit2 & ~muis
+    //override def showMe: Unit = { shoow(meeeetVp,meetE,meetV)}
+  }  /** meetV points cannot flip */
+  //val vmeetTunnel: PartialUI => Constr =  CancelFlipIf(this,One(true),bTn.meetV ) _
+  //addConstraint("vmeetTunnel",'_',vmeetTunnel) //todo, utiliser un autre caractère
+  /**a doubleton on the same tunnel wall cannot flip both vertices*/
+  //val emeetTunnel = MutKeepFlipIf(this,One(true),bTn.meetEempty) _ ;
+  //addConstraint("emeetTunnel",'=',emeetTunnel);}
+
+
+
+}
 /**
  * Calcule une zone remarquable inclue dans summit, de 1,2, ou 3 vertex, appelée centre, qu'on pense que c'est la zone
  * a envahir par la qseed, pour se trouver impeccablement au centre du voronoi, dans le cas de cellule de Voronoi pas trop allongée
@@ -229,7 +247,7 @@ trait addBlobSummit {
     /** true for meeting edges which are next to a particules, and therefore likely to participate to the center */
     val meetiEselected = meetEfilled & existS[V, E](muis)
     val meetiE: BoolV = existS[E, V](meetiEselected) & bfi.otherThanMuis
-    val meetEV = meetiE | meetiV
+    val meetiEV = meetiE | meetiV
     /** faces splitting the summit in three */
     val nbcc3F = insideS[E, F](meetEfilled)
     /** summits part of a face splitting the summit in three */
@@ -253,14 +271,14 @@ trait addBlobSummit {
     val isTripletonF: BoolF = insideS[V, F](existS[F, V](insideFace) & twoNeighbor)
     /** vertices of an isolated tripleton */
     val isTripleton = existS[F, V](isTripletonF) //true if the summits form a triangle.
-    val isLeton=isDoubleton| isTripleton
+    val isLeton=isTripleton | isDoubleton
     /** split-in-3 tripleton are predominant over Vmeeting points and Emeeting points. */
-    val shadowedNbcc3 = exist[E, V](neighborsSym(e(nbcc3)))
+    val shadowedNbcc3 = exist[E, V](neighborsSym(e(nbcc3)))| nbcc3
     /** we will consider meeting point not shadowed by a split-in-3 face */
-    val meetEVnotShadowed = meetEV & ~shadowedNbcc3
-    val meetEnotShadowed = meetiE & ~shadowedNbcc3
+    val meetiEVnotShadowed = meetiEV & ~shadowedNbcc3
+    val meetiEnotShadowed = meetiE & ~shadowedNbcc3
 
-    override def showMe: Unit = {super.showMe;shoow( nbcc3,isDoubleton,isTripleton,meetiE,meetiV,meetEV,meetEnotShadowed,loosangeIncluded,losangeApexes,isLeton)}
+    override def showMe: Unit = {super.showMe;shoow( nbcc3,isDoubleton,isTripleton,meetiE,meetiV,meetiEV,meetiEnotShadowed,loosangeIncluded,losangeApexes)}
   }
   }
 /** using blobsm, adds somme zlt info, and randomness in order to compute an accurate center, also able to penetrate */
@@ -294,17 +312,16 @@ trait addBlobSummit {
       def closerToFireR(initialCtr:BoolV)= initialCtr & ~(awayFromFire(initialCtr)&raaand)
       def closerToFireSR(initialCtr:BoolV)= initialCtr &  ~(awayFromFire(initialCtr)&smallRand)
       def closerToZltSR(initialCtr:BoolV)= initialCtr & ~(awayFromZlt(initialCtr)&smallRand)
-
            // ~next2vor & //on restreint cela car si la seed touche le mur ca empeche de converger, ca devient instable
       qf.tripletonV //sans ca on trouve que le sommet contient bien un tripleton hyperstreched, mais la particule cependant n'est pas dans le tripleton.
      /** first approximation of center, includes not shadowed meetEV not blocking progression to zlt zone
       * raw doubleton and tripleton, and hyperstreched tripleton which do not need to flip orientation*/
-       val ctr1=closerToFireR(blobsm.meetEnotShadowed) & closerToZltSR(blobsm.meetEnotShadowed) |
+       val ctr1=closerToFireR(blobsm.meetiEnotShadowed) & closerToZltSR(blobsm.meetiEnotShadowed) |
          closerToFireR(blobsm.isLeton) |
            (closerToFireSR(blobsm.nbcc3) & // on met une proba plus faible pour éviter des instabilité car NBCC3 est "strong"
              closerToZltSR(blobsm.nbcc3) &   //nbcc3 is a subcase of meetEV, so we should also subject it to removalMeetEnotZltNextToMeetEonZlt
              ~rhombusApexToRemoveFromCtr  )
-      val ctrNoZlt=blobsm.meetEVnotShadowed |   blobsm.isLeton |   (blobsm.nbcc3 & ~rhombusApexToRemoveFromCtr)
+      val ctrNoZlt=blobsm.meetiEVnotShadowed |   blobsm.isLeton |   (blobsm.nbcc3 & ~rhombusApexToRemoveFromCtr)
 
       /** we target identifying thin support blobsm.meetV at the "pointe of" zlt  zon.b.nbcc1  */
       val yetCloser=zon.bzlt.nbcc1 & blobsm.meetV
@@ -485,13 +502,13 @@ trait  QpointConstrain extends addQpointFields  with rando {
   val diseaperSingle = CancelFlipIf(this,One(true),qf.singleton)_
   addConstraint("diseaperSingle",'s',diseaperSingle)
   /**a doubleton cannot flip both vertices*/
-  val diseaperDouble = MutKeepFlipIf(this,One(true),qf.doubleton)_
+  val diseaperDouble = MutKeepFlipIf(this,One(false),qf.doubleton)_
   addConstraint("diseaperDouble",'d',diseaperDouble)
   /** cannot grow from two, to four on both apex */
-  val appearDouble = MutApexKeepFlipIf(this,One(false),qf.doubleton) _
+  val appearDouble = MutApexKeepFlipIf(this,One(true),qf.doubleton) _
   addConstraint("appearDouble",'a',appearDouble)
   /**  a tripleton cannot flip its three vertices*/
-  val diseaperTriple=TriKeepFlipIf(this,One(true),qf.tripleton)_
+  val diseaperTriple=TriKeepFlipIf(this,One(false),qf.tripleton)_
   addConstraint("diseaperTriple",'t',diseaperTriple)
 
   //val extend2side: BoolVe = clock2(transfer(sym(v(doubleton) & rand.randSide)))

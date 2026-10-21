@@ -9,9 +9,9 @@ import compiler.Circuit.hexagon
 import compiler._
 import compiler.SpatialType._
 import dataStruc.{BranchNamed, Named}
-import sdn.{  MuStruct}
+import sdn.MuStruct
 import progOfmacros.Comm._
-import progOfmacros.Compute.{concat3V, concat4V}
+import progOfmacros.Compute.{concat3V, concat4V, concat5V}
 import progOfmacros.Topo.{brdin, nbccV}
 import progOfmacros.{Grad, Wrapper}
 import progOfmacros.Util.{randE2, randN12, randNext, torusify}
@@ -106,6 +106,7 @@ trait ComparApex2{
 trait Compar3 {
   self: UintV with Compar =>
   val gt3:BoolVf=enlarge(transfer(gt))
+  val lt3:BoolVf=enlarge(transfer(lt))
 }
 
 
@@ -121,6 +122,12 @@ trait SymUI extends UintVe {
 
 /** contains addxxxx(arg) function which managas to add the functionality xxx to the argument arg */
 object Util {
+  def myLn2( n:Int):Int={
+    if(n<4)2
+    else if(n<8) 3
+    else if(n<16) 4
+    else -1
+  }
   /** return an unsigned vertex random integer of $n$ bits */
   def randUintV(nbits: Int): UintV = {//pb: quand nbits=1 ya un seul bit, ya pas de concat, et ca renvoie un boolV
     val tmp: Array[UintV] =Array.fill(nbits)(root4naming.addRandBit())
@@ -188,6 +195,7 @@ object Util {
       //we have to consider one case for each bit size, its a bit boring but still easiest, and produce a readable code
       case 3=>grouped.map((a:Array[BoolV])=>concat3V(a(0),a(1),a(2)))
       case 4=>grouped.map((a:Array[BoolV])=>concat4V(a(0),a(1),a(2),a(3)))
+      case 5=>grouped.map((a:Array[BoolV])=>concat5V(a(0),a(1),a(2),a(3), a(4)))
     }
   }
 

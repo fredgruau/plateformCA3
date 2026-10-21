@@ -4,7 +4,7 @@ import compiler.ASTL.{ASTLg, anticlock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, ltSI, v}
 import compiler.ASTLt.ConstLayer
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf}
-import compiler.{AST, ASTBfun, ASTLt, B, Locus, Ring, V}
+import compiler.{AST, ASTBfun, ASTLt, B, E, Locus, Ring, V}
 import progOfStaticAgent.{Homogen, Seed, SpreadOnSummit}
 import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
 import progOfmacros.RedT.cac
@@ -67,7 +67,7 @@ trait addRect{
 trait addZoneLt {
   self: SpreadOnSummit => //adds a leader to a seed ,
   val zlt=new Zone(this,ri.slopgt);
-  //show(d); les show doivent etre fait dans le main
+   //show(d); les show doivent etre fait dans le main
 }
 
 /** signal envoyé vers là ou le rayon est plus grand */
@@ -91,6 +91,7 @@ trait addZone {
     /** it is sufficient that one vertex of the particle support feels an difference in radius, for the whole support to feel it. */
     val zneqexistize = existize(zneq)
     val zeqOnSeed = ~zneqexistize & isV
-    override def showMe: Unit = {zlt.showMe; zgt.showMe; shoow(zeqOnSeed, zneq, zneqexistize)    }
+    val isBLockingToFire:BoolV = me.muis  & ~ zlt.muis & exist[E,V](neighborsSym(e(me.muis & zlt.muis)))
+    override def showMe: Unit = {zlt.showMe; zgt.showMe; shoow(zeqOnSeed, zneq, zneqexistize,isBLockingToFire)    }
   }
 }

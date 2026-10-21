@@ -75,12 +75,13 @@ abstract  class MovableAg[L <: Locus](init:String)(implicit m: repr[L]) extends 
       moves.map(_.values.map(_.bug).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
     }
 
+    /** nombre de bit pour coder une prioritéé en binaire a partir de nbit en unaire*/
 
 
   /** a random priority is needed to help finalize tournament, in case of equality */
   override val prioRand= {
     /** c'est plus sérieux avec deux bits de random priority */
-    val x=randUintV(2)
+    val x=randUintV(nbitPrioRand)
     (x ).asInstanceOf[UintV]
   } //sans "asInstance" il gueule non compatibilité de override entre addLt e UintVx
 

@@ -27,10 +27,21 @@ object Compute {
     val d = pL[V, B]("d")
     Fundef4("compute.concat4V", d.asInstanceOf[UintV]::c.asInstanceOf[UintV]::b::a,a,b,c,d) //bizarement on doit les concaténer dans cet ordre, je ne sait pas trop pourquoi
   }
+  val concat5VDef: Fundef5[(V, B), (V, B),(V, B),(V, B),(V, B), (V, UI)]={
+    val a = pL[V, B]("a")
+    val b = pL[V, B]("b")
+    val c = pL[V, B]("c")
+    val d = pL[V, B]("d")
+    val e = pL[V, B]("e")
+    Fundef5("compute.concat5V",  e.asInstanceOf[UintV]::d.asInstanceOf[UintV]::c.asInstanceOf[UintV]::b::a,a,b,c,d,e) //bizarement on doit les concaténer dans cet ordre, je ne sait pas trop pourquoi
+  }
   def concat4V(b0: BoolV, b1: BoolV, b2: BoolV, b3: BoolV):UintV =
     new Call4(concat4VDef, b0, b1,b2,b3)(repr.nomLR(repr.nomV, repr.nomUI)) with UintV
 
-val countNeighborsDef: Fundef1[(T[V,E], B), (V,UI)] = {
+  def concat5V(b0: BoolV, b1: BoolV, b2: BoolV, b3: BoolV, b4: BoolV):UintV =
+    new Call5(concat5VDef, b0, b1,b2,b3,b4)(repr.nomLR(repr.nomV, repr.nomUI)) with UintV
+
+  val countNeighborsDef: Fundef1[(T[V,E], B), (V,UI)] = {
   val n=pL[T[V,E], B]("neighbor")
   /** int of 6 bits*/
   val nasI: UintV = concatR(n)
@@ -40,6 +51,16 @@ val countNeighborsDef: Fundef1[(T[V,E], B), (V,UI)] = {
   Fundef1("compute.countNeighbors",sum6, n)
 }
 def countNeighbors(n:BoolVe)=new Call1(countNeighborsDef, n)(repr.nomLR(repr.nomV, repr.nomUI)) with UintV
+
+  val countIntOnNeighborsDef: Fundef1[(T[V,E], UI), (V,UI)] = {
+    val n=pL[T[V,E], UI]("neighborUI") //the parametre.
+    /** int of 6 * k bits*/
+    val nasI: UintV = concatR(n)
+    val (n0, n1, n2, n3, n4, n5) = (elt(0, nasI), elt(1, nasI), elt(2, nasI), elt(3, nasI), elt(4, nasI), elt(5, nasI))
+    val n012: UintV = sum3V(n0 ,n1, n2); val n345: UintV = sum3V(n3 ,n4, n5)
+    val sum6=binop(addtwo2to3UI,n012,n345) //bug a corriger
+    Fundef1("compute.countIntOnNeighbors",sum6, n)
+  }
 
   val impliqueDef: Fundef2[(V, B), (V, B), (V, B)] = {
     val a = pL[V, B]("a")

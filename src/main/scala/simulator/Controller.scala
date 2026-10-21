@@ -65,7 +65,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   val globalInitNames: Array[String] = fromXMLasList((globalInit \\ "inits").head).toArray
   val selectedGlobalInit: Int = xInt(globalInit, "selected", "@rank") //which is the starting value for global init
   val randomInitNames: Array[Int] = (0 to 99).toArray
-  val densityInitNames: Array[Int] = (0 to 99).toArray
+  val densityInitNames: Array[Int] = (0 to 200).toArray
   val darknessInitNames: Array[Int] = (0 to 99 by  5).toArray
   val statInitNames: Array[String] = progCA.partial().map{case(k,v)=>lastSegment(k)+lastSegment(v)}.toArray
     //Circuit.theStatified

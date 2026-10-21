@@ -1,5 +1,5 @@
 package progOfStaticAgent
-import sdntool.{Leader, addDist, addDistVor, addInsideBall, addLeader, addRadius, addRect, addZone, addZoneGt, addZoneLt}
+import sdntool.{Leader, addDist, addDistVor, addInsideBall, addLeader, addRadius, addRect, addSurf, addZone, addZoneGt, addZoneLt}
 import compiler.ASTL.{ASTLg, anticlock, broadcast, clock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, fromInt, imply, v}
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf, UintV, UintVx}
@@ -49,7 +49,11 @@ class Homogeneize() extends LDAG with Named with BranchNamed
    part.shoow(part.vor.mergedMoves("containGcenter").asInstanceOf[MoveC2].yes.push)
 
    */
+  // part.ar.showMe
+ part.shoowText(part.ar.muis,List())
   part.shoow(part.lead.muis)
+  part.shoow(part.singleStreched)
+  part.bTn.showMe
   part.shoow(part.muis)
   part.vor.showMe
   part.vor.baba.showMe;   part.vor.bf.showMe;  part.showMe
@@ -89,7 +93,7 @@ class Seed extends MovableAg[V]("global") with MovableAgV  with addBloobV with b
   with EmptyBag[sdn.MuStruct[_<: Locus,_<:Ring]]
 
 /** computes the average and variance of a partial SintV defined by a pair ( SintV ;BoolV )*/
-trait stat{ self:Homogen with addLeader=> staat(lead.muis, dgv.muis)// staat(bve.meet, d.muis);;staat(bve.meetV, d.muis);  staat(bve.meetE2, d.muis)
+trait stat{ self:Homogen with addLeader with addRadius=> staat(lead.muis, ri.muis)// staat(bve.meet, d.muis);;staat(bve.meetV, d.muis);  staat(bve.meetE2, d.muis)
    }
 
 
@@ -112,11 +116,11 @@ class Homogen() extends Seed with addDist with addGcenter // with keepOutsideFor
  *       by choosing to invade preferently vertices on summit whose number of summit-neighbor  are largest
  *  */
 
-class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addRect
+class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addRect with addSurf
   with addZone
  // with addSommet
   with addSummit with addBlobSummit with addCenter
-  with addLeader  with stat/*: we stopped using zone*/
+  with addLeader  with stat  with addTunnel/*: we stopped using zone*/
 {  /** seize applique la force qui cible le  centre si et seulement si le radius est uniforme */
 
 
@@ -147,7 +151,17 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
 //val seizeCenter=cibler(centr.updatedCenter) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
 
  // val seizeCenter2:Force=restrictF(cibler(summit.centerZlt),zon.zeqOnSeed)
-  val seizeCenter=ciblerFaible(ctr.ctr2) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
+  val seizeCenter=ciblerFaible(ctr.ctr2) //on préfére mettre en jeu plusieurs force
+
+//  val seizeNbcc3= ciblerFaible((blobsm.nbcc3 & ~ctr.rhombusApexToRemoveFromCtr))
+  val seizeNbcc3= ciblerFaible((blobsm.nbcc3 & ~blobsm.losangeApexes)) | Force.empty(blobsm.losangeApexes) //on veut oublier zlt
+  val seizeLeton=ciblerFaible(  blobsm.isDoubleton | blobsm.isTripleton)
+  val seizeMeetiEnotShadowed=ciblerFaible(blobsm.meetiEnotShadowed)
+   val toFire=Force.empty(zon.isBLockingToFire)|Force.total.restrict(zon.zlt.muis) //exploration plus avant de zlt
+  // & ~ctr.next2vor)
+
+
+  //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
   //val blockIfStreched:Force=stabilizeNotEmpty(streched)
   //val next2mature:BoolV=exist(neighborsSym(e(qf.doubletonV& ~zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
  // val next2immature:BoolV=exist(neighborsSym(e(zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
@@ -158,13 +172,23 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
 
  //si ca se trouve j'ai pas besoin du tout de explore
   force(introduceNewPriority(), "explore",'O', Force.total)
+ // force(introduceNewPriority(), "EVseize",'z', seizeMeetiEnotShadowed)
 
+  val singleStreched: BoolV = exist[E,V] (transfer(v(dgv.streched & bf.insideE))) & ~exist[E,V](transfer(v(dgv.doubleStreched & bf.insideE)))
+ val seizeTunnel=ciblerFaible(bTn.meetV) //marche depuis un singleton mais aussi depuis un doubleton
 
-  // force(introduceNewPriority(), "stabilize",'z', blockIfStable)
- // force(introduceNewPriority(), "size",'z', seize)
- // force(introduceNewPriority(), "size",'z', blockIfStreched)
+  val seizeTunnelOld=Force.ciblerNotEmptyPush(singleStreched,transfer(v(dgv.streched)))
 
-  force(introduceNewPriority(), "size",'z', seizeCenter)
+  val keepTunnelWide = MutKeepFlipIf(this,One(false),dgv.doubleStreched) _ ; //on peut pas détruire en meme temps deux elements
+  //val forbidExtremityTunnel=   CancelFlipIf(this,One(false),bTn.nbcc0 ) _// agents should not invade cells where distance is negative
+  //addConstraint("exttun",'u',forbidExtremityTunnel)
+  addConstraint("nmeet",'n',keepTunnelWide); //todo préciser que ca contraint juste les force de priorité inférieure a prioTunnel
+  val prioTunn=introduceNewPriority()
+  force(prioTunn, "tunnel",'t', seizeTunnel)
+  force(introduceNewPriority(), "letonseize",'y', seizeLeton)
+  force(introduceNewPriority(), "nbcc3seize",'3', seizeNbcc3)
+  //force(introduceNewPriority(), "tofire",'f', toFire)
+
   // force(introduceNewPriority(),"unif",'u',uniformizeRadius)
   force(introduceNewPriority(),"repulse",'|',dgv.repulse)//dgv.repulse moves seed away from voronoi, in fact from gcenter,
   // because it is allowed to overlap voronoi, which should thereafter withdraw.

@@ -10,6 +10,7 @@ import progOfmacros.Compute.implique
 import progOfmacros.Wrapper.{inside, insideS}
 import sdn.ForceAg.{Agg, Aggg}
 import sdn.SplitHashMapTyped.Split
+import sdn.Util.myLn2
 
 import scala.collection.immutable.{HashSet, ListMap}
 import scala.collection.mutable
@@ -25,6 +26,7 @@ import scala.collection.mutable
 abstract class Constr(val ags: Array[Agg], val impact: Impact, fliprio:PartialUI) {
   /** Most of the time the constraint holds on a single agent that we call "ag" for "agent" */
   val ag=ags(0)
+  val nbitPrio=myLn2(ag.moves.size)+ag.nbitPrioRand
   /** where = places where flips is still valid after the constraint newFlip<-olcFlip&where
    * defined has a method, in order allow definition prior to intanciation of needed field, such as flip.*/
   val where: BoolV //will use fields from the agent: flip, as well as this
@@ -81,7 +83,7 @@ class MutKeepFlipIf(a:Agg,i: Impact,val mutex:BoolE,val fliprio:PartialUI) exten
   /** mutex is triggered if there is indeed two flips on each side of the mutex, and in the right state. */
   def mutrig:BoolE =mutex &  (impact  match {
     case Both() => insideS(fliprio.defined)
-    case One(v) =>  insideS(fliprio.defined & (if (v) ag.isV else (ag.notIsV))) // result also depend on impact
+    case One(v) =>  insideS(fliprio.defined & (if (v) ag.notIsV else (ag.isV))) // result also depend on impact
   })
   /** flip is ok if prio is maximum with respect to the other side */
   def tmp: BoolEv =imply(v(mutrig),fliprio.valuc.lt) //todo faut mettre lt?oui, lt est vrai du coté de la plus grosse prio
@@ -100,7 +102,7 @@ class MutApexKeepFlipIf(a:Agg,i: Impact,val mutex:BoolE,fliprio:PartialUI ) exte
   val mutrig:BoolE ={
     mutex &  (impact  match {
       case Both() => inside(apexE(f(fliprio.defined)))
-      case One(v) =>  inside(apexE(f(fliprio.defined & (if (v) ag.isV else (ag.notIsV)))))// result also depend on impact
+      case One(v) =>  inside(apexE(f(fliprio.defined & (if (v) ag.notIsV else (ag.isV)))))// result also depend on impact
     })}
   /** flip is ok if prio is smaller with respect to the other side */
   //  val chekLtIfMutrig=imply(f(mutrig),prio.ltApex) // je mettait lt au lieu de gt, cela peut créer des oscillations.
@@ -114,10 +116,10 @@ class TriKeepFlipIf(a:Agg,i: Impact,val tritex: BoolF,fliprio:PartialUI) extends
   /** mutex is triggered if there is indeed two flips on each side of the mutex, and in the right state. */
   val tritrig:BoolF =tritex &  (impact  match {  //y a moyen d'écrire un trigger générique pour mut,tri, et loc
     case Both() => insideS(fliprio.defined)
-    case One(v) =>  insideS(fliprio.defined& (if (v) ag.isV else (ag.notIsV))) // result also depend on impact
+    case One(v) =>  insideS(fliprio.defined& (if (v) ag.notIsV else (ag.isV))) // result also depend on impact
   })
   /** flip is ok if prio is minimum with respect to the other side */
-  def tmp: BoolVf =imply(transfer(v(tritrig)),fliprio.valuc.gt3)
+  def tmp: BoolVf =imply(transfer(v(tritrig)),fliprio.valuc.lt3)
   /** flip is preserved if no neighbor edge present a problem */
   val where=inside(tmp)
 }
@@ -136,7 +138,8 @@ class SexTex(a:Agg, fliprio:PartialUI) extends Constr(Array(a), null,fliprio){
   /** carefull with the number of bit, 4
    * carefull that this constraint uses prioYesNotQuiescent so it assumes that moves have been already computed
    * if we want to endows our agent with constraints before computing moves, this will not work*/
-  val choose: BoolVe = chooseMaxOf(fliprio.restoreInvariant.value, 4) //todo deplacer dans constraint ca fait jouer prio
+  //val choose: BoolVe = chooseMaxOf(fliprio.restoreInvariant.value, 4) //todo deplacer dans constraint ca fait jouer prio
+  val choose: BoolVe = chooseMaxOf(fliprio.restoreInvariant.value, nbitPrio) //todo deplacer dans constraint ca fait jouer prio
   val whereto:BoolVe= imply(e(singleton),choose)
   /** where = places where flips is still valid after the constraint newFlip<-oldFlip&where
    * defined has a method, in order allow definition prior to intanciation of needed field, such as flip.  */
@@ -147,36 +150,10 @@ object SexTex{ def apply(a:Agg)(fliprio:PartialUI): SexTex=new SexTex(a,fliprio)
 
 /** sofware for classifying constraints */
 object SplitHashMapTyped {
-/*  sealed trait Kind
-  case object Local extends Kind
-  case object Mutex extends Kind
-  case object MutApex extends Kind
-  case object Tritex extends Kind
-  case object Sextex extends Kind
-
-  final case class ConstrFn(kind: Kind, f: PartialUI => Constr)
-
-  def splitConstrs(
-                    src: mutable.LinkedHashMap[String, ConstrFn]
-                  ): Split[String] = {
-
-    def pick(k: Kind) =
-      toSortedLinkedHashMap(src.collect { case (key, ConstrFn(`k`, f)) => key -> f })
-
-    val locals   = pick(Local)
-    val mutexes  = pick(Mutex)
-    val mutApex  = pick(MutApex)
-    val tritex   = pick(Tritex)
-    val sextex   = pick(Sextex)
-
-
-    Split(locals, mutexes, mutApex, tritex, sextex)
-  }
-*/
   /** Résultat fortement typé. */
   //q leqQuatre diseapearSingle diseapearDouble diseaperTripletaon _vmeet =hmeet  ;videplein sloW
-  val localsInitials="qs_vwg"
-  val mutexesInitials="d;="
+  val localsInitials="qs_vwgu"
+  val mutexesInitials="d;=n"
   val mutapexInitials="a"
   val tritexInitials="t"
   val sextexInitials= "x"
@@ -209,7 +186,7 @@ object SplitHashMapTyped {
     val mutapexes= subMapByFirstChar(src,mutapexInitials )
     val tritexes= subMapByFirstChar(src,tritexInitials )
     val sextexes= subMapByFirstChar(src,sextexInitials )
-    assert(locals.size+mutexes.size+mutapexes.size+tritexes.size+sextexes.size==src.size,"some cosntraints not processed") //check that we processed all constraint
+    assert(locals.size+mutexes.size+mutapexes.size+tritexes.size+sextexes.size==src.size,"some constraints not processed") //check that we processed all constraint
      Split[String](locals,mutexes, mutapexes, tritexes, sextexes)}
 
 }

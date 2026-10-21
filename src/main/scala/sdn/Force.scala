@@ -176,6 +176,20 @@ object Force{
       MoveC1(cible, ~toCible & ag.bf.brdVeIn ))
     }
   }
+
+  def ciblerNotEmptyPush(cible:BoolV,toCible:BoolVe):Force=new Force{
+    /** true if there is a target in the immediate neighborhood */
+    override def actionV(ag: MovableAgV): MoveC = {
+      //we empty non-target and forbid moving towards non-target, only if target is reachable, so as to avoid blocking situation
+      //  MoveC2(MoveC1(~cible & next2cible ,toCible & ag.bf.brdVeIn), on ne peut pas vider si on est pas a coté de la cible alors que faudrait vider en priorité dans ce cas
+      MoveC2(
+        MoveC1(root4naming.myFalse,toCible & ag.bf.brdVeIn), //si la cible est voisine, on s'y dirige?!. Par contre, si on n'est pas sur la cible, on ne vide pas pour autant
+        //MoveC1(cible, ~(toCible&e(next2cible)) & ag.bf.brdVeIn ))
+        MoveC1(cible, e(root4naming.myFalse) ))  //on ne peut pas vider une cible on n'interdit pas d'envahir a coté.
+    }
+  }
+
+
   /**
    *
   * @param cible where we want our particle to be
@@ -188,9 +202,9 @@ object Force{
       //we empty non-target and forbid moving towards non-target, only if target is reachable, so as to avoid blocking situation
       //  MoveC2(MoveC1(~cible & next2cible ,toCible & ag.bf.brdVeIn), on ne peut pas vider si on est pas a coté de la cible alors que faudrait vider en priorité dans ce cas
       MoveC2(
-        MoveC1(root4naming.myFalse,toCible & ag.bf.brdVeIn),
+        MoveC1(root4naming.myFalse,toCible & ag.bf.brdVeIn), //si la cible est voisine, on s'y dirige?!. Par contre, si on n'est pas sur la cible, on ne vide pas pour autant
         //MoveC1(cible, ~(toCible&e(next2cible)) & ag.bf.brdVeIn ))
-        MoveC1(cible, e(root4naming.myFalse) ))
+        MoveC1(cible, e(root4naming.myFalse) ))  //on ne peut pas vider une cible on n'interdit pas d'envahir a coté.
     }
   }
 
@@ -303,7 +317,13 @@ object Force{
       oui
     }
   }
-
+  def empty(where:BoolV)=new Force {
+    override def actionV(ag: MovableAgV): MoveC = {
+      val oui=MoveC1( ag.muis  & where, e(root4naming.myFalse))
+      val non=MoveC1(root4naming.myFalse,neighborsSym(e(where)))
+     oui//MoveC2(oui, non)
+    }
+  }
   /** we designed a random move that does not break the quasipoint property,
    * eliminating the need for checking gate-expensive mutex
    * However, we must still check for directionnality using

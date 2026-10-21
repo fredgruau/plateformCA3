@@ -252,6 +252,30 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     }
     result
   }
+
+  /**
+   *
+   * @param integers represehts inner radius of voronoi cell around seeds
+   * @return two integers representing the proportion of minimum radius, and the radius juste after that.
+   *         after an initial quick transition, the summ should be one.
+   *         atfer convergence, moste of the time, one of the two will be close to 1, the other one close to zero.
+   */
+  private def smallp2(integers:List[Int]): (Double, Double) ={
+    var nbsmall=0; var nbsmallp2=0
+    val min=integers.min
+    for (i <- integers) i match {
+      case x if x == min     => nbsmall += 2
+      case x if x == min + 2 => nbsmallp2 += 2
+      case x if x == min + 1 =>
+        nbsmall += 1
+        nbsmallp2 += 1
+      case _ => // autres valeurs : rien à faire
+    }
+      (nbsmall/(2*integers.size.toDouble),nbsmallp2/(2*integers.size.toDouble))
+  }
+
+  var smalls:List[Double]=List()
+  var smallp2s:List[Double]=List()
   @volatile private var lastStatText = ""
 
   /** iterate through all the layers for which we should compute statistics */
@@ -282,22 +306,25 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
         sumInt32VoronoiPartial(locusDefined,bitIsDefined,  bitiOfValue) //genere and int 32 bits on each voronoi if defined
       }
       /** computes the text associated to an int32 on each voronoi */
-      val integers=statistics(locusDefined, bitIsDefined)
-     // println(integers)
+      val integers: List[Int] =statistics(locusDefined, bitIsDefined)
+     //println(integers)
       if(integers.nonEmpty)
-      {val (mean, stdNorm, minVal, maxVal)=stats(integers)
-
+      {
+        val (mean, stdNorm, minVal, maxVal)=stats(integers)
         text += " "+namesState+":" +f"$stdNorm%.2f"+"/"+ f"$mean%.1f" +  " " +minVal+"<"+maxVal
       //  if(lastSegment(isDefined)=="Meet") { //global assesmentt
           //uniformized=(stdNorm *10 < 2 && stdNorm > 0.01  )
           uniformized=(minVal==maxVal)
         if (uniformized)
           currentInnerRadius = minVal
-        //  if(uniformized==true)    println("tata")
-       // }
-        //
-        //aprés je calcule les stats pour de vrai, ecart type patin coufin
-        // for (points <- medium.locusPlane(locusDefined))          medium.statistics( bitIsDefined, points)
+       //a present je calcule deux courbes: small, smallp2
+       val (s,sp2)=smallp2(integers)
+        smalls=s::smalls
+        smallp2s=sp2::smallp2s
+        //println(s+"   "+sp2)
+        val first=smalls.take(50)
+        val moy=first.sum/first.size.toDouble
+       // System.out.println( f"$s%.2f"+"   "+f"$moy%.2f")
       }
       lastStatText = text// caPannel.updateStat(text) //on veut deux décimale sur standard deviation
 
@@ -324,7 +351,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
 def densityMax(nbCol: Int, nbLine: Int): Int = {
     // même calcul de numLineUsed / numColUsed...
     val r=Math.min( nbLine, nbCol)/3
-    r*(r-1)
+    r*(r+1)+2
   }
 
 
@@ -344,8 +371,8 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
 
       var timeSinceNonalive = 0
       var timeWhileRiuniformized=0
-      def converged(): Boolean = timeSinceNonalive > 100
-      def convergedNew(): Boolean = (timeWhileRiuniformized >= 100)| t>28000
+      def converged(): Boolean = timeSinceNonalive > 1000
+      def convergedNew(): Boolean = (timeWhileRiuniformized >= 100000)| t>280000
       override def run(): Unit = {
         bugFound = false
         noneAlive = false
@@ -417,8 +444,8 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
                     s"iterations=$convergenceIteration " +
                     s"innerRadius=$currentInnerRadius"
                 )
-                //density += unitIncrease
-controller.randomRoot+=1
+                density += unitIncrease
+//controller.randomRoot+=1
                 repaint()
                 sleep(50)
                 noneAlive = false

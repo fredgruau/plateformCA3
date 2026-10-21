@@ -2,7 +2,7 @@ package progOfmacros
 
 import compiler.{AST, ASTBfun, ASTLt, AntiClock, B, E, F, I, Locus, Ring, S, SI, T, UI, V, chip, repr}
 import compiler.AST._
-import compiler.ASTBfun.{Fundef2RP, andRedop, concatRedop, ltUI2, minRedop, minUI, neg, neqUI2, orRedop, orScan, orScanSI, redop, unaryToBinary2, xorRedop}
+import compiler.ASTBfun.{Fundef2RP, andRedop, concatRedop, ltUI2, minRedop, minUI, neg, neqUI2, orRedop, orScan, orScanSI, redop, unaryToBinary2, unaryToBinary3, xorRedop}
 import compiler.ASTL._
 import compiler.ASTLfun._
 import compiler.Circuit.iTabSymb
@@ -43,10 +43,21 @@ object Wrapper {
     val f:Fundef1[(L,R),(L,R)]=getUnopFun(neg[R], arg.locus)(m,r,r)
     new Call1[(L,R),(L,R)](f,arg)(repr.nomLR(m, r)) with ASTLt[L, R] {}
   }
-  def unary2Bin[L<:Locus](arg: ASTLt[L, UI])(implicit m:repr[L],ri: repr[UI])={
-    val f=getUnopFun(unaryToBinary2, arg.locus)(m,ri,ri)
-    new Call1(f,arg)(repr.nomLR(m, compiler.repr.nomUI)) with ASTLt[L, UI] {}  }
 
+  /**
+   *
+   * @param arg entier écrit en codage unnaire 110 code "2" sur trois bits
+   * @param nbit nombre de bit de l'entier ici y en a trois
+   * @param m
+   * @param ri
+   * @tparam L
+   * @return
+   */
+  def unary2Bin[L<:Locus](arg: ASTLt[L, UI],nbit:Int)(implicit m:repr[L],ri: repr[UI])={
+    val f=if(nbit<4) getUnopFun(unaryToBinary2, arg.locus)(m,ri,ri)
+    else if(nbit < 8) getUnopFun(unaryToBinary3, arg.locus)(m,ri,ri)
+    else throw new Exception("trop de forces, il nous faut unnaryTobin4")
+    new Call1(f,arg)(repr.nomLR(m, compiler.repr.nomUI)) with ASTLt[L, UI] {}  }
 
   /** binary operators */
   def xorBin[L<:Locus,R<:Ring](arg1:ASTLt[L, R],arg2:ASTLt[L,R])(implicit m:repr[L],q:repr[R]):ASTLt[L,R]={

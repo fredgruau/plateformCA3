@@ -234,7 +234,9 @@ object AST {
   case class Fundef3[+Ti1, +Ti2, +Ti3, +To1](s: String, arg: AST[To1], p1: Param[Ti1],
                                              p2: Param[Ti2], p3: Param[Ti3]) extends Fundef[To1](s, arg, p1, p2, p3)
   case class Fundef4[+Ti1, +Ti2, +Ti3,+Ti4, +To1](s: String, arg: AST[To1], p1: Param[Ti1],
-                                             p2: Param[Ti2], p3: Param[Ti3], p4: Param[Ti4]) extends Fundef[To1](s, arg, p1, p2, p3, p4)
+                                                  p2: Param[Ti2], p3: Param[Ti3], p4: Param[Ti4]) extends Fundef[To1](s, arg, p1, p2, p3, p4)
+  case class Fundef5[+Ti1, +Ti2, +Ti3,+Ti4, +Ti5, +To1](s: String, arg: AST[To1], p1: Param[Ti1],
+                                                  p2: Param[Ti2], p3: Param[Ti3], p4: Param[Ti4], p5: Param[Ti5]) extends Fundef[To1](s, arg, p1, p2, p3, p4, p5)
 
   //on peut pas utiliser fundefn, car faudrait savoir a l'avance le nombre de paramétres, pour maj l'environnement.
   //case class Fundefn[Ti1, To1](override val namef: String, arg: AST[To1], pn: Param[Ti1]*)(implicit n: repr[To1])  extends Fundef[To1](namef, arg, pn: _*)
@@ -262,6 +264,9 @@ object AST {
 
   case class Call4[Ti1, Ti2, Ti3, Ti4, To1](override val f: Fundef4[Ti1, Ti2, Ti3, Ti4, To1], arg: AST[_ <: Ti1], arg2: AST[_ <: Ti2], arg3: AST[_ <: Ti3], arg4: AST[_ <: Ti4])(implicit n: repr[To1])
     extends Call[To1](f, arg, arg2, arg3, arg4) with Tripleton[AST[_]]
+
+  case class Call5[Ti1, Ti2, Ti3, Ti4,Ti5, To1](override val f: Fundef5[Ti1, Ti2, Ti3, Ti4, Ti5, To1], arg: AST[_ <: Ti1], arg2: AST[_ <: Ti2], arg3: AST[_ <: Ti3], arg4: AST[_ <: Ti4], arg5: AST[_ <: Ti5])(implicit n: repr[To1])
+    extends Call[To1](f, arg, arg2, arg3, arg4,arg5) with Tripleton[AST[_]]
 
   case class Read[T](which: String)(implicit m: repr[T]) extends AST[T]() with EmptyBag[AST[_]]
 

@@ -173,6 +173,7 @@ object ForceAg{
 /**  ForcedAg are Agents  udated using force as opposed to pure detection (gcenter) */
 abstract class ForceAg[L <: Locus] extends Agent[L]
  { //val priorityObliged:Int
+   final val  nbitPrioRand=2;
    val forces:ArrayBuffer[mutable.LinkedHashMap[String,Force]] = ArrayBuffer()
    /** will include also structuring forces, for bounding agent */
    def allForces=forces
@@ -180,9 +181,10 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
    protected def addForces(priority:Int, name:String, shortName:Char, f:Force ) = { //we may have to store set of moves, if we need add move of same priority.
      val ht=forces(priority)
      assert(!(ht.contains(name)), "each force must have a distinct priority");
-     val condition:BoolV=inputBool
-     moderators.addOne(name, condition)
-     forces(priority)(shortName+name)=f.restrict(condition) //le caractére identifiant la force est mis au début du nom, pour simplifier.
+     //val condition:BoolV=inputBool
+    // moderators.addOne(name, condition)
+     moderators(name)=inputBool
+     forces(priority)(shortName+name)=f.restrict(moderators(name)) //le caractére identifiant la force est mis au début du nom, pour simplifier.
 
    }
    def showModerators={
@@ -255,13 +257,13 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
     for (m <- moves; (k, v) <- m) mergedMoves(k.drop(1)) = v
 
      /** does a computation to be repeated specifically for yes moves */
-     def processMoves(all:UintV):(UintV,UintV,UintV)={
+     def processMoves(all:UintV,nbit:Int):(UintV,UintV,UintV)={
        /** bouche les trous avec un orscanright */
        val filled=orScanRight(all)
-       (filled,unop(derivative, filled),unary2Bin(filled))
+       (filled,unop(derivative, filled),unary2Bin(filled,nbit))
      }
      val (filledTriggered,/** all false except for highest priority move */ highestTriggered, prioDet: UintV) = {
-       processMoves(allTriggered)
+       processMoves(allTriggered,moves.size)
      }
      yesnoHighestTriggered=highestTriggered
      /** selectionne le flip parmis les flip des mouvement proposés */
@@ -274,7 +276,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
         * and yesFilledtriggered is equal to fill triggered, thereby simplifying the computation*/
        val presenceOfC2moves = moves.map(_.values.map({case a: MoveC2 =>true  case a: MoveC1 =>  false} ).reduce(_ | _)).reduce(_ | _)
        if (!presenceOfC2moves ) (filledTriggered, highestTriggered, prioDet)
-       else processMoves(allTriggeredYes)
+       else processMoves(allTriggeredYes,moves.size)
      }
      allBugs=allBug
      yesHighestTriggered = yHT //used for printable purpose
@@ -375,6 +377,6 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
      showPositiveMoves;
      showConstraint;
      showAllFlip;
-     showModerators
+     showModerators //must be executed
    }
  }

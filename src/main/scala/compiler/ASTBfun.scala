@@ -657,7 +657,7 @@ object ASTBfun {
   /** input is an unary sequence of up to seven boolean,
    * It is a sequence of true followed by a sequence of false.
    * output is the binary code 1000000->100, .... 1111111-> 111 */
-  val unaryTonBbinary3: Fundef1R[UI] = {
+  val unaryToBinary3: Fundef1R[UI] = {
     val (ucode) = p[UI]("ucode")
     val alt=new Call1[UI,UI](doublePeriod,ucode) with ASTBt[UI] {}
     val clockGoDo=new Call1[UI,UI](clockGoingDown,alt) with ASTBt[UI] {}

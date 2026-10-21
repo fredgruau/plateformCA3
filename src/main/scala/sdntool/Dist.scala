@@ -12,10 +12,10 @@ import compiler._
 import compiler.SpatialType._
 import dataStruc.{BranchNamed, Named}
 import progOfStaticAgent.Homogeneize
-import progOfmacros.Comm.{neighborsSym, neighborsSymUI}
+import progOfmacros.Comm.{apexE, neighborsSym, neighborsSymUI}
 import progOfmacros.Grad.{deltaCall, deltaCallProp, siFieldOperator, siFieldOperatorProp, slopeDeltaDistDef}
 import progOfmacros.{Comm, Grad, Wrapper}
-import progOfmacros.Wrapper.{borderS, exist, existS, inside, neqUI2L}
+import progOfmacros.Wrapper.{borderS, exist, existS, inside, neqUI2L, shrink}
 import progOfmacros.RedT.cacEndomorph
 import sdn.Globals.root4naming
 import sdn.{BlobVe, CancelFlipIf, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, One, Stratify, addGcenter, addQpointFields, addVor, carrySysInstr}
@@ -46,10 +46,17 @@ abstract class SiField(n:Int,  source: MuStruct[V, B],op:siFieldOperator) extend
 }
 
 trait addStreched extends SiField {
+  self:SiField=>
   val tmpDoubletoon:BoolEv=Comm.neighborsEvSym(this.sloplt)
   val streched:BoolE=inside(tmpDoubletoon) //& inside(bf.doubletoon)
-  abstract override def showMe():Unit = {super.showMe; shoow(streched)}
+  //on calcule aussi si y a deux streched cote a cote
+  val twostreched:BoolVf=shrink(transfer(v(streched)))
+  val doubleStreched: BoolE = exist(apexE(twostreched))
+  abstract override def showMe(): Unit = {
+    super.showMe; shoow(streched,doubleStreched)
+  }
 }
+
 /**
  * define the repulse  forces.
  *
@@ -100,7 +107,7 @@ class MuDist(bitSize:Int, val source: MuStruct[V, B])
   source match{
     case ag: sdn.ForceAg[V]=> //adds a slow constraint to avoid vortex creation
       /** moving to forbidden would create a source in a negative distance
-       * which would preevent to ecrease the distance level towards zero */
+       * which would preevent to decrease the distance level towards zero */
       val forbidden:BoolV= ASTLfun.isneg(muis.pred)
       val  slow=CancelFlipIf(ag,One(false),forbidden ) _// agents should not invade cells where distance is negative
       ag.addConstraint("slow",'w',slow)

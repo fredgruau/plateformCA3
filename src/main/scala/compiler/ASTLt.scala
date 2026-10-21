@@ -148,6 +148,11 @@ trait ASTLt[L <: Locus, R <: Ring] extends AST[(L, R)] with MyAstlBoolOp[L, R] w
         f.asInstanceOf[Fundef4[Any, Any, Any,Any, (L, R)]],
         g(a.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]], g(a2.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]],
         g(a3.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]], g(a4.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]])(m) with ASTLt[L, R]
+      case Call5(f, a, a2, a3, a4,a5) => new Call5(
+        f.asInstanceOf[Fundef5[Any, Any, Any,Any,Any, (L, R)]],
+        g(a.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]], g(a2.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]],
+        g(a3.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]], g(a4.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]] ,
+        g(a5.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]]  )(m) with ASTLt[L, R]
 
       case _ => throw new RuntimeException("ciel ")
     }

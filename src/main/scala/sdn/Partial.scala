@@ -17,7 +17,6 @@ import sdn.Util.addLt
 
  */
 class PartialASTL[ R <: Ring](val defined:BoolV, val value:ASTLt[V,R])(implicit m:repr[R]) {
-
 }
 
 class PartialUI (override val defined:BoolV, override val value:UintV) extends PartialASTL[UI](defined,value) with Named with BranchNamed{

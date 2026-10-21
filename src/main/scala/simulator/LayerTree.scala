@@ -43,11 +43,6 @@ class LayerTree(val xmlLayerTree: Node, val controller: Controller) extends Tree
         case _ => throw new Exception("pas 0ou1")
       }
       val nameTotal=extractNodeText(n)
-      println(s"Renderer : nom=[$nameTotal], trouvé=${controller.buttons2.containsKey(nameTotal)}, buttons=${controller.buttons2}")
-      println(s"icon0=$icon0")
-      if (icon0 != null)
-        println(s"taille icon0 : ${icon0.getIconWidth} × ${icon0.getIconHeight}")
-      println(new java.io.File("src/ressources/chiffre_0.png").getAbsolutePath)
       if(controller.buttons2.containsKey(nameTotal))
         iconBit(nameTotal)
       else  if (controller.colorDisplayedField.contains(extractNodeText(n))) //test if the field is to be displayed
