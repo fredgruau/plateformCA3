@@ -682,8 +682,6 @@ object SimulatorUtil {
               "machine",
               "@nbCol"
             )
-
-
           var initRoot:
             HashMap[String, String] =
             HashMap.empty

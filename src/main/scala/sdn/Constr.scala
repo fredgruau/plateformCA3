@@ -68,7 +68,7 @@ class ConstrSyncImply(override val bounding:Aggg,  override val bounded:BoundedA
    *
    * flip is further canceled if implication bounding.flipSYnc => bounded.flipSync is false on zone sync
    * for example, in the case of voronoi, zoneSync=not gabrielcenter, on this zone, if bounding=gabrielcenter flips, it implies
-   * that also voronoi should also flip.
+   * that voronoi should also flip.
    * */
   val cancel:(BoolV,BoolV)=>BoolV = ~ implique(_,_)
 }

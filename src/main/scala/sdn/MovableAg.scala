@@ -48,7 +48,7 @@ trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with addBlobVf
   //override val NisV=  ~isV
   override def flip2next=  {
    //println("totototototototo");    println("totototototototo")
-    val f=flipRandomlyCanceled
+    val f=flipAfterRandCancel
      f ^ muis
   }//delayedL(xorBin(flipRandomlyCanceled,muis) )//delayed is necessary in order to get the very last update of flip
 }

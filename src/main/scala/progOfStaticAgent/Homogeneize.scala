@@ -32,7 +32,7 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   setFliprioOfMoveAndFlipAfterConstr();  setFlipSynced()
   //part.shoow(part.gc.flipAfterSync,part.gc.flipAfterConstr)
   showTrucPourDebugger
-  part.shoow(part.highproba)
+  part.shoow(part.allflipRandcancel)
   part.shoow(part.vor.muis) //triggers evaluation
   part.shoow(part.gc.alreadyThere,part.gc.muis)
   //part.shoow(part.mergedMoves("stabilize").asInstanceOf[MoveC2].no.empty)
@@ -78,7 +78,11 @@ class Homogeneize() extends LDAG with Named with BranchNamed
  // part.centr.showMe
 //  part.shoow(part.bve.meetE2)
   part.shoow( part.vor.isForced)
-  part.shoow(part.inbl.muis) //;  part.inbl.showMe
+  part.shoow(part.inbl.muis)
+  part.inbl.showMe
+  part.shoow( part.deflipSync)
+  part.shoow( part.vor.deflipSync)
+  //;  part.inbl.showMe
  // part.shoow(part.doubletonImplyStreched)
   //part.shoow(part.next2strechedDoubleton)
   //part.shoow(part.hyperStretchedTripleton)
@@ -122,72 +126,40 @@ class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addR
   with addSummit with addBlobSummit with addCenter
   with addLeader  with stat  with addTunnel/*: we stopped using zone*/
 {  /** seize applique la force qui cible le  centre si et seulement si le radius est uniforme */
-
-
-/** cette force exerce une poussé des particules vers les radisu plus grand
+  /** cette force exerce une poussé des particules vers les radisu plus grand
  *  elle "prévient" les situation de campfire,
  * idealement pour etre sur de solutionner les campfire, faudrait  mettreune priorité plus forte que repulse,
  * mais cela devient trop instable.
  * pour les transition de rayon, uniformize radius crée des instabilité
  */
  val uniformizeRadius:Force= repulsePropagate(zon.zgt.muis) // | attractPropagate(zon.zlt.muis)
- // val seizeWhileUniformizingRadius:Force= seize | uniformizeRadius
- //val blockIfStable: Force =stabilizeNotEmpty(prop.proped)
-  //true for Edges separting two particles steched.
-  // val doubletonImplyStreched= dgv.streched | ~ qf.doubleton //calculé sur l'edge
- // val doubletonImplyStreched=dgv.streched  | ~  qf.doubletoon  //achanger
- // val doubletonImplyStreched=(prop.doubletonStreched & dgv.streched) | ~  qf.doubletoon  //achanger
-  //val next2DoubletonAndStreched:BoolV= existS (doubletonAndStreched)
-  //val next2strechedDoubleton:BoolV=isV& ~qf.singleton & insideS(doubletonImplyStreched)
-  //val tripletonImplyStreched= prop.tripletonStreched | ~qf.tripleton
-  //val streched2:BoolV=isV& ~qf.singleton&insideS(doubletonImplyStreched)
-  //val streched3:BoolV=isV& ~qf.singleton&insideS(tripletonImplyStreched)
-  //val streched2=qf.doubletonV & insideS(doubletonImplyStreched)
-  //val hyperStretchedTripleton=qf.tripletonV & insideS(tripletonImplyStreched)// vrai si les trois doubleton inclus ont tous dgv.streched
- // val streched=  streched2 | streched3all
-
-//  val adjustedCentr3= adjustedCentr2 | centr.centerForMovingSingleton updatedCenter
-//val seizeCenter=cibler(centr.adjustCenter4ForYMove) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
-//val seizeCenter=cibler(centr.updatedCenter) //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
 
  // val seizeCenter2:Force=restrictF(cibler(summit.centerZlt),zon.zeqOnSeed)
   val seizeCenter=ciblerFaible(ctr.ctr2) //on préfére mettre en jeu plusieurs force
 
 //  val seizeNbcc3= ciblerFaible((blobsm.nbcc3 & ~ctr.rhombusApexToRemoveFromCtr))
-  val seizeNbcc3= ciblerFaible((blobsm.nbcc3 & ~blobsm.losangeApexes)) | Force.empty(blobsm.losangeApexes) //on veut oublier zlt
+val seizeTunnel=ciblerFaible(bTn.meetV & ~blobsm.losangeApexes & ~sum.weakSummit /*& ~blobsm.losangeApexes*//*& blobsm.meet c'est  redondant par contre le tunnel empeche d'empecher*/) // | Force.empty(~blobsm.meet) //marche depuis un singleton mais aussi depuis un doubleton
+  val seizeTunnelOld=Force.ciblerNotEmptyPush(singleStreched,transfer(v(dgv.streched)))
+  val seizeNbcc3= ciblerFaible((blobsm.nbcc3 & ~blobsm.losangeApexes & ~sum.weakSummit )) //| Force.empty(blobsm.losangeApexes) //on veut oublier zlt
   val seizeLeton=ciblerFaible(  blobsm.isDoubleton | blobsm.isTripleton)
   val seizeMeetiEnotShadowed=ciblerFaible(blobsm.meetiEnotShadowed)
    val toFire=Force.empty(zon.isBLockingToFire)|Force.total.restrict(zon.zlt.muis) //exploration plus avant de zlt
   // & ~ctr.next2vor)
-
-
-  //bouger un singleton, idealement vers un tripleton. sauf que cela ne marche pas encore bien faut plus de calculs.
-  //val blockIfStreched:Force=stabilizeNotEmpty(streched)
-  //val next2mature:BoolV=exist(neighborsSym(e(qf.doubletonV& ~zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
- // val next2immature:BoolV=exist(neighborsSym(e(zon.zlt.existOnPart))) //on va obliger de remplir le centre que si y a deja murissement
- // val blockIfStreched:Force=Force.stabilize(muis&streched/*&centr.center & ~zon.zlt.existOnPart*/,~muis & ~centr.center /*& ~next2immature*/ ) //on envahis pas le non centre si c'est mur.
-  //  val blockIfStreched:Force=stabilizeNotEmpty(next2DoubletonAndStreched)
-  /** explore moves as much as possible. We have called it called "fly" because flies move without purpose, we should modulate it with probability */
- // force(introduceNewPriority(), "explore",'O', Force.total.inflechi(centr.center))
-
- //si ca se trouve j'ai pas besoin du tout de explore
-  force(introduceNewPriority(), "explore",'O', Force.total)
- // force(introduceNewPriority(), "EVseize",'z', seizeMeetiEnotShadowed)
-
   val singleStreched: BoolV = exist[E,V] (transfer(v(dgv.streched & bf.insideE))) & ~exist[E,V](transfer(v(dgv.doubleStreched & bf.insideE)))
- val seizeTunnel=ciblerFaible(bTn.meetV) //marche depuis un singleton mais aussi depuis un doubleton
 
-  val seizeTunnelOld=Force.ciblerNotEmptyPush(singleStreched,transfer(v(dgv.streched)))
-
-  val keepTunnelWide = MutKeepFlipIf(this,One(false),dgv.doubleStreched) _ ; //on peut pas détruire en meme temps deux elements
+  force(introduceNewPriority(), "explore",'O', Force.total)
+  val keepTunnelWide = MutKeepFlipIf(this,One(false),dgv.doubleStreched) _ ; //on peut pas détruire en meme temps deux elements sur un bord du tunnel wide.
   //val forbidExtremityTunnel=   CancelFlipIf(this,One(false),bTn.nbcc0 ) _// agents should not invade cells where distance is negative
   //addConstraint("exttun",'u',forbidExtremityTunnel)
   addConstraint("nmeet",'n',keepTunnelWide); //todo préciser que ca contraint juste les force de priorité inférieure a prioTunnel
-  val prioTunn=introduceNewPriority()
-  force(prioTunn, "tunnel",'t', seizeTunnel)
+  val prioTunn=introduceNewPriority();  force(prioTunn, "tunnel",'t', seizeTunnel)
+  val extremity= ~blobsm.meet & sum.isSummit2 //le complementaire des meeting points, sur le sommet. celui qu'on envisage de  vider d'office
+  shoow(extremity)
+ force(introduceNewPriority(), "noext",'e', Force.empty(extremity ))  //conserve une epaisseur de tunnel de deux
   force(introduceNewPriority(), "letonseize",'y', seizeLeton)
   force(introduceNewPriority(), "nbcc3seize",'3', seizeNbcc3)
   //force(introduceNewPriority(), "tofire",'f', toFire)
+  force(introduceNewPriority(), "norhomb",'E', Force.empty(blobsm.losangeApexes))  //conserve une epaisseur de tunnel de deux
 
   // force(introduceNewPriority(),"unif",'u',uniformizeRadius)
   force(introduceNewPriority(),"repulse",'|',dgv.repulse)//dgv.repulse moves seed away from voronoi, in fact from gcenter,

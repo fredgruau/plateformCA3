@@ -61,7 +61,7 @@ abstract class Agent[L <: Locus] extends MuStruct[L, B] with HasIsV {
   var deflipSync:BoolV=null
   // each constrsync contributes a deflipsync that reduces flipAfter Constr
   def setFlipSync()={
-    deflipSync= isV & ~isV  //on part de falseV
+    deflipSync= root4naming.myFalse//isV & ~isV  //on part de falseV
     checkInvariantSync
     //on va visiter tout les agent borné par l'agent courant, pour calculer le deflipSync de l'agent courant
     for((_,c)<-constrsync)
@@ -294,7 +294,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
 
    //val flipCancelLocal=  new scala.collection.mutable.LinkedHashMap[String,BoolV]() with Named {}
 
-   val highproba:BoolV= ~ (~ ( root4naming.addRandBit().asInstanceOf[BoolV] ))//vrai avec trois chance sur quatre
+   val allflipRandcancel:BoolV= ~ (~ ( root4naming.addRandBit().asInstanceOf[BoolV] ))//vrai avec une chance sur deux
    //val highproba:BoolV= root4naming.addRandBit().asInstanceOf[BoolV]| root4naming.addRandBit().asInstanceOf[BoolV] //vrai avec trois chance sur quatre
 
    /** applies all the constraints on the move */
@@ -337,7 +337,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L]
      //we will randomly cancel only if not obliged flip
    }
 
-   def flipRandomlyCanceled=flipAfterSync & highproba
+   def flipAfterRandCancel=flipAfterSync & allflipRandcancel
 
 
    /** stores the first letter of each move's name for all priorities, This lettre is to be displayed if move is selected

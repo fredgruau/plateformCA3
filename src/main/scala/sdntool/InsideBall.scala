@@ -23,7 +23,7 @@ class InsideBall(d:MuDist,ri:InnerRadius,v:Vor) extends MuStruct [V,B] {
   val adj = delayedL(adjacentBall(muis))
   /** under growth, inBall is valid only if adjacent to previous insideBall */
   val inBallgrow = inBall & adj
-  /** under shrink, inBall is not  valid only if adjacent to previous insideBall */
+  /** under shrink, inBall is not  valid only if adjacent to previous outsideBall */
   val ins = delayedL(insideBall(muis))
   val inBallshrink = ~inBall & ~ins & ~d.source.muis //& ~adjacentBall(inBallgrow)
   override val muis: LayerS[V, B] = new LayerS[V, B](1, "global") {

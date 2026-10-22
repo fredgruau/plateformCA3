@@ -57,8 +57,9 @@ abstract class BoundedAgV(init:String, val bounding: Aggg , val follows:Force )
   /** bounded variable must compute when they are forced by their bounding parent, because a forced move cannot be randomly canceled */
   var isForced:BoolV=null
   //on calcule isForced au plus tot, dés qu'on a yesHighestTriggered
-  override def setFliprioOfMove(): Unit = { super.setFliprioOfMove();isForced=yesHighestTriggered>fromInt(1)  }
-  override def  flipRandomlyCanceled=   cond(isForced, flipAfterSync,super.flipRandomlyCanceled)
+  override def setFliprioOfMove(): Unit = { super.setFliprioOfMove();
+    isForced=yesHighestTriggered > 1  } //si il y a une force sur vor, ca suffit pour qu'il bouge "forcé"??
+  override def  flipAfterRandCancel=   cond(isForced, flipAfterSync,super.flipAfterRandCancel)
 }
 /** voronoi is our first instance of partially  bounded agents, so we define it here, it is our first bounded agent. */
 class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/ )

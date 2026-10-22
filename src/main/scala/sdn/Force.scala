@@ -319,7 +319,7 @@ object Force{
   }
   def empty(where:BoolV)=new Force {
     override def actionV(ag: MovableAgV): MoveC = {
-      val oui=MoveC1( ag.muis  & where, e(root4naming.myFalse))
+      val oui=MoveC1( /*ag.muis  &*/ where, e(root4naming.myFalse))
       val non=MoveC1(root4naming.myFalse,neighborsSym(e(where)))
      oui//MoveC2(oui, non)
     }

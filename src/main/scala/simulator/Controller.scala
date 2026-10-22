@@ -38,7 +38,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
                  val progCA: CAloops2, val chosenDir: String, val mf: MainFrame)
   extends ToolBar() { //the controller inherits the toolBar, so that it can easily identifies which button was ckicqued, using the button's variable  name
   /** sometimes we try different random root, so as to explore different possible runs. */
-  val buttons2: util.HashMap[String, Integer] =CAloops2.getButtons()
+  val buttons2: util.HashMap[String, Integer] =CAloops2.getButtons()  //bouton pour annuler une force dynamiquement.
   var randomRoot: Int = xInt(simulParam, "simul", "@randomRoot")
   var selectedSpeed:Int=xInt(simulParam, "simul", "@selectedSpeed")
   var densityInitial: Int = xInt(simulParam, "simul", "@density")
@@ -68,6 +68,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   val densityInitNames: Array[Int] = (0 to 200).toArray
   val darknessInitNames: Array[Int] = (0 to 99 by  5).toArray
   val statInitNames: Array[String] = progCA.partial().map{case(k,v)=>lastSegment(k)+lastSegment(v)}.toArray
+  val gridNames: Array[String]=Array("30x20","30x40","60x40","60x80","120x80")
     //Circuit.theStatified
   /** check that global variables (layer and shown) do not share offset. */
   def invariantFieldOffset = {
@@ -250,6 +251,9 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   val densityInitList = new ComboBox[Int](densityInitNames) {
     selection.item = densityInitial
   }
+
+
+
     val darknessInitList = new ComboBox[Int](darknessInitNames) {
     selection.item = darkness
   }
@@ -260,7 +264,7 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
   //val randomRootField = new TextField("" + randomRoot, 2)
   contents += (globalInitList, randomInitList,densityInitList,darknessInitList,statInitList) //, randomRootField)
 
-  listenTo(globalInitList.selection, randomInitList.selection,densityInitList.selection,darknessInitList.selection,statInitList.selection)
+  listenTo(globalInitList.selection,randomInitList.selection,densityInitList.selection,darknessInitList.selection,statInitList.selection)
   //todo add a jcombo to select a number between 0 and 9
   /** When we switch mode between pause and play, the icon of the PlayPause button toggles */
   private def togglePlayPauseIcon(): Unit = {

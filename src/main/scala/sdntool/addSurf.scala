@@ -15,7 +15,7 @@ class Area(val d:MuDist) extends MuStruct [V,UI]  {
   val cardNearer=countNeighbors(d.sloplt)
   override val muis: ASTL.Strate[V, UI] with ASTLt[V, UI] with carrySysInstr  =  new LayerS[V, UI](8,"0") { // new SIlayer()
 
-    val neig: UintVe=delayedL( transfer(sym(transfer(e(pred)))))
+    val neig: UintVe=delayedL( transfer(sym(transfer(e(pred)))) ) //&  d.slopgt )
     val sum:UintV = reduce(addRedop[UI].asInstanceOf[redop[UI]],neig)
     override val next: AST[(V, UI)] = sum
   }

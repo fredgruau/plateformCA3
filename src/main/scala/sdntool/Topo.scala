@@ -99,7 +99,7 @@ class BloobVFields(val muis:BoolV with carrySysInstr, val otherThanMuis:BoolV) e
     val dense= ~(density<4)
     val tie: BoolV = ~notDense & ~dense & raand
 
-  override def showMe={ shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave,dense, notDense) ; shoowText(density,List())  }
+  override def showMe={ }//shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave,dense, notDense) ; shoowText(density,List())  }
 }
 
 /** endows an Agent vertex with the feature needed to a blob stored in a class "bf" (shortname) */
@@ -113,7 +113,8 @@ abstract class Blob extends Attributs {  val meetV:BoolV; val meetE:BoolE; val n
   def meetE2=existS[E,V](meetE)
   /** regroup all meeting points and so, all gabriel centers */
   val meet= ~ (~ delayedL(meetV | meetE2)) //double négation nécessaire pour nommer.
-override def showMe=shoow(meet)//;shoowText(nbCc,List())
+  val meetFilled= ~ (~ delayedL(meetV | meetE2)) //double négation nécessaire pour nommer.
+  override def showMe=shoow(meet)//;shoowText(nbCc,List())
 }
 
 
@@ -203,14 +204,19 @@ trait addSummit{
   val thiiismuis=muis;
   val sum=new Attributs {
     override val muis: ASTLg with carrySysInstr = thiiismuis
-    val particuleAuVoisinage=neighborsSym(e(isV)) //y a une particule au voisinage
+    val particuleAuVoisinage: BoolVe =neighborsSym(e(isV)) //y a une particule au voisinage
+    val notReallySummit=exist(dgv.slopgt) //permet de ne pas générer de tripleton pas au sommet.
+    val particuleAuVoisinageRealSummit: BoolVe =neighborsSym(e(isV & ~notReallySummit)) //y a une particule au voisinage
+    val particuleAuVoisinageNotRealSummit: BoolVe =neighborsSym(e(isV & notReallySummit)) //y a une particule au voisinage
     //on peut etre sommet tout en ayant un dgv slopt, car proche de la particule
-    val isSummit1: BoolV =  isV |
+    val maybeweakSummit= exist (~dgv.slopgt & particuleAuVoisinageNotRealSummit)
+     val isSummit1: BoolV =  isV |
       (  ~exist(dgv.slopgt & particuleAuVoisinage)  & //y a pas de particule au voisinage, plus loin
-        exist (~dgv.slopgt & particuleAuVoisinage) )//y a une particule au voisinage a la meme distance ou plus pres
+        exist (~dgv.slopgt & particuleAuVoisinageRealSummit) )//y a une particule au voisinage a la meme distance ou plus pres
     /** etends la detection des sommet un vertex plus loin, y a un summit1 au voisinage a la meme distance ou plus pres */
+    val weakSummit=maybeweakSummit & ~ notReallySummit & isSummit1
     val isSummit2=isSummit1 |  exist (~dgv.slopgt & neighborsSym(e(isSummit1)) )
-    override def showMe: Unit = {shoow(isSummit1,isSummit2)}
+    override def showMe: Unit = {shoow(isSummit1,isSummit2,particuleAuVoisinageRealSummit,notReallySummit,weakSummit)}
   }
 }
 
