@@ -538,8 +538,8 @@ abstract class Medium(val env:Env, val nbLine: Int, val nbCol: Int, val bounding
     }
 
   /**
-   * Searches a pointlines called "points" in order to collect integer when is defined is true. Integers have already been computed
-   * and are stored in a fiedl of each voronoi, called "int32"
+   * Searches a pointlines called "points" in order to collect integers when is defined is true. Integers have already been computed
+   * and are stored in a fiedl of each voronoi, called "int32Code"
    * @param isdefined
    * @param points
    * @return

@@ -30,8 +30,15 @@ import scala.util.Random
  */
 class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, initName: HashMap[String, String],val t0:Int) {
   @volatile private var currentInnerRadius: Int = -1
+  @volatile private var  lastInnerRadius: Int = -1
+  @volatile private var  lastlastInnerRadius: Int = -1
+  /** time needed to reach a small variance */
+  @volatile private var tSigmaSmall: Int= -1
+  /** time needed to reach uniformization of inner radius*/
+  @volatile private var tUniform: Int= -1
   /** current time */
   var t = -1 //incoherent value, should be initialized
+
   @volatile private var threadRunning = false
   @volatile private var stopRequested = false
 
@@ -43,9 +50,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
 
   def isThreadRunning: Boolean = threadRunning
 
-  def requestStop(): Unit = {
-    stopRequested = true
-  }
+  def requestStop(): Unit = {  stopRequested = true }
   val medium: Medium with encodeByInt with InitSelect = arch match {
     case "christal" => christal(this,nbLine, nbCol, controller.CAwidth) //default medium is christal
   }
@@ -58,11 +63,11 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   /** for now we cache only memory config */
   val cache=new dataStruc.Cache[Array[Array[Int]]]
   /** associated pannel */
-  var caPannel: CApannel = null //to be set latter due to mutual recursive definition
+  var caPannel: CApannel = null //to be set latter due to mutual recursive definitionaahjhjhhhh
+  /** usefull info on the run displayed above the CQA  */
   val iterationLabel = new Label(s"t=$t density=$density")
   //init() // this initialization is to be called after creation, because pannes cannot be set at creation
   // at runtime, when the user restarts the whole simulation from the restart button
-
 
   /**
    * The memory is set back to virgin
@@ -75,12 +80,9 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   private def initMemCA(): Unit = {
     //for (layerName: String <- controller.progCA.directInit()) {
     resetMem()
-    val toto=controller.progCA.init().keys
+    //val toto=controller.progCA.init().keys
     for (layerName: String <- controller.progCA.init().keys) { //iterate over the layers to be initalized
       /** fields layerName's components */
-      if(layerName.startsWith("llhomogeneizePartVorIsv"))
-        println("llhomogeneizePartVorIsv")
-
       val memFields2Init: Seq[Array[Int]] = memFields(layerName) //gets the memory plane
       val initNameFinal = initName.getOrElse(layerName, controller.initName(layerName)) //either it is the root layer or we find it in env
       val finalInitMethodName: String = if (initNameFinal.startsWith(  "global")) controller.globalInitList.selection.item //currently selected init method
@@ -91,8 +93,6 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
         controller.locusOfDisplayedOrDirectInitField(layerName), // locus is passed. It is used in def/center/yaxis
         controller.bitSizeDisplayedOrDirectInitField.getOrElse(layerName, 1),
         density ,inverted     ) // bitsize  is passed.
-      if(layerName.startsWith("llhomogeneizePartVorIsv"))
-        println("lldefVe")
       initMethod.init(memFields2Init.toArray)
       val u=0
     }
@@ -103,25 +103,16 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       val memFields2Init: Seq[Array[Int]] = memFields(layerName)
       for (memoryPlane <- memFields2Init) {
         val p = medium.propagate4Shift
-
         val locus = controller.locusOfDisplayedOrDirectInitField(layerName)
         if(locus == compiler.Locus.locusV && ! layerName.startsWith("lldef")) //lldef are used to detect bugs, therefore they should not undergo preparebits.
-        {
-          p.mirror(memoryPlane)
+        {   p.mirror(memoryPlane)
           p.prepareBit(memoryPlane)}
-        //miror comes before preparebit
-        /* if(locus == compiler.Locus.locusV && layerName.startsWith("lldef")){
-           val matBool = Array.ofDim[Boolean](nbLine, nbCol)
-           medium.decode(memoryPlane, matBool)
-           printMat(matBool)
-         }*/
         val testMiror = false //to be set to true if you want to test miror
         if (locus == locusV && testMiror) {
           val matBool = Array.ofDim[Boolean](nbLine, nbCol)
           medium.decode(memoryPlane, matBool)
           if (!isMiror(matBool)) throw new Exception("pas is miror dans init env")
         }
-
       }
     }
   }
@@ -137,6 +128,9 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     // System.out.println( medium.pointSet(V()).size)
     initMiror()
     t= -1
+    tSigmaSmall = -1
+    tUniform= -1
+    currentInnerRadius = -1
     cache.reset()
     forward() //we do one forward, so as to be able to show the fields.
     for (_ <- 1 until t0) //forward till to
@@ -144,11 +138,6 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     medium.resetColorTextVoronoi(controller.displayedLocus)
     computeStatistics()
     computeVoronoirColors() // for the initial painting
-    //computeVoronoirInt32() // for the initial painting
-
-    //repaint() //  cannot be called now, because the associated pannel has not been created yet.
-    //   if (controller.isPlaying) play(true)//lauch the threads
-
   }
 
   /**
@@ -158,13 +147,9 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
    */
   def memFields(fieldName: String): List[Array[Int]] =
     controller.memFieldsOffset(fieldName).map(mem(_))
-
-
   /** we create that array once and forall to decode memory bit planes */
   private val bitPlaneBuffer: Array[Array[Boolean]] = Array.ofDim[Boolean](nbLine, nbCol)
   private val bitPlaneBufferIsDef: Array[Array[Boolean]] = Array.ofDim[Boolean](nbLine, nbCol)
-
-
   /**
    * sum to the colors of locus l, the contribution of bitplanes
    * which can represent a boolean field
@@ -194,8 +179,6 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
         medium.sumBitVoronoiPartial(bitPlaneBufferIsDef,bitPlaneBuffer, points)
     }
   }
-
-
 
   /** computes the index of the text that should be displayed */
   private def sumInt32Voronoi(locus: Locus, bitPlanes: List[Array[Int]]): Unit = {
@@ -239,7 +222,12 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     }
   }
 
-
+  /**
+   *
+   * @param locus locus where statistics are gathered
+   * @param bitPlanesIsdefined bitplane where to read wether partial int is defined
+   * @return
+   */
   private def statistics(locus: Locus, bitPlanesIsdefined: List[Array[Int]]):List[Int] = {
     var result:List[Int]=List()
     assert (bitPlanesIsdefined.size == medium.locusPlane(locus).length, "number of bit planes for is defined should be locus density")
@@ -253,45 +241,67 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     result
   }
 
-  /**
-   *
-   * @param integers represehts inner radius of voronoi cell around seeds
-   * @return two integers representing the proportion of minimum radius, and the radius juste after that.
-   *         after an initial quick transition, the summ should be one.
-   *         atfer convergence, moste of the time, one of the two will be close to 1, the other one close to zero.
-   */
-  private def smallp2(integers:List[Int]): (Double, Double) ={
-    var nbsmall=0; var nbsmallp2=0
-    val min=integers.min
-    for (i <- integers) i match {
-      case x if x == min     => nbsmall += 2
-      case x if x == min + 2 => nbsmallp2 += 2
-      case x if x == min + 1 =>
-        nbsmall += 1
-        nbsmallp2 += 1
-      case _ => // autres valeurs : rien à faire
-    }
-      (nbsmall/(2*integers.size.toDouble),nbsmallp2/(2*integers.size.toDouble))
-  }
-
-  var smalls:List[Double]=List()
-  var smallp2s:List[Double]=List()
   @volatile private var lastStatText = ""
 
-  /** iterate through all the layers for which we should compute statistics */
+  /**
+   * iterate through all the layers for which we should compute statistics
+   * does some computation to check wether variance of area is reduced.
+   * @return true if radius is uniformized
+   */
   def computeStatistics():Boolean = {
-    var text=""
-    var uniformized=false
-    for (isDefined <- controller.partial.keys) { //process fiedls to be displayed, one by one we do all the stat
+    var text = ""
+    var uniformized = false
+    var sigmaSmall = false
+    /** returns a list of integers representing a partially defined Int */
+    def integers(valueDefined: String): List[Int] = {
       medium.resetColorTextVoronoi(controller.displayedLocus)
-      val valueDefined=controller.partial(isDefined)
-      val namesState = lastSegment(isDefined)+lastSegment(valueDefined)
-      val locusDefined: Locus = controller.locusOfDisplayedOrDirectInitField(isDefined)
-      val locusValue : Locus = controller.locusOfDisplayedOrDirectInitField(valueDefined)
-      assert(locusValue==locusDefined)
+      val leaderMuis = controller.partial(valueDefined)
+      val namesState = lastSegment(valueDefined) //gets the name associated
+      val locusDefined: Locus = controller.locusOfDisplayedOrDirectInitField(leaderMuis)
+      val locusValue: Locus = controller.locusOfDisplayedOrDirectInitField(valueDefined)
+      assert(locusValue == locusDefined) //tout les deux des boolV
       val bitSizeInt: Int = controller.bitSizeDisplayedOrDirectInitField.getOrElse(valueDefined, 1) //default bitsize is one, for boolean
       /** 1D array of  integers reprensenting the fields */
-      val bitPlaneIsDefined: Array[Array[Int]] = memFields(isDefined).toArray
+      val bitPlaneIsDefined: Array[Array[Int]] = memFields(leaderMuis).toArray
+      val bitPlaneValue: Array[Array[Int]] = memFields(valueDefined).toArray
+      val density = locusDefined.density * bitSizeInt
+      assert(density == bitPlaneValue.size, "the number of bit plane should be equal to the field's density")
+      val bitIsDefined: List[Array[Int]] = (0 until locusDefined.density).map(j => bitPlaneIsDefined(j)).toList
+      for (i <- (0 until bitSizeInt).reverse) { //loops over the bits of integers reverse so that bit 0 gets smallest color
+        //we decompose an int into its  bits, first bit are strongest bit
+        /** bitiof locus's arity is locus density */
+        val bitiOfValue: List[Array[Int]] = (0 until locusDefined.density).map(j => bitPlaneValue(i + j * bitSizeInt)).toList
+        //we generate an int32, but only if defined
+        sumInt32VoronoiPartial(locusDefined, bitIsDefined, bitiOfValue) //genere and int 32 bits on each voronoi if defined
+      }
+      statistics(locusDefined, bitIsDefined)
+    }
+    val (meanAr, stdNormAr, minValAr, maxValAr)=stats(integers("homogeneizePartArTotal"))  //statistics on voronoi area
+    val (meanRi, stdNormRi, minValRi, maxValRi)=stats(integers("homogeneizePartRiMuis"))   //statistics on inner radius
+    val efficacity=minValAr/maxValAr
+    text += " Area:" +f"stdev:$stdNormAr%.2f"+" moy:"+ f"$meanAr%.1f" +  " " +minValAr+"<"+maxValAr+f"eff$efficacity%.2f"
+    text+=" Ri: "+f"stdev: $stdNormRi%.2f"+" moy:"+ f"$meanRi%.1f "+minValRi+"<"+maxValRi
+      if(stdNormAr<0.2 && tSigmaSmall<0 /*&& stdNormRi <0.2 */&& t>50)    tSigmaSmall=t;
+    uniformized=(minValRi==maxValRi)
+    if (uniformized)       currentInnerRadius = minValRi
+     lastStatText = text
+    uniformized
+      }
+
+  def computeStatisticsOld():Boolean = {
+    var text=""
+    var uniformized=false
+    var sigmaSmall=false
+    for (valueDefined: String <- controller.partial.keys) { //process fiedls to be displayed, one by one we do all the stat
+      medium.resetColorTextVoronoi(controller.displayedLocus)
+      val leaderMuis=controller.partial(valueDefined)  //gets the booV where partial value is defined
+       val namesState = lastSegment(valueDefined) //gets the name associated
+      val locusDefined: Locus = controller.locusOfDisplayedOrDirectInitField(leaderMuis)
+      val locusValue : Locus = controller.locusOfDisplayedOrDirectInitField(valueDefined)
+      assert(locusValue==locusDefined)  //tout les deux des boolV
+      val bitSizeInt: Int = controller.bitSizeDisplayedOrDirectInitField.getOrElse(valueDefined, 1) //default bitsize is one, for boolean
+      /** 1D array of  integers reprensenting the fields */
+      val bitPlaneIsDefined: Array[Array[Int]] = memFields(leaderMuis).toArray
       val bitPlaneValue: Array[Array[Int]] = memFields(valueDefined).toArray
       val density = locusDefined.density * bitSizeInt
       /** if we display an int, then color associated to the field shoudl be halved */
@@ -311,37 +321,37 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       if(integers.nonEmpty)
       {
         val (mean, stdNorm, minVal, maxVal)=stats(integers)
-        text += " "+namesState+":" +f"$stdNorm%.2f"+"/"+ f"$mean%.1f" +  " " +minVal+"<"+maxVal
-      //  if(lastSegment(isDefined)=="Meet") { //global assesmentt
+        if(namesState.startsWith("Total")) //il s'agit de l'aire de la case voronoi
+        { val efficacity=minVal/maxVal
+          text += " Area:" +f"stdev$stdNorm%.2f"+" moy:"+ f"$mean%.1f" +  " " +minVal+"<"+maxVal+f"eff$efficacity%.2f"
+          if(stdNorm<0.2 && tSigmaSmall<0 && t>50)
+          { tSigmaSmall=t;
+            //println(f"density=$density t=$t stdNorm=$stdNorm%.8f")
+          }
+        }
+
+        else if(namesState.startsWith("Muis")) //il s'agit du rayon  de la case voronoi
+      //  if(lastSegment(leaderMuis)=="Meet") { //global assesmentt
           //uniformized=(stdNorm *10 < 2 && stdNorm > 0.01  )
+        { text+=" Ri: "+f"stdev$stdNorm%.2f"+" moy:"+ f"$mean%.1f"+minVal+"<"+maxVal
           uniformized=(minVal==maxVal)
+        }
         if (uniformized)
           currentInnerRadius = minVal
        //a present je calcule deux courbes: small, smallp2
-       val (s,sp2)=smallp2(integers)
-        smalls=s::smalls
-        smallp2s=sp2::smallp2s
-        //println(s+"   "+sp2)
-        val first=smalls.take(50)
-        val moy=first.sum/first.size.toDouble
+       //val (s,sp2)=smallp2(integers)        smalls=s::smalls        smallp2s=sp2::smallp2s        val first=smalls.take(50)        val moy=first.sum/first.size.toDouble
        // System.out.println( f"$s%.2f"+"   "+f"$moy%.2f")
       }
-      lastStatText = text// caPannel.updateStat(text) //on veut deux décimale sur standard deviation
+      lastStatText = text// //    caPannel.updateStat(text) //on veut deux décimale sur standard deviation
 
     }
-
     uniformized // the inner radius is the same everywhere
     //at this stage, the int32 where is defined is true, are set we can collect the values in a list, and then compute statistics
-
-
   }
 
   def stopAndWait(): Unit = {
-
     stopRequested = true
-
     val thread = workerThread
-
     if (thread != null && thread != Thread.currentThread()) {
       thread.join()
     }
@@ -359,20 +369,19 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
 
   /** contains a thread which iterates the CA, while not asked to pause */
   def play(fwd: Boolean): Unit = synchronized {
+    /** after this time, we stop the thread automatically */
+      var missedUniformed=0;  var missedSigmaSmall=0;  var nbtrial=0;  var sommeTuniform=0;  var sommeTsigmasmall=0
+    def timeout=t>nbCol*nbLine*5
+    def sigmaSmallfound=tSigmaSmall!= -1
 
-    if (isThreadRunning)
-      return
-
+    if (isThreadRunning)    return
     stopRequested = false
     threadRunning = true
-
     val thread = new Thread {
-
-
       var timeSinceNonalive = 0
       var timeWhileRiuniformized=0
-      def converged(): Boolean = timeSinceNonalive > 1000
-      def convergedNew(): Boolean = (timeWhileRiuniformized >= 100000)| t>280000
+      def innerRadiusUniformized= timeWhileRiuniformized >= 20  //je met 20 au lieu de 100
+      def enoughRelaxing: Boolean = (sigmaSmallfound  && innerRadiusUniformized  ) | timeout
       override def run(): Unit = {
         bugFound = false
         noneAlive = false
@@ -380,11 +389,13 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
         var convergenceSansRiUniformized = false
         var riUniformized = false
         try {
+          tSigmaSmall= -1
           while ( //itére sur les densité
             !stopRequested &&
               !bugFound &&
               !convergenceSansRiUniformized &&
-              ((density <= densityMax(nbCol, nbLine) && fwd) || !fwd)
+              ((density <= densityMax(nbCol, nbLine) && fwd) || !fwd) &&
+              (lastlastInnerRadius!=0 || density< (nbCol*nbLine)/20) //on peut avoir le radius qui vaut 0 a cause d'un modulo, ici, on veut le rayon O pour de vrai, pas modulo
           ) {
 2
             var nbIter = 0
@@ -394,14 +405,15 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
          * que toutes les 16 itérations.
          */
             val displayEvery =   math.max(2, nbLoops)
-            val goesToConverged=nbLoops>= 128
-            val iterateThroughDensity= (nbLoops>= 256) |true//for the moment we iterate allways
+            val goesToConverged= false && nbLoops>= 512 //we never go directly to converged, we want to follow what's going on.
+            val iterateThroughDensity= (nbLoops>= 1024 | true)//for the moment we iterate allways
+
             //itére un paquet de forward
             while (
               !stopRequested &&
                 !bugFound &&
                 !convergenceSansRiUniformized &&
-                !convergedNew() &&
+                !enoughRelaxing &&
                 (nbIter < nbLoops || goesToConverged)
             ) {
               if (fwd) { riUniformized = forward()
@@ -409,55 +421,37 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
                 else     timeSinceNonalive = 0
                 if(riUniformized) timeWhileRiuniformized+=1
                 else timeWhileRiuniformized=0
-
+                if(timeWhileRiuniformized >= 20 && tUniform== -1 )
+                { tUniform=t-timeWhileRiuniformized
+                }
               } else { backward(1)   }
               nbIter += 1
               iterationsSinceDisplay += 1
             }
-            /*
-             * Affichage beaucoup moins fréquent.
-             */
-            if (iterationsSinceDisplay >= displayEvery) {
-              repaint()
-              sleep(50)
-              iterationsSinceDisplay = 0
-            }
-            if (
-              fwd &&
-                convergedNew() &&
-                !bugFound &&
-                !stopRequested
-            ) {
-              if (/*riUniformized &&*/ iterateThroughDensity) {
-                val convergenceIteration = t - 100
-                ConvergenceLogger.append(
-                  nbLine,
-                  nbCol,
-                  density,
-                  convergenceIteration,
-                  currentInnerRadius,
-                  controller.randomRoot
-                )
+            if (iterationsSinceDisplay >= displayEvery) {repaint(); sleep(20); iterationsSinceDisplay = 0   } //Affichage beaucoup moins fréquent.
+            if ( fwd &&  enoughRelaxing &&  !bugFound && !stopRequested )
+            { if ( iterateThroughDensity) {
+                val convergenceIteration = t - 20
+                ConvergenceLogger.append( nbLine,  nbCol,   density, tUniform /*convergenceIteration*/, currentInnerRadius, controller.randomRoot, tSigmaSmall)
+              lastlastInnerRadius=lastInnerRadius
+               lastInnerRadius=currentInnerRadius
 
-                println(
-                  s"CONVERGENCE density=$density " +
-                    s"iterations=$convergenceIteration " +
-                    s"innerRadius=$currentInnerRadius"
-                )
+              nbtrial+=1
+              if(tUniform== -1)missedUniformed+=1 else sommeTuniform+= tUniform-20
+              if(tSigmaSmall== -1)missedSigmaSmall+=1 else sommeTsigmasmall+=tSigmaSmall
+              println("density" + density +" tUniformMoy:" +  sommeTuniform/(nbtrial-missedUniformed) + " missedUniform:"+missedUniformed+
+                " tSigmasmallMoy:" +  sommeTsigmasmall/(nbtrial-missedSigmaSmall) + " missedSigmalsmall:"+missedSigmaSmall
+              )
+
                 density += unitIncrease
-//controller.randomRoot+=1
-                repaint()
-                sleep(50)
-                noneAlive = false
-                timeSinceNonalive = 0
-                timeWhileRiuniformized=0
+
+                //controller.randomRoot+=1
+                repaint();  sleep (20)
+                noneAlive = false; timeSinceNonalive = 0;    timeWhileRiuniformized=0
                 init()
               } else {
                 convergenceSansRiUniformized = true
-                println(
-                  "STOP: convergence sans RI uniformisé, ou bien parcequ'on veut voir" +
-                    "density=" + density +
-                    " t=" + t
+                println( "STOP: convergence sans RI uniformisé, ou bien parcequ'on veut voir" +  "density=" + density +   " t=" + t
                 )
               }
             }
@@ -466,25 +460,25 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
         } finally {
           threadRunning = false
           workerThread = null
-
-          println(
-            "END PLAY THREAD = " +
-              Thread.currentThread().getName
+          println("END PLAY THREAD = " +    Thread.currentThread().getName
           )
         }
       }
     }
-
     workerThread = thread
     thread.start()
   }
-
   var bugs: mutable.Buffer[String] = mutable.Buffer.empty
   var isalives: mutable.Buffer[String] = mutable.Buffer.empty
   /** contains locus of bug */
   var lociBug:Set[Locus]=immutable.HashSet()
   var lociLive:Set[Locus]=immutable.HashSet()
-  /** does one CA iteration on the memory */
+
+  /**
+   * does one CA iteration on the memory
+   * @return returns true if radius uniformized
+   *
+   */
   def forward(): Boolean = caLock.synchronized {
     //  controller.progCA.anchorFieldInMem(mem) //todo a refaire seulement si meme change (quand on display ou qu'on display plus)
     val conteneur = controller.progCA.theLoops(medium.propagate4Shift, mem) //we retrieve wether there was a bug
@@ -493,7 +487,7 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
     bugFound= bugs.nonEmpty
     noneAlive = isalives.isEmpty
     t += 1
-    val converged =computeStatistics()
+    val uniformizedRi =computeStatistics()
     if (bugs.nonEmpty) {  //we set the locus of bugs
       for(bugName<-bugs) {
         val  locusBug=controller.progCA.fieldLocus.asScala(bugName)
@@ -514,11 +508,9 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
       controller.checkNewLocus(lociBug) ; controller.checkNewLocus(lociLive) //marche meme si y a plusieurs bug différent détecté en meme temps.
       val i=0
     }*/
-
-
    // iterationLabel.text = s"t=$t density=$density" //todo je fais cela ou alors?
    cache.push(deepCopyArray( mem))
-    converged
+    uniformizedRi
   }
 
   /** @param nbIter number of iteration steps
@@ -627,13 +619,18 @@ object ConvergenceLogger {
   private val file =
     new File("results/convergence.csv")
   println("CSV = " + file.getAbsolutePath)
+
+  def fmt(value: Any): String =
+    if (value == -1) " " else value.toString
+
   def append(
               nbLine: Int,
               nbCol: Int,
               density: Int,
               iterations: Int,
               innerRadius: Int,
-              randomRoot: Int
+              randomRoot: Int,
+              tSmallSigma:Int
             ): Unit = synchronized {
 
     // crée le répertoire results s'il n'existe pas
@@ -651,11 +648,11 @@ object ConvergenceLogger {
 
       if (writeHeader)
         out.println(
-          "nbLine,nbCol,density,iterations,innerRadius,RandomRoot"
+          "nbLine,nbCol,density,tUniform,innerRadius,RandomRoot,tSmallSigma"
         )
 
       out.println(
-        s"$nbLine,$nbCol,$density,$iterations,$innerRadius, $randomRoot"
+        s"$nbLine,$nbCol,$density,${fmt(iterations)},$innerRadius, $randomRoot, ${fmt(tSmallSigma)}"
       )
 
     } finally {

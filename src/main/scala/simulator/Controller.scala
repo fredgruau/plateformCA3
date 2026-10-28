@@ -224,9 +224,9 @@ class Controller(val nameCA: String, var globalInit: Node, val globalInitName: S
 
   val speedSlider = new Slider {
     min = 0
-    max = 8
+    max = 10
     value = selectedSpeed
-    majorTickSpacing = 6
+    majorTickSpacing = 4
     minorTickSpacing = 2
     paintTicks = true
     paintLabels = true

@@ -50,7 +50,9 @@ class Homogeneize() extends LDAG with Named with BranchNamed
 
    */
   // part.ar.showMe
- part.shoowText(part.ar.muis,List())
+ part.shot(part.ar.muis)
+  part.ar.showMe()
+
   part.shoow(part.lead.muis)
   part.shoow(part.singleStreched)
   part.bTn.showMe
@@ -96,9 +98,13 @@ class Homogeneize() extends LDAG with Named with BranchNamed
 class Seed extends MovableAg[V]("global") with MovableAgV  with addBloobV with blobConstrain with addQpointFields with QpointConstrain
   with EmptyBag[sdn.MuStruct[_<: Locus,_<:Ring]]
 
-/** computes the average and variance of a partial SintV defined by a pair ( SintV ;BoolV )*/
-trait stat{ self:Homogen with addLeader with addRadius=> staat(lead.muis, ri.muis)// staat(bve.meet, d.muis);;staat(bve.meetV, d.muis);  staat(bve.meetE2, d.muis)
-   }
+
+  /** computes the average and variance of a partial SintV defined by a pair ( SintV ;BoolV )*/
+  trait stat{ self:Homogen with addLeader with addRadius with addSurf=>
+    staat(lead.muis, ar.total)// staat(bve.meet, d.muis);;staat(bve.meetV, d.muis);  staat(bve.meetE2, d.muis)
+    staat(lead.muis, ri.muis)
+  }
+
 
 
 /**adds distance, gabriel center, voronoi distance to voronoi, and then finally repulsive force from voronoi*/
@@ -149,17 +155,17 @@ val seizeTunnel=ciblerFaible(bTn.meetV & ~blobsm.losangeApexes & ~sum.weakSummit
 
   force(introduceNewPriority(), "explore",'O', Force.total)
   val keepTunnelWide = MutKeepFlipIf(this,One(false),dgv.doubleStreched) _ ; //on peut pas détruire en meme temps deux elements sur un bord du tunnel wide.
-  //val forbidExtremityTunnel=   CancelFlipIf(this,One(false),bTn.nbcc0 ) _// agents should not invade cells where distance is negative
+  //val forbidExtremityTunnel=   CancelFlipIf(this,One(false),bTn.nbcc0 ) _// agents should not invade extremity of tunnels, to keep tunnels wide
   //addConstraint("exttun",'u',forbidExtremityTunnel)
   addConstraint("nmeet",'n',keepTunnelWide); //todo préciser que ca contraint juste les force de priorité inférieure a prioTunnel
   val prioTunn=introduceNewPriority();  force(prioTunn, "tunnel",'t', seizeTunnel)
   val extremity= ~blobsm.meet & sum.isSummit2 //le complementaire des meeting points, sur le sommet. celui qu'on envisage de  vider d'office
   shoow(extremity)
- force(introduceNewPriority(), "noext",'e', Force.empty(extremity ))  //conserve une epaisseur de tunnel de deux
+ //force(introduceNewPriority(), "noext",'e', Force.empty(extremity ))  //conserve une epaisseur de tunnel de deux. Il s'agit de forbidExtremityTunnel implementé comme une contrainte
   force(introduceNewPriority(), "letonseize",'y', seizeLeton)
   force(introduceNewPriority(), "nbcc3seize",'3', seizeNbcc3)
-  //force(introduceNewPriority(), "tofire",'f', toFire)
-  force(introduceNewPriority(), "norhomb",'E', Force.empty(blobsm.losangeApexes))  //conserve une epaisseur de tunnel de deux
+  //force(introduceNewPriority(), "tofire",'f', toFire) //pousse vers zlt
+  //force(introduceNewPriority(), "norhomb",'E', Force.empty(blobsm.losangeApexes))  //evite "d'orienter" les losanges
 
   // force(introduceNewPriority(),"unif",'u',uniformizeRadius)
   force(introduceNewPriority(),"repulse",'|',dgv.repulse)//dgv.repulse moves seed away from voronoi, in fact from gcenter,

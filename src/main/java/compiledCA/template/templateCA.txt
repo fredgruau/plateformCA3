@@ -44,6 +44,7 @@ ArrayList<String> livesIf=new ArrayList<>();
 @Override public HashMap<String, List<String>> textOfFields() {HashMap<String, List<String>> map = new HashMap<>();
 {{FIELDLABEL}}  return (map); }
 
+//collect statistics
 @Override  public HashMap<String, String> partial() {HashMap<String, String> map = new HashMap<>();
   {{FIELDSTAT}}
   return (map);

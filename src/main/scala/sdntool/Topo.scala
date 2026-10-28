@@ -10,7 +10,7 @@ package sdn
 
 import compiler.AST.{Call1, Call2, Fundef1, Fundef2, Layer, pL}
 import compiler.ASTB.Intof
-import compiler.ASTBfun.{andLBtoR, eqUI2}
+import compiler.ASTBfun.{addRedop, andLBtoR, eqUI2, redop}
 import compiler.ASTLfun.{f, _}
 import compiler.ASTL._
 import compiler.SpatialType._
@@ -493,6 +493,13 @@ trait  QpointConstrain extends addQpointFields  with rando {
   def existize(feature:BoolV)={
     val muisfeature=muis & feature
     muisfeature | (muis & exist(neighborsSym(e(muisfeature))))
+  }
+ /** given a an integer feature, makes the sum on quasiparticle. */
+  def sumize(feature:UintV):UintV={
+    val zeroifiedFeature:UintV=cond(muis,feature,ASTLfun.fromInt(0)) //met 0 si on n'est pas sur la qparticule
+    val zeroifiedFeatureNeig= transfer(sym(transfer(e(zeroifiedFeature))))
+    val suuuum:UintV=reduce(addRedop[UI].asInstanceOf[redop[UI]],zeroifiedFeatureNeig) //y en a 6 bit, faut donc ajouter des bits!
+    suuuum + zeroifiedFeature
   }
 
   /** will choose neighbor with higest flip priority in fp, does not depends on flip  */

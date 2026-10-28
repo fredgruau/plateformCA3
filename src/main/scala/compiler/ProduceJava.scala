@@ -506,7 +506,7 @@ if (!call.exps(0).isInstanceOf[Read[_]])
           val isDef =call.exps(0).symbolsIncludingLayers.head //le premier est un boolean
           val values=radicalOfVar(call.exps(1).symbolsIncludingLayers.head)
          // val List(isDef,values)=twoNames.distinct
-           theStatified += (isDef -> values) //sideeffect, update theDisplayed. display has allways a single arg which is the field to be displayed
+           theStatified += (values -> isDef) //sideeffect, update theDisplayed. display has allways a single arg which is the field to be displayed
           callCode += List(isDef,values).mkString(",") //in fact we could supress calls to show. We still leave them, just so that we can check those in the compiled java.
 
         case "copy" => assert(paramsD.size == 1 && paramsR.size == 1) //we copy bit by bit, hence int by int.
