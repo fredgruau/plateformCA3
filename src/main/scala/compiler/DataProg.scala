@@ -1084,13 +1084,13 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
     if (!isLeafCaLoop) {
       val (muI, tSymbScalar) = muInstrMain(dagis) //computes the muI associated to a callProc and direct affectation, and the modified symbolTable.
       return new DataProg(DagInstr(muI.reverse),
-        funs.map { case (k, v) => k -> { System.out.println("premierdebug "+k);
+        funs.map { case (k, v) => k -> { /*System.out.println("premierdebug "+k);
           if(k.startsWith("redsandb.vf_1_1") )
             System.out.println("redsandb.vf_1_1")
           if(k.startsWith("_fun39") )
             System.out.println("_fun39")
           if(k.startsWith("redsorb.ef_1_1") )
-            System.out.println("redsorb.ef_1_1")
+            System.out.println("redsorb.ef_1_1")*/
           v.unfoldSpace(m)} },
         tSymbScalar, paramD.flatMap(deploySpace(_)), paramR.flatMap(deploySpace(_)), HashMap.empty) //no coalesced registers we put empty to enforce schedule matters
     }

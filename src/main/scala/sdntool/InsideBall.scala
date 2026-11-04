@@ -4,7 +4,7 @@ import compiler.ASTL.{anticlock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, ltSI}
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf}
 import compiler.{AST, ASTBfun, B, Locus, Ring, V}
-import progOfStaticAgent.{Homogen, Seed, SpreadOnSummit}
+import progOfStaticAgent.{Homogen,  HomogenCVG}
 import progOfmacros.Comm.{adjacentBall, insideBall}
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.exist
@@ -35,14 +35,14 @@ class InsideBall(d:MuDist,ri:InnerRadius,v:Vor) extends MuStruct [V,B] {
     /** annule le mouvement si stable, donc seul no est défini */
   }
   def showMe = {
-    shoow(inBallgrow, inBallshrink, adj)
-    shot(rmd)
+    //shoow(inBallgrow, inBallshrink, adj)
+    //shot(rmd)
   }
 }
 
 /** ajoute la capacité de calculer l'inside ball */
 trait addInsideBall {
-  self: SpreadOnSummit =>
+  self: HomogenCVG =>
   val inbl=new InsideBall(d,ri,vor);
   //show(d); les show doivent etre fait dans le main
 }

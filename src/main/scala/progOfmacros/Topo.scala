@@ -9,7 +9,7 @@ import compiler.Circuit.hexagon
 import compiler._
 import progOfmacros.RedT.{cac, cacEndomorph}
 
-/** contains macro computing information used to perseved topological invariants, such as nbcc, or quasiPoint */
+/** contains macro computing information used to preserve topological invariants, such as nbcc, or quasiPoint */
 object Topo {
   /** From a booleV, computes the number of true connected components, can be reused for BlobE, BlobVe */
   val nbccDef: Fundef1[(T[V, E], B), (V, UI)] = {

@@ -5,11 +5,11 @@ import compiler.ASTLfun.{cond, e, ltSI, v}
 import compiler.ASTLt.ConstLayer
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf}
 import compiler.{AST, ASTBfun, ASTLt, B, E, Locus, Ring, V}
-import progOfStaticAgent.{Homogen, Seed, SpreadOnSummit}
+import progOfStaticAgent.{Homogen,  HomogenCVG}
 import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.{exist, existS, inside}
-import sdn.{Attributs, BloobV, BloobVFields, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, QpointConstrain, addGcenter, addVor, carrySysInstr}
+import sdn.{Attributs,  Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct,  addGcenter, addVor, carrySysInstr}
 /**
  *
  * @param d distance to particle
@@ -44,8 +44,8 @@ class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter wi
 
     override val next: BoolV = (startE | startV | (exist(p.d.slopgt & neighborsSym(e(pred)) &
       //avoid propagation to start in one voronoi cell and propagate to an adjacent voronoi cell,
-      ~transfer(v(p.vor.baba.meetEfilled ))))   &  //by crossing a thick voronoi wall
-    ~ (p.vor.baba.meetV & p.vor.isV))// by crossing a thin voronoi wall, which is voronoi and nbcc2
+      ~transfer(v(p.vor.bf.bv.meetEfilled ))))   &  //by crossing a thick voronoi wall
+    ~ (p.vor.bf.bv.meetV & p.vor.isV))// by crossing a thin voronoi wall, which is voronoi and nbcc2
     //import compiler.ASTLfun.fromBool //pour avoir la conversion implicite de boolean vers boolVe
     /** annule le mouvement si stable, donc seul no est défini */
   }
@@ -61,25 +61,27 @@ class Zone(p:MovableAgV with addRect with addDist with addVor with addGcenter wi
  *  such as the inner radius being temporarily not the same */
 trait addRect{
   val rectLayer=new ConstLayer[V, B](1, "border")
-  val rect:BoolV=rectLayer&rectLayer //manip qui a l'air débile, c'est pour avoir un nom sous forme d'un path.
+  /**  l'air débile, c'est pour avoir un nom sous forme d'un path.*/
+  val rect:BoolV=rectLayer&rectLayer
 }
+
 /** signal envoyé vers là ou le rayon est plus petit */
 trait addZoneLt {
-  self: SpreadOnSummit => //adds a leader to a seed ,
+  self: HomogenCVG with addRect with addZone=> //adds a leader to a seed ,
   val zlt=new Zone(this,ri.slopgt);
    //show(d); les show doivent etre fait dans le main
 }
 
 /** signal envoyé vers là ou le rayon est plus grand */
 trait addZoneGt {
-  self: SpreadOnSummit => //adds a leader to a seed ,
+  self: HomogenCVG  with addRect with addZone=> //adds a leader to a seed ,
   val zgt=new Zone(this,ri.sloplt);
   //show(d); les show doivent etre fait dans le main
 }
 
 /** ajoute les zone, plus  calcul qui les fait intervenir les deux  */
 trait addZone {
-  self: MovableAgV with addRect with addDist with addVor with addGcenter with QpointConstrain with addRadius =>
+  self: Qpoint with addRect with addDist with addVor with addGcenter  with addRadius =>
   val me=this
   val zon = new Attributs() {
     override val muis: ASTLg with carrySysInstr = me.muis

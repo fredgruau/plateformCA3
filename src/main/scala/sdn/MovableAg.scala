@@ -13,6 +13,7 @@ import dataStruc.DagNode.EmptyBag
 import progOfmacros.Comm.neighborsSym
 import progOfmacros.Wrapper.{borderS, exist, existS, unary2Bin, xorBin}
 import sdn.Force.cibler
+import sdn.Globals.root4naming
 import sdn.{Compar, ForceAg, carrySysInstr}
 import sdn.Util.{addLt, addSym, randUintV}
 import sdntool.addDist
@@ -39,21 +40,18 @@ trait UtilVagent extends BranchNamed{
 }
 
 
-/** defines the methods in vef[V], adds UtilVagent, which mixin some further usefull field*/
-trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with addBlobVfields{
+/** defines the methods in vef[V], adds UtilVagent, which mixin some further usefull field, rando is used to get a random bit, for vote*/
+trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with sdntool.addBlobVfields with rando {  //probably another rand
   self:MovableAg[V] =>
   override val isV: BoolV = muis
-  /** well known voting rule */
-  def vote()= cibler(bf.dense | bf.tie)
-  //override val NisV=  ~isV
+  /** well known voting rule we put "lazy" to avoir waising a rand, if there isn't a vote*/
+  lazy val vote= {val rand= root4naming.addRandBit().asInstanceOf[BoolV]
+    cibler(bf.dense | bf.density3 & rand)}
   override def flip2next=  {
    //println("totototototototo");    println("totototototototo")
-    val f=flipAfterRandCancel
-     f ^ muis
-  }//delayedL(xorBin(flipRandomlyCanceled,muis) )//delayed is necessary in order to get the very last update of flip
+    val f=flipAfterSync;  f ^ muis
+  }
 }
-
-
 
 /**  code  common to Movable agents which stores a support
  * and can directly apply the move on this support in order to modify it */
@@ -70,7 +68,6 @@ abstract  class MovableAg[L <: Locus](init:String)(implicit m: repr[L]) extends 
     moves.map(_.values.map(_.move2flip(isV)).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
   }
 
-
     override def  allBug: UintV ={
       moves.map(_.values.map(_.bug).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
     }
@@ -78,12 +75,8 @@ abstract  class MovableAg[L <: Locus](init:String)(implicit m: repr[L]) extends 
     /** nombre de bit pour coder une prioritéé en binaire a partir de nbit en unaire*/
 
 
-  /** a random priority is needed to help finalize tournament, in case of equality */
-  override val prioRand= {
-    /** c'est plus sérieux avec deux bits de random priority */
-    val x=randUintV(nbitPrioRand)
-    (x ).asInstanceOf[UintV]
-  } //sans "asInstance" il gueule non compatibilité de override entre addLt e UintVx
+  /** a random priority is needed to help finalize tournament, in case of equality c'est plus sérieux avec deux bits de random priority*/
+  override val prioRand=  randUintV(nbitPrioRand).asInstanceOf[UintV]   //sans "asInstance" il gueule non compatibilité de override entre addLt e UintVx
 
   /** Movable Agent's support. It is memorized in a layer a movable agent is a mustruct, so it is  called muis. */
   override val muis=new Layer[(L, B)](1, init) with ASTLt[L,B]  with Stratify [L,B] with carrySysInstr   {

@@ -5,6 +5,7 @@ import compiler.Locus.locusV
 import compiler.{Locus, V}
 import dataStruc.Util.{deepCopyArray, isEqualto, isMiror, lastSegment, printMat, stats}
 import simulator.CAtype.pointLines
+import simulator.Env.{pauseDuration, timeTresholdRiuniformized}
 import simulator.Medium.christal
 import simulator.Util.{copyBasic, toInts}
 import triangulation.Utility.halve
@@ -18,7 +19,10 @@ import scala.collection.immutable.{HashMap, HashSet}
 import scala.collection.{immutable, mutable}
 import scala.swing._
 import scala.util.Random
-
+object Env{
+ val timeTresholdRiuniformized=100
+  val pauseDuration=20
+}
 /**
  * contains all the information needed to run a given CA.
  *
@@ -370,7 +374,8 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
   /** contains a thread which iterates the CA, while not asked to pause */
   def play(fwd: Boolean): Unit = synchronized {
     /** after this time, we stop the thread automatically */
-      var missedUniformed=0;  var missedSigmaSmall=0;  var nbtrial=0;  var sommeTuniform=0;  var sommeTsigmasmall=0
+      var missedUniformed=0;  var missedSigmaSmall=0;
+    var nbtrial=0;  var sommeTuniform=0;  var sommeTsigmasmall=0
     def timeout=t>nbCol*nbLine*5
     def sigmaSmallfound=tSigmaSmall!= -1
 
@@ -380,7 +385,7 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
     val thread = new Thread {
       var timeSinceNonalive = 0
       var timeWhileRiuniformized=0
-      def innerRadiusUniformized= timeWhileRiuniformized >= 20  //je met 20 au lieu de 100
+      def innerRadiusUniformized= timeWhileRiuniformized >= timeTresholdRiuniformized
       def enoughRelaxing: Boolean = (sigmaSmallfound  && innerRadiusUniformized  ) | timeout
       override def run(): Unit = {
         bugFound = false
@@ -421,32 +426,28 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
                 else     timeSinceNonalive = 0
                 if(riUniformized) timeWhileRiuniformized+=1
                 else timeWhileRiuniformized=0
-                if(timeWhileRiuniformized >= 20 && tUniform== -1 )
+                if(timeWhileRiuniformized >= timeTresholdRiuniformized && tUniform== -1 )
                 { tUniform=t-timeWhileRiuniformized
                 }
               } else { backward(1)   }
               nbIter += 1
               iterationsSinceDisplay += 1
             }
-            if (iterationsSinceDisplay >= displayEvery) {repaint(); sleep(20); iterationsSinceDisplay = 0   } //Affichage beaucoup moins fréquent.
+            if (iterationsSinceDisplay >= displayEvery) {repaint(); sleep(pauseDuration); iterationsSinceDisplay = 0   } //Affichage beaucoup moins fréquent.
             if ( fwd &&  enoughRelaxing &&  !bugFound && !stopRequested )
             { if ( iterateThroughDensity) {
-                val convergenceIteration = t - 20
+                val convergenceIteration = t - timeTresholdRiuniformized
                 ConvergenceLogger.append( nbLine,  nbCol,   density, tUniform /*convergenceIteration*/, currentInnerRadius, controller.randomRoot, tSigmaSmall)
               lastlastInnerRadius=lastInnerRadius
                lastInnerRadius=currentInnerRadius
 
-              nbtrial+=1
-              if(tUniform== -1)missedUniformed+=1 else sommeTuniform+= tUniform-20
-              if(tSigmaSmall== -1)missedSigmaSmall+=1 else sommeTsigmasmall+=tSigmaSmall
-              println("density" + density +" tUniformMoy:" +  sommeTuniform/(nbtrial-missedUniformed) + " missedUniform:"+missedUniformed+
-                " tSigmasmallMoy:" +  sommeTsigmasmall/(nbtrial-missedSigmaSmall) + " missedSigmalsmall:"+missedSigmaSmall
-              )
-
+              nbtrial +=1
+              if(tUniform== -1) missedUniformed+=1 else sommeTuniform+= tUniform-timeTresholdRiuniformized
+              if(tSigmaSmall== -1) missedSigmaSmall+=1 else sommeTsigmasmall+=tSigmaSmall
+            println("density" + density +" tUniformMoy:" +  sommeTuniform/(1+nbtrial-missedUniformed) + " missedUniform:"+missedUniformed+ " tSigmasmallMoy:" +  sommeTsigmasmall/(1+nbtrial-missedSigmaSmall) + " missedSigmalsmall:"+missedSigmaSmall              )
                 density += unitIncrease
-
                 //controller.randomRoot+=1
-                repaint();  sleep (20)
+                repaint();  sleep (pauseDuration)
                 noneAlive = false; timeSinceNonalive = 0;    timeWhileRiuniformized=0
                 init()
               } else {

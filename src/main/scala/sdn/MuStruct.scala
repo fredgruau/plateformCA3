@@ -8,7 +8,7 @@ import compiler.{AST, ASTBt, ASTL, ASTLfun, ASTLt, B, CallProc, Circuit, I, Locu
 import dataStruc.{BranchNamed, DagNode, Named}
 import dataStruc.DagNode.EmptyBag
 import sdn.ForceAg
-import sdn.ForceAg.{Agg, Aggg}
+import sdn.ForceAg.{AgForced, Ag}
 import sdn.MuStruct.allMuStruct
 
 import scala.Predef.->
@@ -72,8 +72,6 @@ val muis: ASTL.Strate[L,R] with ASTLt[L,R] with carrySysInstr
   def locus: Locus =muis.locus//todo, on pourrait calculer cela directement
 }
 
-
-
 trait muEmptyBag extends EmptyBag[MuStruct[_ <: Locus, _ <: Ring]]
 /** Bound agent need not layers */
 //abstract class BoundAg[L<:Locus] extends Agent[L]
@@ -81,7 +79,8 @@ trait muEmptyBag extends EmptyBag[MuStruct[_ <: Locus, _ <: Ring]]
 
 object MuStruct{
    var allMuStruct:mutable.ArrayDeque[MuStruct[_<:Locus,_<:Ring]]=mutable.ArrayDeque()
-  /** we can display mustruct only after DataProg has been built and names have been given using reflection */
+  /** we can display mustruct only after DataProg has been built and names have been given using reflection
+   * todo: display the organization as a tree*/
    def showMustruct=for(m<-allMuStruct)
      System.out.println(m.toString)
   def setFliprioOfMoveAndFlipAfterConstr()=  for(m<-allMuStruct) m match {
@@ -91,7 +90,7 @@ object MuStruct{
   /** for the moment we go reverse, and  update the synced flip of  inputAgent which is stored in the constraint itself, as a destination*/
   def setFlipSynced()=
     for(m<-allMuStruct.reverse) m match {
-    case a:Aggg=>
+    case a:Ag=>
       a.setFlipSync()
     case _ =>
   }

@@ -219,7 +219,7 @@ class Dag[T <: DagNode[T]](generators: List[T]) {
       val inrcimt=addSmallerRoot(inputComponentsOfSrc-componentsOfTarget, HashSet[T]())
       val inrcit=addSmallerRoot(HashSet( componentsOfTarget), HashSet[T]())
       val cycleDetected=inrcimt.intersect(inrcit).nonEmpty
-      if (cycleDetected)    {   println("making the union of " + src + "   to  " + target + "   was about to creating a cycle")
+      if (cycleDetected)    {  /* println("making the union of " + src + "   to  " + target + "   was about to creating a cycle")*/
           pairCausingCycles =  pairCausingCycles + ((src,target))
       }
       cycleDetected

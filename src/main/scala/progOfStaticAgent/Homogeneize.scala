@@ -1,16 +1,11 @@
 package progOfStaticAgent
-import sdntool.{Leader, addDist, addDistVor, addInsideBall, addLeader, addRadius, addRect, addSurf, addZone, addZoneGt, addZoneLt}
+import sdntool.{Leader, Qpoint, QpointConstrain, addDist, addDistVor, addInsideBall, addLeader, addQpointFields, addRadius, addRect, addArea, addZone, addZoneGt, addZoneLt, addSeize, blobConstrain}
 import compiler.ASTL.{ASTLg, anticlock, broadcast, clock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, fromInt, imply, v}
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf, UintV, UintVx}
 import compiler.{AST, ASTBfun, ASTLt, B, E, Locus, Ring, SI, T, V, chip}
 import dataStruc.DagNode.EmptyBag
 import dataStruc.{BranchNamed, Named}
-import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
-import progOfmacros.Compute.countNeighbors
-import progOfmacros.RedT.{cac, shrink2min1to5, shrinkshrink}
-import progOfmacros.Topo.nbccV
-import progOfmacros.Wrapper
 import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, smoothen, smoothen2, testShrink}
 import sdn.Force.{attractPropagate, cibler, ciblerFaible, repulsePropagate, restrictF, stabilizeNotEmpty}
 import sdn.Globals.root4naming
@@ -25,24 +20,20 @@ object Homogeneize{
 /**illustrate the working of repulsion combined with exploration  */
 class Homogeneize() extends LDAG with Named with BranchNamed
 {
-  //val part=new Homogen()
-  val part=new SpreadOnSummit()
-  //val part=new Convergent()
+  //builds the hierarchy of agents
+  val part=new HomogenCVG()
+  //iterate through the hierarchy,  to apply forces, constraints, and sync
   showMustruct;
   setFliprioOfMoveAndFlipAfterConstr();  setFlipSynced()
   //part.shoow(part.gc.flipAfterSync,part.gc.flipAfterConstr)
   showTrucPourDebugger
-  part.shoow(part.allflipRandcancel)
+  part.shoow(part.rand)
   part.shoow(part.vor.muis) //triggers evaluation
   part.shoow(part.gc.alreadyThere,part.gc.muis)
-  //part.shoow(part.mergedMoves("stabilize").asInstanceOf[MoveC2].no.empty)
-  //garder ce qui suit en commentaire, ca indique comment faire pour montrer l'effet d'une force via son nom, come "seize"
- // part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC1].yes.empty)
-//  part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC1].push)
-  //part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].no.empty)
-  //part.shoow(part.mergedMoves("seize").asInstanceOf[MoveC2].no.push)
+  part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
+  /*
+  garder ce qui suit en commentaire, ca indique comment faire pour montrer l'effet d'une force via son nom, come "seize"
 
-  /*  part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
    part.shoow(part.vor.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
    part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].yes.empty)
    part.shoow(part.mergedMoves("repulse").asInstanceOf[MoveC2].no.empty)
@@ -54,64 +45,38 @@ class Homogeneize() extends LDAG with Named with BranchNamed
   part.ar.showMe()
 
   part.shoow(part.lead.muis)
-  part.shoow(part.singleStreched)
-  part.bTn.showMe
+  //part.shoow(part.singleStreched)
+  part.bfTn.bv.showMe
   part.shoow(part.muis)
   part.vor.showMe
-  part.vor.baba.showMe;   part.vor.bf.showMe;  part.showMe
-  part.bf.showMe;  part.baba.showMe;  part.bve.showMe;  part.d.showMe; part.dgv.showMe
+  //part.vor.baba.showMe;
+  part.showMe
+  part.bf.showMe;  part.bf.bv.showMe;  part.bve.showMe;  part.d.showMe; part.dgv.showMe
   part.shoowText(part.ri.muis,List()); part.ri.showMe;
-  //part.shoow(part.moderators("repulse"))
-  // part.sm.showme; //does not work, because sm is not taking part i the computation.
- // part.shoow(part.sm.muis, part.sm.b.meetiE, part.sm.b.meetiV, part.sm.b.ctr, part.sm.b.isDoubleton)
-/*  part.shoow(part.summit.centerZlt,part.summit.meetiE,part.summit.meetiV,part.summit.nbcc3,part.summit.twoNeighbor,part.summit.isTripleton,
-    part.summit.meetiEselected,part.summit.loosangeIncluded,part.summit.losangeApexes,part.summit.rhombusShouldFlip,part.summit.losangeApexToRemoveFromCtr,
-    part.summit.meetEblockingZltmeetE,part.summit.weakMeetE,part.summit.meetEblockingZltnbcc3,part.summit.raand)
- part.shoowText(part.summit.density, List())*/
-  part.zon.showMe
+
+ // part.zon.showMe
   part.qf.showMe
   part.sum.showMe
-  part.ctr.showMe
-  part.blobsm.showMe
-  //part.shoow(part.sf.isSummit)
- // part.shoowText( part.sf.density,List())
-//  part.shoow(part.centr.notCentrForallize)
- // part.shoow(part.centr.isSummit)
- // part.centr.showMe
-//  part.shoow(part.bve.meetE2)
-  part.shoow( part.vor.isForced)
+  part.bsm.showMe
   part.shoow(part.inbl.muis)
   part.inbl.showMe
   part.shoow( part.deflipSync)
   part.shoow( part.vor.deflipSync)
-  //;  part.inbl.showMe
- // part.shoow(part.doubletonImplyStreched)
-  //part.shoow(part.next2strechedDoubleton)
-  //part.shoow(part.hyperStretchedTripleton)
-
-  //part.shoow(part.zon.zlt.muis,part.rect); part.shoow(part.zon.zgt.muis);
- // part.zon.zlt.showMe;    part.zon.zgt.showMe
-  // part.z.showMe
 }
-
-/** basic quasiparticle with blob and quasipoint constraints */
-class Seed extends MovableAg[V]("global") with MovableAgV  with addBloobV with blobConstrain with addQpointFields with QpointConstrain
-  with EmptyBag[sdn.MuStruct[_<: Locus,_<:Ring]]
 
 
   /** computes the average and variance of a partial SintV defined by a pair ( SintV ;BoolV )*/
-  trait stat{ self:Homogen with addLeader with addRadius with addSurf=>
-    staat(lead.muis, ar.total)// staat(bve.meet, d.muis);;staat(bve.meetV, d.muis);  staat(bve.meetE2, d.muis)
-    staat(lead.muis, ri.muis)
+  trait statHomo{ self:Homogen with addLeader with addRadius with addArea=>
+    staat(lead.muis, ar.total) // this is used, because the area is informative
+    staat(lead.muis, ri.muis) //however this is not used because the radius precision is too low.
   }
 
 
 
 /**adds distance, gabriel center, voronoi distance to voronoi, and then finally repulsive force from voronoi*/
-class Homogen() extends Seed with addDist with addGcenter // with keepOutsideForce
+class Homogen() extends Qpoint with addDist with addGcenter // with keepOutsideForce
   with addVor with addDistVor
 {  /** seed should not overlap gCenters */
-
    val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
   addConstraint("avoidgc",'g',avoidGc)
 
@@ -126,89 +91,39 @@ class Homogen() extends Seed with addDist with addGcenter // with keepOutsideFor
  *       by choosing to invade preferently vertices on summit whose number of summit-neighbor  are largest
  *  */
 
-class SpreadOnSummit extends Homogen with addRadius with addInsideBall with addRect with addSurf
-  with addZone
- // with addSommet
-  with addSummit with addBlobSummit with addCenter
-  with addLeader  with stat  with addTunnel/*: we stopped using zone*/
-{  /** seize applique la force qui cible le  centre si et seulement si le radius est uniforme */
-  /** cette force exerce une poussé des particules vers les radisu plus grand
+class HomogenCVG extends Homogen   with addSeize with addArea with addRadius with addInsideBall  /*with addRect  with addZone*/
+  with addLeader  with statHomo /*: we stopped using zone*/
+{
+  /** cette force exerce une poussé des particules vers les radius plus grand
  *  elle "prévient" les situation de campfire,
  * idealement pour etre sur de solutionner les campfire, faudrait  mettreune priorité plus forte que repulse,
  * mais cela devient trop instable.
  * pour les transition de rayon, uniformize radius crée des instabilité
  */
- val uniformizeRadius:Force= repulsePropagate(zon.zgt.muis) // | attractPropagate(zon.zlt.muis)
-
- // val seizeCenter2:Force=restrictF(cibler(summit.centerZlt),zon.zeqOnSeed)
-  val seizeCenter=ciblerFaible(ctr.ctr2) //on préfére mettre en jeu plusieurs force
-
-//  val seizeNbcc3= ciblerFaible((blobsm.nbcc3 & ~ctr.rhombusApexToRemoveFromCtr))
-val seizeTunnel=ciblerFaible(bTn.meetV & ~blobsm.losangeApexes & ~sum.weakSummit /*& ~blobsm.losangeApexes*//*& blobsm.meet c'est  redondant par contre le tunnel empeche d'empecher*/) // | Force.empty(~blobsm.meet) //marche depuis un singleton mais aussi depuis un doubleton
-  val seizeTunnelOld=Force.ciblerNotEmptyPush(singleStreched,transfer(v(dgv.streched)))
-  val seizeNbcc3= ciblerFaible((blobsm.nbcc3 & ~blobsm.losangeApexes & ~sum.weakSummit )) //| Force.empty(blobsm.losangeApexes) //on veut oublier zlt
-  val seizeLeton=ciblerFaible(  blobsm.isDoubleton | blobsm.isTripleton)
-  val seizeMeetiEnotShadowed=ciblerFaible(blobsm.meetiEnotShadowed)
-   val toFire=Force.empty(zon.isBLockingToFire)|Force.total.restrict(zon.zlt.muis) //exploration plus avant de zlt
+ //val uniformizeRadius:Force= repulsePropagate(zon.zgt.muis) // | attractPropagate(zon.zlt.muis)
+  /** seize applique la force qui cible le  centre si et seulement si le radius est uniforme */
+ // val seizeCenter2:Force=restrictF(cibler(isSummit2.centerZlt),zon.zeqOnSeed)
+ // val seizeMeetiEnotShadowed=ciblerFaible(bsm.meetiEnotShadowed)
+ // val toFire=Force.empty(zon.isBLockingToFire)|Force.total.restrict(zon.zlt.muis) //exploration plus avant de zlt
   // & ~ctr.next2vor)
-  val singleStreched: BoolV = exist[E,V] (transfer(v(dgv.streched & bf.insideE))) & ~exist[E,V](transfer(v(dgv.doubleStreched & bf.insideE)))
+ // val singleStreched: BoolV = exist[E,V] (transfer(v(dgv.streched & bf.insideE))) & ~exist[E,V](transfer(v(dgv.doubleStreched & bf.insideE)))
+  /** le complementaire des meeting points, sur le sommet. celui qu'on envisage de  vider d'office */
+ // val extremity= ~bfs.bv.meet & sum.isSummit2   //shoow(extremity)//force(introduceNewPriority(), "noext",'e', Force.empty(extremity ))  //conserve une epaisseur de tunnel de deux. Il s'agit de forbidExtremityTunnel implementé comme une contrainte
+  //val seizeTunnel: Force =ciblerFaible(bTn.meetV & ~bsm.losangeApexes & ~sum.weakSummit)
+  // val seizeNbcc3= ciblerFaible((bsm.nbcc3 & ~bsm.losangeApexes & ~sum.weakSummit )) //| Force.empty(toto.losangeApexes) //on veut oublier zlt
+  //val seizeLeton=ciblerFaible(  bsm.isDoubleton | bsm.isTripleton)
+  val mySeize= moderate(seize,"seize")
+ //force(introduceNewPriority(), "tunnel",'t', seizeTunnel);  force(introduceNewPriority(), "letonseize",'y', seizeLeton);  force(introduceNewPriority(), "nbcc3seize",'3', seizeNbcc3)
+  val explore=moderate(Force.total,"explore")
+  appendForce("explore",'0', explore )
+  appendForce("seize",'y',mySeize )
+  appendForce("repulse",'|',dgv.repulse)
+  /** on peut pas détruire en meme temps deux elements sur un bord du tunnel wide.
+   * withLimitingPrio(getPriority(seize)+1) assure que cette contrainte s'exerce  juste pour les force de priorité inférieure ou egal a la priorité de size
+   */
+  val keepTunnelWide = (MutKeepFlipIf(this,One(false),dgv.twoStrechedSeparator) _ ).withLimitingPrio(getPriority(mySeize)+1) ; addConstraint("nmeet",'n',keepTunnelWide);
 
-  force(introduceNewPriority(), "explore",'O', Force.total)
-  val keepTunnelWide = MutKeepFlipIf(this,One(false),dgv.doubleStreched) _ ; //on peut pas détruire en meme temps deux elements sur un bord du tunnel wide.
-  //val forbidExtremityTunnel=   CancelFlipIf(this,One(false),bTn.nbcc0 ) _// agents should not invade extremity of tunnels, to keep tunnels wide
-  //addConstraint("exttun",'u',forbidExtremityTunnel)
-  addConstraint("nmeet",'n',keepTunnelWide); //todo préciser que ca contraint juste les force de priorité inférieure a prioTunnel
-  val prioTunn=introduceNewPriority();  force(prioTunn, "tunnel",'t', seizeTunnel)
-  val extremity= ~blobsm.meet & sum.isSummit2 //le complementaire des meeting points, sur le sommet. celui qu'on envisage de  vider d'office
-  shoow(extremity)
- //force(introduceNewPriority(), "noext",'e', Force.empty(extremity ))  //conserve une epaisseur de tunnel de deux. Il s'agit de forbidExtremityTunnel implementé comme une contrainte
-  force(introduceNewPriority(), "letonseize",'y', seizeLeton)
-  force(introduceNewPriority(), "nbcc3seize",'3', seizeNbcc3)
-  //force(introduceNewPriority(), "tofire",'f', toFire) //pousse vers zlt
-  //force(introduceNewPriority(), "norhomb",'E', Force.empty(blobsm.losangeApexes))  //evite "d'orienter" les losanges
 
-  // force(introduceNewPriority(),"unif",'u',uniformizeRadius)
-  force(introduceNewPriority(),"repulse",'|',dgv.repulse)//dgv.repulse moves seed away from voronoi, in fact from gcenter,
-  // because it is allowed to overlap voronoi, which should thereafter withdraw.
-  // This overlapping is the key for ensuring uniformization of the radius.?? that remains to be investigated.
-
+  // particles is allowed to overlap voronoi, it may be the key for ensuring uniformization but that remains to be investigated.
 
  }
-
-
-/** obsolete, calcule une convergence qui n'est pas assez generale pour stabiliser, soit elle stabilise trop tot,
- * soit elle ne stabilise  pas assez*/
-/*class Convergent extends Homogen with addLeader //with addRadius // //pas besoin de leader pour le moment
-{  val sf=new Attributs()
-{ //sf==stableFields
-  override val muis: ASTLg with carrySysInstr = Convergent.this.muis
-  /** border of qparticle  where dg diminishes */
-  val brdVeSloped=bf.brdVeIn & dgv.sloplt
-  /** around isV, adds Vertices on the otherside of brdVeslopped */
-  val isVplus: ASTLt[V, B] =isV | exist(transfer(sym(transfer(brdVeSloped))))
-  /** add vertex  if three neighbors are on */
-  val isVsmoothed=smoothen(isVplus)
-  /** computes the Vf bool and yes that is right*/
-  val isVtest=testShrink(isVplus)
-  /** add vertex  if four neighbors are on, bugs, more restrictive therefore, than smoothen */
-  val isVsmoothed2: BoolV =isVplus| exist(isVtest)
-  // shoow(isVplus,isVsmoothed,isVsmoothed2,isVtest)  /** true for one seed if on its whole border dg diminishes */
-  /** essai de stable plus compliqué */
-  val stableComplex=Convergent.this.muis.asInstanceOf[BoolV] & insideBall(isVsmoothed2)
-  val stableComplexAll=forallize(stableComplex) & isV
-  /**  stable simple qu'on est sur qu'il ne perturbe pas l'homogeneisation */
-  val stableSimple: ASTLt[V, B] =isV & inside(imply(bf.brdVeIn,dgv.sloplt))
-  val stableSimpleAll=forallize(stableSimple) & isV
-  override def showMe: Unit = ()// shoow(isVplus) //shoow(stable1,stable2)
-  val balance: Force = new Force() {
-    //import compiler.ASTLfun.fromBool
-    override def actionV(ag: MovableAgV): MoveC = {
-      val yes=MoveC1(root4naming.myFalse,e(root4naming.myFalse)) //force is pure negative
-      /** if stable2 , this will cancel movement of lower priority, */
-      val no = MoveC1(stableSimpleAll, e(stableSimpleAll)& bf.brdVeIn) // negative  forces
-      MoveC2(yes,no)
-    }
-  }
-}
-  // force(introduceNewPriority(),"balance",'_',sf.balance)
-}*/

@@ -202,7 +202,7 @@ object Util {
 }
 
 /** Layer implementing a random bit */
-class Rand() extends Layer[(V, B)](1, "random") with ASTLt[V, B]         {
+class Rand() extends Layer[(V, B)](1, "random") with ASTLt[V, B]   {
 
   //val miroredNext = randNext(this) //by default it'll get mirored because of its radius 1.
   //val next: BoolV = torusify(miroredNext) //will apply the identity, plus torusify.
@@ -211,6 +211,20 @@ class Rand() extends Layer[(V, B)](1, "random") with ASTLt[V, B]         {
     randN12(this)
   } //lazy because probably not used
   lazy val randSide: BoolEv = randE2(this) //only qpointRand uses this
+}
+
+/** adds the possibility of using a randomizer */
+trait rando {
+  val _rand = new Rand()  // Champ privé
+  def rand: Rand = _rand          // Getter public pour le champ
+}
+
+
+/** contains fields that can be computed for any boolV representing blobs, not just Vagents
+ * for exemple, we can use it to grow voronoi, which needs meeting point
+ ** declares a bunch of spatial attributes, provide the necessary trait "show"  to show a subselection of them */
+abstract class Attributs extends  hasMuisSysInstr with shoow with BranchNamed with Named{
+  def showMe
 }
 
 

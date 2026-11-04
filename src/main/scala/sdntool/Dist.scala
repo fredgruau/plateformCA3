@@ -18,7 +18,7 @@ import progOfmacros.{Comm, Grad, Wrapper}
 import progOfmacros.Wrapper.{borderS, exist, existS, inside, neqUI2L, shrink}
 import progOfmacros.RedT.cacEndomorph
 import sdn.Globals.root4naming
-import sdn.{BlobVe, CancelFlipIf, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, One, Stratify, addGcenter, addQpointFields, addVor, carrySysInstr}
+import sdn.{CancelFlipIf, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, One, Stratify, addGcenter,  addVor, carrySysInstr}
 import sdn.Util.{addLt, addLtSI}
 
 /**
@@ -48,12 +48,14 @@ abstract class SiField(n:Int,  source: MuStruct[V, B],op:siFieldOperator) extend
 trait addStreched extends SiField {
   self:SiField=>
   val tmpDoubletoon:BoolEv=Comm.neighborsEvSym(this.sloplt)
+  /** true for an edge such that the distance goes down at both extremity of the edge, away from the edge */
   val streched:BoolE=inside(tmpDoubletoon) //& inside(bf.doubletoon)
-  //on calcule aussi si y a deux streched cote a cote
+  /** true if  vertice has two streched on the other side of boolF */
   val twostreched:BoolVf=shrink(transfer(v(streched)))
-  val doubleStreched: BoolE = exist(apexE(twostreched))
+  /** true if edges separate two vertice streching a third one */
+  val twoStrechedSeparator: BoolE = exist(apexE(twostreched))
   abstract override def showMe(): Unit = {
-    super.showMe; shoow(streched,doubleStreched)
+    super.showMe; shoow(streched,twoStrechedSeparator)
   }
 }
 

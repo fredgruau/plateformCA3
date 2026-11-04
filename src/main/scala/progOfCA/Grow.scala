@@ -15,7 +15,8 @@ import compiler.ASTLt.ConstLayer
 import compiler.repr.nomE
 import dataStruc.{BranchNamed, Named}
 import progOfmacros.Topo.brdin
-import sdn.{Blob, BlobVe, BloobV, BloobVFields, Compar, Compar3, addBlobVfields, carrySysInstr}
+import sdn.{Compar, Compar3, carrySysInstr}
+import sdntool.{BlobVe, BloobV, BloobVFields}
 
 /** uses plain  blobV computation to grow seed into Voronoi region,  by stoping the growth just before merge happens */
 class Grow() extends Layer[(V, B)](1, "global") with BoolV  with carrySysInstr with BranchNamed {

@@ -5,17 +5,16 @@ import compiler.ASTL.{ASTLg, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, halve, neighbors, reduce, sign}
 import compiler.SpatialType.{IntE, IntV, UintV, UintVe}
 import compiler.{AST, ASTL, ASTLfun, ASTLt, Locus, Ring, SI, UI, V}
-import progOfStaticAgent.Seed
 import progOfmacros.Comm.neighborsSym
 import progOfmacros.Compute.countNeighbors
 import progOfmacros.Wrapper.exist
-import sdn.{Attributs, LayerS, MovableAgV, MuStruct, QpointConstrain, carrySysInstr}
+import sdn.{Attributs, LayerS, MovableAgV, MuStruct,  carrySysInstr}
 import sdntool.area.nbitArea
 object area{
   val nbitArea=12
 }
 
-class Area(val d:MuDist,p:Seed) extends MuStruct [V,UI]  {
+class Area(val d:MuDist,p:Qpoint) extends MuStruct [V,UI]  {
   /** support of agent, implemented as a layer. we also use it to store a list  of system instructions */
   val cardNearer=countNeighbors(d.sloplt)
   val singleOutput= ~(cardNearer > ASTLfun.fromInt(1)) //un seul voisin plus pres
@@ -36,9 +35,7 @@ class Area(val d:MuDist,p:Seed) extends MuStruct [V,UI]  {
   def showMe(): Unit = {shot(cardNearer,out2,inNeig2,sum2,total);shoow(singleOutput)}
 
 }
-trait addSurf {//adds a computation of the area within voronoi, made available on the leader
-  self: Seed with addDist=>
+trait addArea {//adds a computation of the area within voronoi, made available on the leader
+  self: Qpoint with addDist=>
   val ar=new Area(d,this)
-
-
 }

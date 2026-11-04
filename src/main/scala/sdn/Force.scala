@@ -14,13 +14,9 @@ import progOfmacros.Wrapper
 import sdn.Globals.root4naming
 import sdn.Rand
 import sdn.Util.addSym
+import sdntool.addBlobVfields
 
 import scala.util.matching.Regex.Match
-/** adds the possibility of using a randomizer */
-trait rando {
-   val _rand = new Rand()  // Champ privé
-  def rand: Rand = _rand          // Getter public pour le champ
-}
 
 
 /**
@@ -59,7 +55,7 @@ case class MoveC1 (val empty: BoolV, val push: BoolVe) extends MoveC{
   val triggered=empty|invade
   override val triggeredYes: BoolV = triggered
   def move2flip(isV:BoolV):BoolV=cond(isV,empty,invade)
-  val bug=empty & invade
+  val bug=empty & invade //it should not be possible for a vertice to be wished emptied and filled, a force has to decide between the two.
 }
 
 /**
@@ -118,6 +114,7 @@ abstract class Force extends  Named  {
         myThis.actionV(ag).asInstanceOf[MoveC1].restrict(rnd&rnd2&rnd3) //marche seulement si le move est un moveC1
     }
   }
+  //todo, implementer restricted force, comme une case classe de force, pour pouvoir récupérer le nom directement pour eviter d'avoir a le repeter avec des risque d'erreur
   def restrict(condition:BoolV):Force={
     val myThis=this
     new Force {
@@ -220,7 +217,7 @@ object Force{
     override def actionV(ag: MovableAgV): MoveC = {
       val yes=MoveC1(root4naming.myFalse,e(root4naming.myFalse)) //a stabilizing force is pure negative, so there are no yes move
       /** if stable2 , this will cancel movement of lower priority, */
-      val agblob=ag.asInstanceOf[addBlobVfields]
+      val agblob=ag.asInstanceOf[sdntool.addBlobVfields]
       val no = MoveC1(stbl, e(root4naming.myFalse)) // negative  forces do not empty for vertice which are stabilized, do not push towards stabilied vertice
       MoveC2(yes,no)
     }
@@ -243,12 +240,6 @@ object Force{
       MoveC2(yes,no)
     }
   }
-
-
-
-
-
-
 /*
   val emptyZgt=(isV&zgt.muis) & exist(neighborsSym(e(isV & ~(zgt.muis))))
   val emptyZlt= (isV& ~zlt.muis) & exist(neighborsSym(e(isV & (zlt.muis))))

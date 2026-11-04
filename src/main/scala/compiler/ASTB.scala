@@ -554,7 +554,8 @@ object ASTB {
    * @return return the minmimum number of bits needed to encode the signed integer n
    */
   def nbitCte(n: Int, t: I): Int = if (n < 0) {
-    if (t != SI()) throw new RuntimeException("should be signed integer");
+    if (t != SI())
+      throw new RuntimeException("should be signed integer");
     1 + log2(-n - Epsilon)
   }
   else if (n == 0) 1 //the integer O takes one bit to store
