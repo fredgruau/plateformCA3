@@ -2,7 +2,7 @@ package compiler
 
 import compiler.ASTLfun._
 import ASTL._
-import compiler.AST.{Fundef1, Fundef2}
+import compiler.AST.{Call1, Fundef1, Fundef2}
 import compiler.ASTB._
 import compiler.ASTBfun._
 import compiler.SpatialType._
@@ -287,6 +287,29 @@ object ASTLfun {
   def uI2SIL[L <: Locus](d: ASTLt[L, UI])(implicit m: repr[L]) = unop(uI2SI, d)
   def sI2UIL[L <: Locus](d: ASTLt[L, SI])(implicit m: repr[L]) = unop(SI2UI, d)
   def b2SIL[L <: Locus](d: ASTLt[L, B])(implicit m: repr[L]) = unop(b2SI, d)
+  /** c'est compliqué de facilement transformer un boolean un unsigned intetger: on commence par ajouter un zero qu'aprés on enleve */
+  private val (dropMsbSI, dropMsbUI) = {
+    val other2: Fundef2R[B] = {
+      val (xb, yb) = (p[B]("xb"), p[B]("yb"));
+      Fundef2("other2", xb, xb, yb)
+    }
+
+    def dropMsb[R <: I](implicit n: repr[R]): Fundef1R[R] = {
+      val x = p[R]("xdropB");
+      Fundef1("dropMsb", Scan1(x, other2, False(), Right(), initUsed = true), x)
+    };
+    (dropMsb[SI], dropMsb[UI])
+  }
+
+  val b2UI: Fundef1[B,UI] = {
+    val xb = p[B]("xBtoUi")
+    val r:AST[UI]=Concat2(xb,False())
+    val s:AST[UI]=new Call1[UI, UI] (dropMsbUI,r)with ASTBt[UI]
+    Fundef1("b2UI", s,xb) //
+  }
+  /** marche pas  */
+  def b2UIL[L <: Locus](d: ASTLt[L, B])(implicit m: repr[L]) =
+    unop(b2UI, d)
 
 
 

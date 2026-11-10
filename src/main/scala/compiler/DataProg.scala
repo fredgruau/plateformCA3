@@ -78,8 +78,11 @@ object DataProg {
       val l2: List[CallProc] =l.collect{case  instrs:carrySysInstr=>instrs.syysInstr}.flatten
       val res=l1++l2
       val setsize=res.toSet.size
-      if(setsize!=res.size)   throw new Exception("probably the same field is printed two times " + findDuplicates(res) )
-      res
+      if(setsize!=res.size)
+        {val duplicate=findDuplicates(res)
+          throw new Exception("probably the same field is printed two times " +  duplicate)
+        }
+          res
     }
     //def getHierarchyDisplay:HashMap[Layer[_],ASTL[_ <: Locus,_ <: Ring]]=new HashMap()++
     //TODO build the layer structure here, exploit that we have it!
@@ -591,7 +594,7 @@ class DataProg[U <: InfoType[_]](val dagis: DagInstr, val funs: iTabSymb[DataPro
     val tl: TabSymb[String] = mutable.HashMap.empty
     for (i <- dagis2.visitedL) i.buildhdtl(hd, tl)
     //def called=dagis2.visitedL.filter(case c: Call[_] =>)
-    assert(hd.keySet.size==tl.keySet.size,"on utilise pas tout les résultat de "+hd.values + tl.values)
+    assert(hd.keySet.size==tl.keySet.size,"on utilise pas tout les résultat de "+hd.values +" tl "+ tl.values)
     /** "return CallProc instruction" containing the body of the function */
     val main = dagis2.allGenerators.find(_.isReturn).get.asInstanceOf[CallProc]
     /** names of variable storing the result parameters ,

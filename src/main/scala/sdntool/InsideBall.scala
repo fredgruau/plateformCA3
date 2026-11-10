@@ -4,7 +4,7 @@ import compiler.ASTL.{anticlock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, ltSI}
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf}
 import compiler.{AST, ASTBfun, B, Locus, Ring, V}
-import progOfStaticAgent.{Homogen,  HomogenCVG}
+import progOfStaticAgent.{Homogen, HomogenCvg}
 import progOfmacros.Comm.{adjacentBall, insideBall}
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.exist
@@ -16,6 +16,7 @@ import sdn.{Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, Vor}
  * @param ri radius broadcasted from the particle
  */
 class InsideBall(d:MuDist,ri:InnerRadius,v:Vor) extends MuStruct [V,B] {
+  override def shoi={d.source.shoow(muis)}  //inbl n'est pas utilisé pour le move des particules, donc il n'est pas visualisé sauf si un mustruct qui lui participe, le demand
   override def inputNeighbors = List(d, ri)
   val rmd = delayedL(ri.muis +(- d.muis))
   val inBall = ~ltSI(rmd)|d.source.muis
@@ -42,7 +43,7 @@ class InsideBall(d:MuDist,ri:InnerRadius,v:Vor) extends MuStruct [V,B] {
 
 /** ajoute la capacité de calculer l'inside ball */
 trait addInsideBall {
-  self: HomogenCVG =>
+  self: HomogenCvg with addRadius=>
   val inbl=new InsideBall(d,ri,vor);
   //show(d); les show doivent etre fait dans le main
 }

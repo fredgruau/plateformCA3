@@ -1,6 +1,7 @@
 package progOfLayer
 
-import compiler.ASTL.send
+import compiler.ASTBfun.{ltUI2, neqUI2}
+import compiler.ASTL.{binop, send}
 import compiler.ASTLfun._
 import compiler.ASTLt.ConstLayer
 import compiler.SpatialType.{BoolV, BoolVe, SintV, UintV, UintVe, UintVx}
@@ -10,7 +11,7 @@ import progOfLayer.Sextexrect.chooseMaxOf
 import progOfmacros.Compute.concat3V
 import progOfmacros.Wrapper.{condL, ltUI2L, neqUI2L, not}
 import sdn.Globals.root4naming
-import sdn.Util.{addSymUI, oneThirdRandBit, randConstUintV, splitInto6}
+import sdn.Util.{addSymUI, addSymUIbis, oneThirdRandBit, randConstUintV, splitInto6}
 
 /** tests the lt macro, containts a bugif */
 
@@ -52,20 +53,40 @@ class   Sextexrect() extends ConstLayer[V, B](1, "global")  with BranchNamed{
 
 object Sextexrect {
  def weakCmpProdtwo(arg1: UintV, arg2: UintV): (ASTLt[V, UI], ASTLt[V, B], ASTLt[V, B]) = {
-  val lt = ltUI2L(arg1, arg2)
-  val eq = not(neqUI2L(arg1, arg2))
+  //val lt = ltUI2L(arg1, arg2)
+  val lt=binop(ltUI2,arg1,arg2)
+  //val eq = not(neqUI2L(arg1, arg2))
+  val eq = ~binop(neqUI2,arg1, arg2)
   val le = lt | eq
   val ge = ~lt | eq
-  val max = condL(ge, arg1, arg2)
+  val max = cond(ge, arg1, arg2)
+  (max, ge, le)
+ }
+
+ /** version of weakCmp that do not make calls, so that it can be included */
+ def weakCmpProdtwo2(arg1: UintV, arg2: UintV): (ASTLt[V, UI], ASTLt[V, B], ASTLt[V, B]) = {
+  val lt=binop(ltUI2,arg1,arg2)
+  val eq = ~binop(neqUI2,arg1, arg2)
+  val le = lt | eq
+  val ge = ~lt | eq
+  val max = cond(ge, arg1, arg2)
   (max, ge, le)
  }
 
  /** "Zero" here means that if arg1 = arg2 we do not expand at all */
  def weakCmpProdZero(arg1: UintV, arg2: UintV): (ASTLt[V, UI], ASTLt[V, B], ASTLt[V, B]) = {
-  val lt = ltUI2L(arg1, arg2)
-  val eq = not(neqUI2L(arg1, arg2))
+  val lt =  binop(ltUI2,arg1,arg2)// val lt = ltUI2L(arg1, arg2)
+  val eq =    ~binop(neqUI2,arg1, arg2)//not(neqUI2L(arg1, arg2))
   val gt = ~lt & ~eq
-  val max = condL(gt, arg1, arg2)
+  val max = cond(gt, arg1, arg2)
+  (max, gt, lt)
+ }
+ /** version of weakCmpProdZero that do not make calls, so that it can be included */
+ def weakCmpProdZero2(arg1: UintV, arg2: UintV): (ASTLt[V, UI], ASTLt[V, B], ASTLt[V, B]) = {
+  val lt =  binop(ltUI2,arg1,arg2)
+  val eq = ~binop(neqUI2,arg1, arg2)
+  val gt = ~lt & ~eq
+  val max = cond(gt, arg1, arg2)
   (max, gt, lt)
  }
 
@@ -107,20 +128,17 @@ object Sextexrect {
   sextex
  }
 
-
  /**
   *  fonction that we are finally using. Elect the direction of max priority.
   * @param prio  priority
   * @param k number of bits. for exemple two  bits of priority plus two random bits, make four bits
-  * @return
+  * @return  indicates one among the six possible direction. the chosen direction is the one with max priority
   */
  def chooseMaxOf(prio: UintV,k:Int): BoolVe={
  /**  contients les 6 voisins dans l'ordre clock: east,se,sw, west, nw,ne */
- val voisins: UintVe = addSymUI(e(prio)).symUI
+ val voisins: UintVe = addSymUI(e(prio)).symUI //addSymUI(e(prio)).symUI
   /**  récupére tout les bits de tout ces voisins, reste ensuite a  les regrouper en paquet, un par voisin*/
  val nasI: UintV = concatR(voisins) //si k = 4, on récupére 24 bits a la suite pour 6 voisins, chacun 4 bits,
-
-
 /* former fomulation awkward because dependant on the number of bits
  val (n0, n1, n2, n3, n4, n5) = (elt(0, nasI), elt(1, nasI), elt(2, nasI), elt(3, nasI), elt(4, nasI), elt(5, nasI)) // aprés on les numérote
  val (n6, n7, n8, n9, n10, n11) = (elt(6, nasI), elt(7, nasI), elt(8, nasI), elt(9, nasI), elt(10, nasI), elt(11, nasI)) //aprés on les numérote
@@ -129,9 +147,7 @@ object Sextexrect {
  val west = concat3V(n9, n10, n11)
  val nwest = concat3V(n12, n13, n14)
  val neast = concat3V(n15, n16, n17)*/
-
  val Array(east,se,sw, west,nwest,neast)=splitInto6(nasI, k)
-
  /** Two in weakCmpProdtwo  means that if arg1 = arg2 we expand in both directions, going from a singleton to a tripleton */
  val (northmin, nwnw, nene) = weakCmpProdtwo(nwest, neast)
  //  shoow(northmin,nwnw,nene)
@@ -156,6 +172,8 @@ object Sextexrect {
  val sextex: BoolVe = send(sextexInt)
  sextex
 }
+
+
 
  /** same but going for min instead of max*/
  def chooseMinOfOld(prio:UintV):BoolVe={

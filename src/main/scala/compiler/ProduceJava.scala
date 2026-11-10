@@ -561,7 +561,7 @@ if (!call.exps(0).isInstanceOf[Read[_]])
 
             //check that data anr result are all with #
              paramCode=concatCallCode ++ paramCode
-            System.out.println("concat") //c'est standard
+            //System.out.println("concat") //c'est standard
           }
           else{
           val spatialParam = shortenedSig(dataParam ::: resultParam)

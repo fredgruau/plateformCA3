@@ -5,11 +5,11 @@ import compiler.ASTLfun.{cond, e, ltSI, v}
 import compiler.ASTLt.ConstLayer
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf}
 import compiler.{AST, ASTBfun, ASTLt, B, E, Locus, Ring, V}
-import progOfStaticAgent.{Homogen,  HomogenCVG}
+import progOfStaticAgent.{Homogen, HomogenStat}
 import progOfmacros.Comm.{adjacentBall, insideBall, neighborsSym}
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.{exist, existS, inside}
-import sdn.{Attributs,  Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct,  addGcenter, addVor, carrySysInstr}
+import sdn.{Attributs, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, addGcenter, addVor, carrySysInstr}
 /**
  *
  * @param d distance to particle
@@ -67,14 +67,14 @@ trait addRect{
 
 /** signal envoyé vers là ou le rayon est plus petit */
 trait addZoneLt {
-  self: HomogenCVG with addRect with addZone=> //adds a leader to a seed ,
+  self: HomogenStat with addRect with addZone=> //adds a leader to a seed ,
   val zlt=new Zone(this,ri.slopgt);
    //show(d); les show doivent etre fait dans le main
 }
 
 /** signal envoyé vers là ou le rayon est plus grand */
 trait addZoneGt {
-  self: HomogenCVG  with addRect with addZone=> //adds a leader to a seed ,
+  self: HomogenStat  with addRect with addZone=> //adds a leader to a seed ,
   val zgt=new Zone(this,ri.sloplt);
   //show(d); les show doivent etre fait dans le main
 }

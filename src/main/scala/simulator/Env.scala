@@ -280,7 +280,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       }
       statistics(locusDefined, bitIsDefined)
     }
-    val (meanAr, stdNormAr, minValAr, maxValAr)=stats(integers("homogeneizePartArTotal"))  //statistics on voronoi area
+    if(controller.partial.contains("homogeneizePartRiMuis")    && controller.partial.contains("homogeneizePartRiMuis"))
+    {val (meanAr, stdNormAr, minValAr, maxValAr)=stats(integers("homogeneizePartArTotal"))  //statistics on voronoi area
     val (meanRi, stdNormRi, minValRi, maxValRi)=stats(integers("homogeneizePartRiMuis"))   //statistics on inner radius
     val efficacity=minValAr/maxValAr
     text += " Area:" +f"stdev:$stdNormAr%.2f"+" moy:"+ f"$meanAr%.1f" +  " " +minValAr+"<"+maxValAr+f"eff$efficacity%.2f"
@@ -289,7 +290,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     uniformized=(minValRi==maxValRi)
     if (uniformized)       currentInnerRadius = minValRi
      lastStatText = text
-    uniformized
+    uniformized}else
+      false
       }
 
   def computeStatisticsOld():Boolean = {

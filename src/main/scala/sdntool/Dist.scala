@@ -33,13 +33,14 @@ abstract class SiField(n:Int,  source: MuStruct[V, B],op:siFieldOperator) extend
    }
    /** slopelt retrieves the sign of the slope, which is allways needed, delta is 0, +1 ot -1  we update with small delta:either increment or decrement */
    val (sloplt: BoolVe, delta, level, gap) = deltaCall(muis.pred,op)
-
+  override def shoi={super.shoi;
+    shoow( level, gap)}
   val slopgt = neighborsSym(sloplt);  val existNearer = exist(sloplt);  val existFurther = exist(slopgt);
   val opp = -(muis)  //todo opp can be retrieved from deltaCall
   /** spurious vortex occurs outside chip.borderF.df, so we have to and with chip.borderF.df in order to prevent false detection of vortex bug */
   val vortex: BoolF =   chip.borderF.df & andR(transfer(cacEndomorph(xorRedop[B]._1, sloplt)))
 /** same story with gap*/   val gap2=gap & chip.borderE.df
-   def showMe = { shoow(sloplt,slopgt,level); shoowText(muis, List());
+  def showMe = { shoow(sloplt,slopgt,level); shoowText(muis, List());
      buugif( vortex) ;  buugif( gap2)
     shoow (vortex, gap2)
   }

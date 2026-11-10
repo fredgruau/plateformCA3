@@ -18,10 +18,15 @@ import progOfmacros.RedT.{shrinkEF, shrinkFE}
 import progOfmacros.Unop.Unop.getUnopFun
 
 
-
 /** wrapper to call  macro built on the fly, provides more explicit name and simpler syntax
  * */
 object Wrapper {
+
+
+
+
+
+
 
   /** Wrappers for Unop macro, defined from just an unary operators  works for UI and SI */
   def segment1[L<:Locus,R<:compiler.I](arg: ASTLt[L, R])(implicit m:repr[L],ri: repr[R])={
@@ -54,7 +59,8 @@ object Wrapper {
    * @return
    */
   def unary2Bin[L<:Locus](arg: ASTLt[L, UI],nbit:Int)(implicit m:repr[L],ri: repr[UI])={
-    val f=if(nbit<4) getUnopFun(unaryToBinary2, arg.locus)(m,ri,ri)
+    val f: Fundef1[(L, UI), (L, UI)] =
+        if(nbit<4) getUnopFun(unaryToBinary2, arg.locus)(m,ri,ri)
     else if(nbit < 8) getUnopFun(unaryToBinary3, arg.locus)(m,ri,ri)
     else throw new Exception("trop de forces, il nous faut unnaryTobin4")
     new Call1(f,arg)(repr.nomLR(m, compiler.repr.nomUI)) with ASTLt[L, UI] {}  }

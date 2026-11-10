@@ -3,7 +3,7 @@ package progOfmacros
 import compiler.SpatialType._
 import compiler.AST._
 import compiler.ASTL._
-import compiler.ASTLfun.e
+import compiler.ASTLfun.{andR, e, orR, reduce}
 import compiler._
 import progOfmacros.Wrapper.{exist, inside}
 /** contains communication primitives using rotations and symmetries
@@ -31,10 +31,60 @@ object Comm {
   /** wrapper   */
   def neighborsSym(ve: BoolVe): BoolVe = new Call1[(T[V,E], B), (T[V, E], B)](neighborsDef, ve) with BoolVe
 
-  def adjacentRing(bv: BoolV):BoolV=exist(neighborsSym(e(bv)))
-  def adjacentBall(bv: BoolV):BoolV=adjacentRing(bv)|bv
-  def insideRing(bv: BoolV):BoolV=inside(neighborsSym(e(bv)))
-  def insideBall(bv: BoolV):BoolV=bv & insideRing(bv)
+
+  val adjRingDef: Fundef1[(V,B), (V,B)] = {
+    val v = pL[V, B]("ngh")
+    val result= orR(transfer(sym(transfer(e(v)))))
+    result.setName("res");
+    Fundef1("comm.adjRingDef", result,v)
+  }
+
+  val adjBallDef: Fundef1[(V,B), (V,B)] = {
+    val v = pL[V, B]("ngh")
+    val result= orR(transfer(sym(transfer(e(v)))))|v
+    result.setName("res");
+    Fundef1("comm.adjBallDef", result,v)
+  }
+
+  val adjEDef: Fundef1[(T[V,E],B), (V,B)] = {
+    val v = pL[T[V,E], B]("ngh")
+    val result= orR(transfer(sym(transfer(v))))
+    result.setName("res");
+    Fundef1("comm.adjEDef", result,v)
+  }
+
+  def adjacentRing(bv: BoolV):BoolV= new Call1[(V,B),(V,B)](adjRingDef,bv) with BoolV
+    //exist(neighborsSym(e(bv)))
+    def adjacentBall(bv: BoolV):BoolV=new Call1[(V,B),(V,B)](adjBallDef,bv) with BoolV
+  //adjacentRing(bv)|bv
+  def adjacentE(bve: BoolVe):BoolV=new Call1[(T[V,E],B),(V,B)](adjEDef,bve) with BoolV
+  //adjacentRing(bv)|bv
+
+  val insdRingDef: Fundef1[(V,B), (V,B)] = {
+    val v = pL[V, B]("ngh")
+    val result= andR(transfer(sym(transfer(e(v)))))
+    result.setName("res");
+    Fundef1("comm.insdRingDef", result,v)
+  }
+
+  val insdBallDef: Fundef1[(V,B), (V,B)] = {
+    val v = pL[V, B]("ngh")
+    val result= andR(transfer(sym(transfer(e(v)))))&v
+    result.setName("res");
+    Fundef1("comm.insdBallDef", result,v)
+  }
+  val insdEDef: Fundef1[(T[V,E],B), (V,B)] = {
+    val v = pL[T[V,E], B]("ngh")
+    val result= andR(transfer(sym(transfer(v))))
+    result.setName("res");
+    Fundef1("comm.insdEDef", result,v)
+  }
+
+  def insideRing(bv: BoolV):BoolV= new Call1[(V,B),(V,B)](insdRingDef,bv) with BoolV
+  //exist(neighborsSym(e(bv)))
+  def insideBall(bv: BoolV):BoolV=new Call1[(V,B),(V,B)](insdBallDef,bv) with BoolV
+  def insideE(bve: BoolVe):BoolV= new Call1[(T[V,E],B),(V,B)](insdEDef,bve) with BoolV
+  //exist(neighborsSym(e(bv)))
 
   val neighborsDefUI: Fundef1[(T[V, E], UI), (T[V, E], UI)] = {
     val ve = pL[T[V,E],UI]("ngh")

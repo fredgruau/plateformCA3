@@ -6,10 +6,18 @@ import scala.collection.{immutable, mutable}
 import scala.collection.immutable.{HashMap, HashSet}
 import scala.collection.mutable.ArrayBuffer
 
-/** Explicitely stores  neighbors uses names to set them */
-trait WiredInOut[T <: WiredInOut[T]] extends DagNode[T] {
-  /** to be set if we want to use the Dag feature. */
+trait invDag [T <: DagNode[T]] extends DagNode[T] {
   var outputNeighbors: List[T] = List.empty;
+}
+object invDag{
+  def setOutputNeighbors2[T <: DagNode[T] with WiredInOut[T]](instrs: List[T]) = {
+    for (a <- instrs)
+      for (b <- a.inputNeighbors)
+        b.outputNeighbors = a :: b.outputNeighbors;
+  }
+}
+/** Explicitely stores  neighbors uses names to set them */
+trait WiredInOut[T <: WiredInOut[T]] extends DagNode[T] with invDag[T] {
   /** to be set if we want to use the Dag feature. */
   var inputNeighbors: List[T] = List.empty;
 

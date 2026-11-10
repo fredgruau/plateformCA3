@@ -108,7 +108,7 @@ object Simulator extends SimpleSwingApplication {
     /** Tree for browsing the hierarchy of layers and which field to display */
     val xmlLayerTree: Elem =
       readXmlTree(  progCA.displayableLayerHierarchy()  )
-    System.out.println( "the displayable layers are\n" +    xmlLayerTree   )
+    //System.out.println( "the displayable fields are\n" +    xmlLayerTree   )
     val layerTree: LayerTree =
       new LayerTree(xmlLayerTree,   controller    )
     val scrollableXmlTree =    new ScrollPane(layerTree)

@@ -6,12 +6,12 @@ import compiler.ASTLfun.{e, f, imply, v}
 import compiler.{ASTLfun, Locus}
 import compiler.SpatialType.{BoolE, BoolEv, BoolF, BoolV, BoolVe, BoolVf}
 import progOfLayer.Sextexrect.chooseMaxOf
-import progOfmacros.Comm.{apexE, apexV, neighborsSym}
-import progOfmacros.Compute.implique
+import progOfmacros.Comm.{apexE, apexV, insideE, neighborsSym}
+import progOfmacros.Compute.{chooseMaxOf2, chooseMaxOf3, implique}
 import progOfmacros.Wrapper.{inside, insideS}
 import sdn.ForceAg.{Ag, AgForced}
 import sdn.SplitHashMapTyped.Split
-import sdn.Util.myLn2
+import sdn.Util.{addSymUI, myLn2}
 import sdntool.addQpointFields
 
 import scala.collection.immutable.{HashSet, ListMap}
@@ -40,12 +40,13 @@ abstract class Constr(val ags: Array[AgForced], val impact: Impact, fliprio:Part
   /** Most of the time the constraint holds on a single agent that we call "ag" for "agent" */
   var limitingPrio= -1
   val ag=ags(0)
-  val nbitPrio=myLn2(ag.moves.size)+ag.nbitPrioRand
+  /** nombre de bit pour coder une prioritéé en binaire a partir de nbit en unaire*/
+  val nbitPrio=myLn2(ag.forces.size)+ag.nbitPrioRand
   def setLimitingPrio(n:Int)={limitingPrio=n}
   /** where = places where flips is still valid after the constraint newFlip<-oldFlip & where
    * defined has a method, in order allow definition prior to intanciation of needed field, such as flip.*/
   val where: BoolV
-  /** if a limiting prio is specified, where will cancel if prio< limitingPrio */
+  /** if a limiting prio is specified, whereprio will be true if yesPrioDet >= limitingPrio */
    val wherePrio= delayedL(if(limitingPrio== -1) where else where | ~ (/*fliprio.valuc */ ag.yesPrioDet < ASTLfun.fromInt(limitingPrio)))
 }
 
@@ -160,15 +161,18 @@ class SexTex(a:AgForced, fliprio:PartialUI) extends Constr(Array(a), null,flipri
  // val  sexKeepFlipIfoldoldold: Int => Int = (fp:Int)=> 3//chooseMaxOf(fp.value, 4)
   /**if we implement sextex, qpoint fields must be available*/
   val singleton=ag.asInstanceOf[addQpointFields].qf.singleton
-  /** carefull with the number of bit, 4
+  /**
+   * indicates one among the six possible direction. the chosen direction is the one with max priority
    * carefull that this constraint uses prioYesNotQuiescent so it assumes that moves have been already computed
    * if we want to endows our agent with constraints before computing moves, this will not work*/
-  //val choose: BoolVe = chooseMaxOf(fliprio.restoreInvariant.value, 4) //todo deplacer dans constraint ca fait jouer prio
-  val choose: BoolVe = chooseMaxOf(fliprio.restoreInvariant.value, nbitPrio) //todo deplacer dans constraint ca fait jouer prio
-  val whereto:BoolVe= imply(e(singleton),choose)
+  val vois=addSymUI(e(fliprio.restoreInvariant.value)).symUI
+
+  val choose2: BoolVe = chooseMaxOf3(vois, nbitPrio)
+  //val choose: BoolVe = chooseMaxOf(fliprio.restoreInvariant.value, nbitPrio)
+  val whereto:BoolVe= imply(e(singleton),choose2)
   /** where = places where flips is still valid after the constraint newFlip<-oldFlip&where
    * defined has a method, in order allow definition prior to intanciation of needed field, such as flip.  */
-  override val where: BoolV = inside(neighborsSym(whereto))
+  override val where: BoolV = insideE(whereto)
 }
 object SexTex{ def apply(a:AgForced)(fliprio:PartialUI): SexTex=new SexTex(a,fliprio)}
 

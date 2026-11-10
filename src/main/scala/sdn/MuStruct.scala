@@ -5,10 +5,11 @@ import compiler.ASTL.{ASTLg, delayedL}
 import compiler.SpatialType.BoolV
 import compiler.repr.{nomB, nomV}
 import compiler.{AST, ASTBt, ASTL, ASTLfun, ASTLt, B, CallProc, Circuit, I, Locus, Ring, SI, UI, V, repr}
-import dataStruc.{BranchNamed, DagNode, Named}
+import dataStruc.{BranchNamed, DagNode, Named, invDag}
 import dataStruc.DagNode.EmptyBag
+import dataStruc.invDag.setOutputNeighbors2
 import sdn.ForceAg
-import sdn.ForceAg.{AgForced, Ag}
+import sdn.ForceAg.{Ag, AgForced}
 import sdn.MuStruct.allMuStruct
 
 import scala.Predef.->
@@ -24,7 +25,7 @@ trait carrySysInstr{
 trait hasMuisSysInstr{
   val muis:ASTLg with carrySysInstr}
 
-/** si une classe commme attribut, posséde un muis qui a une liste de sysinstr, on peut faire les shoow, bugif, showtext, en les rangeant dans cette liste */
+/** si une classe commme par exemple attribut, posséde un muis qui a une liste de sysinstr, on peut faire les shoow, bugif, showtext, en les rangeant dans cette liste */
 trait shoow{
   self:hasMuisSysInstr=>
   def buugif(v: AST[_]) = {muis.syysInstr ::= CallProc("bug", List(), List(v))  }
@@ -52,7 +53,6 @@ trait Stratify[L<:Locus,R<:Ring] extends ASTL.Strate[L,R] {
   val pred=this.asInstanceOf[ASTLt[L,R]]
   //todo faire a l'envers: on defini munext, et on dit que next = delayed munext
   override val munext: ASTLt[L, R] =delayedL(this.next.asInstanceOf[ASTLt[L,R]])(self.mym) }
-
 /** we add trait carrySysInstr to layers so as to fit mustruct logic of using layers as strates, and to store system instructions  */
 abstract class LayerS[L<:Locus,R<:Ring](override val nbit: Int, override val init: String)(implicit m: repr[L],n:repr[R])
   extends Layer[(L,R )](nbit,init)with Stratify[L,R] with ASTLt[L,R] with carrySysInstr()
@@ -64,12 +64,17 @@ abstract class LayerS[L<:Locus,R<:Ring](override val nbit: Int, override val ini
  * le path de nommage passe par les mustruct, et plus par les layers.
  * pour cela on mix les trait branchname et name */
 abstract class MuStruct[L<:Locus,R<:Ring] extends  DagNode[MuStruct[_<:Locus,_<:Ring]]
-  with Named with BranchNamed with hasMuisSysInstr with shoow {
+  with Named with BranchNamed with hasMuisSysInstr with shoow with invDag[MuStruct[_<:Locus,_<:Ring]] {
+  def shoi=muis.ring match{
+    case B() => shoow(muis)
+    case UI() | SI() =>shot(muis)
+  }
   allMuStruct.append( this) //insert new created muStruct on  last position of already instanciated mu struct
   /** support of agent, implemented as a layer. we also use it to store a list  of system instructions */
-val muis: ASTL.Strate[L,R] with ASTLt[L,R] with carrySysInstr
+  val muis: ASTL.Strate[L,R] with ASTLt[L,R] with carrySysInstr
   /** we add the possibility to display fields */
   def locus: Locus =muis.locus//todo, on pourrait calculer cela directement
+
 }
 
 trait muEmptyBag extends EmptyBag[MuStruct[_ <: Locus, _ <: Ring]]
@@ -81,8 +86,18 @@ object MuStruct{
    var allMuStruct:mutable.ArrayDeque[MuStruct[_<:Locus,_<:Ring]]=mutable.ArrayDeque()
   /** we can display mustruct only after DataProg has been built and names have been given using reflection
    * todo: display the organization as a tree*/
-   def showMustruct=for(m<-allMuStruct)
-     System.out.println(m.toString)
+   def showMustruct={
+     for(m<-allMuStruct)m.shoi
+   }
+    def printMustruct={
+      //setOutputNeighbors2(allMuStruct.toList) //pour afficher l'arbre mais on n'est pas sur encore dans quel sens on veut l'afficher.
+      for(m<-allMuStruct)      System.out.println(m.toString)
+    }
+    //for(m<-allMuStruct)      System.out.println(m.toString)
+
+  //def printMustruct=System.out.println( allMuStruct.head.toStringTree)
+
+
   def setFliprioOfMoveAndFlipAfterConstr()=  for(m<-allMuStruct) m match {
     case a:ForceAg[_]=>  a.setFliprioOfMove(); a.setFlipCancel()
     case _ =>

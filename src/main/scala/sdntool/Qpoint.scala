@@ -6,11 +6,11 @@ import compiler.ASTLfun.{apex, cond, e, f, imply, orR, reduce}
 import compiler.SpatialType.{BoolE, BoolF, BoolV, BoolVe, BoolVf, UintV}
 import compiler.{AST, ASTBfun, ASTLfun, B, E, F, Locus, Ring, UI, V}
 import dataStruc.DagNode.EmptyBag
-import progOfmacros.Comm.{adjacentBall, apexV, insideBall, neighborsSym}
+import progOfmacros.Comm.{adjacentBall, adjacentRing, apexV, insideBall, neighborsSym}
 import progOfmacros.Compute.implique
 import progOfmacros.RedT.cac
 import progOfmacros.Wrapper.{exist, existS, inside, insideS, not}
-import sdn.{Attributs, CancelFlipIf, KeepFlipIf, LayerS, MovableAg, MovableAgV, MuStruct, MutApexKeepFlipIf, MutKeepFlipIf, One, SexTex, TriKeepFlipIf,  carrySysInstr, rando}
+import sdn.{Attributs, CancelFlipIf, KeepFlipIf, LayerS, MovableAg, MovableAgV, MuStruct, MutApexKeepFlipIf, MutKeepFlipIf, One, SexTex, TriKeepFlipIf, carrySysInstr, rando}
 
 
 /** basic quasiparticle with blob and quasipoint constraints */
@@ -29,8 +29,9 @@ class Qpoint extends MovableAg[V]("global") with MovableAgV  with addBlobVfields
    * if and only if feature is also true for one vertex of the seed
    * feature is usually only defined in the seed */
   def existize(feature:BoolV)={
-    val muisfeature=muis & feature
-    muisfeature | (muis & exist(neighborsSym(e(muisfeature))))
+    adjacentBall(muis & feature)
+/*    val muisfeature=muis & feature
+    muisfeature | (muis & exist(neighborsSym(e(muisfeature))))*/
   }
   /** given a an integer feature, makes the sum on quasiparticle. */
   def sumize(feature:UintV):UintV={
@@ -53,9 +54,9 @@ trait addQpointFields {
   val qf = new Attributs() {
     override val muis: BoolV with carrySysInstr = selfRef.muis
     /** true for the vertices of a qpt consiting exactly of one vertices */
-    val singleton: BoolV = inside(bf.brdVeIn) & muis
+    val singleton: BoolV = inside(bf.brdVeIn) //& muis
     val nonsingleton = ~singleton & muis
-    val next2NonSingleton = exist(neighborsSym(e(nonsingleton)))
+    val next2NonSingleton = adjacentRing(nonsingleton)
     /** true if both apex vertices of the edge are empty */
     val bothApexEmpty: BoolE = not(orR(apex[V, E, B](f(muis))))
     /** true for the edge inside qpt consiting exactly of two vertices */
@@ -134,7 +135,8 @@ class Leader(source: Qpoint) extends MuStruct [V,B] {
     /** we have to consider sym to finally retrieve the new leader. */
     override val next: AST[(V, B)] = delayedL(cond(sourceMovedWide,elected3,this.pred))(this.mym)
   }
-  shoow(electedNeigbor2,electedNeigbor1,sourceMovedWide,neighborSourceNext,elected3)
+  shoow(electedNeigbor1)
+  //shoow(electedNeigbor2,electedNeigbor1,sourceMovedWide,neighborSourceNext,elected3)
 }
 
 

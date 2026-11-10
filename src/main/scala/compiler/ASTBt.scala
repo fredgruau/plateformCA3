@@ -33,7 +33,7 @@ object ASTBt {
   }
 
   def checkUISI(effectivPar: AST[_], opPar: AST[_]) =
-    if (effectivPar.mym.name != opPar.mym.name && effectivPar.mym.name != B() /*&& opPar.mym.name!=B()*/)
+    if (effectivPar.mym.name != opPar.mym.name && effectivPar.mym.name != B() && opPar.mym.name!=B())
       throw new Exception("Faut preserver SI ou UI")
 }
 

@@ -43,7 +43,7 @@ class BloobV(val muis:BoolV with carrySysInstr, f:BloobVFields) extends Blob  {
   /** provides the meeting edge outside the blob */
   val meetEempty=meetE & f.outsideE
   /** provides the meeting vertice  inside the blob */
-  val meetVfilled=meetV&f.otherThanMuis
+  val meetVfilled=meetV&f.couldBeOtherThanMuis
   /** */
   override  def showMe={super.showMe ; shoow(nbcc0,nbcc1,meetV); shoowText(nbCc,List())
   }
@@ -109,20 +109,20 @@ trait  blobConstrain   {
  *   this avoir having to redefine them.
  *
  * @param muis provide shoow capability
- * @param otherThanMuis for computing blob properties, otherThanMuis is equal to muis, if muis is an agent[V]
+ * @param couldBeOtherThanMuis for computing blob properties, otherThanMuis is equal to muis, if muis is an agent[V]
  *
  */
-class BloobVFields(val muis:BoolV with carrySysInstr, val otherThanMuis:BoolV) extends Attributs{
+class BloobVFields(val muis:BoolV with carrySysInstr, val couldBeOtherThanMuis:BoolV) extends Attributs{
   /** true on the border of the blob  la double négation est la pour que le champs s'appelle bien brdE */
-  val brdE:BoolE=  borderS(~(~ otherThanMuis) )//push everywhere possible.
+  val brdE:BoolE=  borderS( couldBeOtherThanMuis )//push everywhere possible.
   /** true on vertices next to the border of the blob */
   val  brdV:BoolV=existS(brdE)
-  val isVe:BoolVe=e(otherThanMuis)
+  val isVe:BoolVe=e(couldBeOtherThanMuis)
   /** true if there is a filled vertice towards the corresponding direction among the 6 directions*/
   val qqnEnFace:BoolVe=neighborsSym(isVe)
   /** Ve edges leaving the support , we know we may take a sym so we prepare for it, to get a meaningfull name brdVe.sym*/
   val brdVeIn: BoolVe =transfer(v(brdE)) & isVe//addSym introduit un delayed et compromet le nommage automatique par reflection. addSym( transfer(v(brdE)) & isVe)
-  val brdVeOut: BoolVe=transfer(v(brdE)) & e(~otherThanMuis)//todo bien possible qu'on puisse travailler juste avec un seul brdVe
+  val brdVeOut: BoolVe=transfer(v(brdE)) & e(~couldBeOtherThanMuis)//todo bien possible qu'on puisse travailler juste avec un seul brdVe
   /** true for inner edges */
   val insideE: BoolE =inside(transfer(isVe))
   val outsideE: BoolE =inside(transfer(~isVe))
@@ -130,7 +130,7 @@ class BloobVFields(val muis:BoolV with carrySysInstr, val otherThanMuis:BoolV) e
   /** todo ya deux vote, un ca suffit */
   val lightConcave=( exist(shrink3(brdVeOut)) | (exist(shrink2(brdVeOut)) & rand) ) & ~  inside(brdVeOut)
 
-  val density: UintVx = addLt(countNeighbors(addSym(e(otherThanMuis)).sym))
+  val density: UintVx = addLt(countNeighbors(addSym(e(couldBeOtherThanMuis)).sym))
   //val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit
   val notDense = density < fromInt(3)
   val dense= ~(density<4)

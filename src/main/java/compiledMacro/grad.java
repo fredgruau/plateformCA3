@@ -342,4 +342,21 @@ for (int i = 1; i < pdeef$h1$0.length -1; i++) {
   ;
 p.prepareBit(gradltapex2)
  ;
+  }
+public static int ltapex2_3_3_1_1GateCount=21;
+ public static void ltapex2_3_3_1_1(PrShift p,int [][] pdeef,int [][] psegmentderiv,int [][] pdifff,int [][] gradltapex2){
+ int[] gradltapex2$h1=gradltapex2[0],gradltapex2$h2=gradltapex2[1],gradltapex2$d1=gradltapex2[2],gradltapex2$d2=gradltapex2[3],gradltapex2$ad1=gradltapex2[4],gradltapex2$ad2=gradltapex2[5],pdeef$h1$0=pdeef[0],pdeef$h1$1=pdeef[1],pdeef$h1$2=pdeef[2],pdeef$h2$0=pdeef[3],pdeef$h2$1=pdeef[4],pdeef$h2$2=pdeef[5],pdeef$d1$0=pdeef[6],pdeef$d1$1=pdeef[7],pdeef$d1$2=pdeef[8],pdeef$d2$0=pdeef[9],pdeef$d2$1=pdeef[10],pdeef$d2$2=pdeef[11],pdeef$ad1$0=pdeef[12],pdeef$ad1$1=pdeef[13],pdeef$ad1$2=pdeef[14],pdeef$ad2$0=pdeef[15],pdeef$ad2$1=pdeef[16],pdeef$ad2$2=pdeef[17],psegmentderiv$h$0=psegmentderiv[0],psegmentderiv$h$1=psegmentderiv[1],psegmentderiv$h$2=psegmentderiv[2],psegmentderiv$d$0=psegmentderiv[3],psegmentderiv$d$1=psegmentderiv[4],psegmentderiv$d$2=psegmentderiv[5],psegmentderiv$ad$0=psegmentderiv[6],psegmentderiv$ad$1=psegmentderiv[7],psegmentderiv$ad$2=psegmentderiv[8],pdifff$h=pdifff[0],pdifff$d=pdifff[1],pdifff$ad=pdifff[2];
+
+// initialisation 
+ int auxL27=0,r0=0;
+for (int i = 1; i < pdeef$h1$0.length -1; i++) {
+ r0=( psegmentderiv$h$0[i]  &  pdeef$h1$0[i] );r0=( r0  | ( psegmentderiv$h$1[i]  &  pdeef$h1$1[i] ));r0=( r0  | ( psegmentderiv$h$2[i]  &  pdeef$h1$2[i] ));auxL27= r0 ;
+ gradltapex2$h1[i]= auxL27 ;gradltapex2$h2[i]=(~ auxL27  &  pdifff$h[i] );r0=( psegmentderiv$d$0[i]  &  pdeef$d1$0[i] );r0=( r0  | ( psegmentderiv$d$1[i]  &  pdeef$d1$1[i] ));
+ r0=( r0  | ( psegmentderiv$d$2[i]  &  pdeef$d1$2[i] ));auxL27= r0 ;gradltapex2$d1[i]= auxL27 ;gradltapex2$d2[i]=(~ auxL27  &  pdifff$d[i] );
+ r0=( psegmentderiv$ad$0[i]  &  pdeef$ad1$0[i] );r0=( r0  | ( psegmentderiv$ad$1[i]  &  pdeef$ad1$1[i] ));r0=( r0  | ( psegmentderiv$ad$2[i]  &  pdeef$ad1$2[i] ));auxL27= r0 ;
+ gradltapex2$ad1[i]= auxL27 ;gradltapex2$ad2[i]=(~ auxL27  &  pdifff$ad[i] );
+  }
+  ;
+p.prepareBit(gradltapex2)
+ ;
   }}

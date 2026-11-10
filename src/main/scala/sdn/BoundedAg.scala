@@ -66,7 +66,6 @@ class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/
 
   //force(introduceNewPriority(),"vote",'v',vote())//specific forces applied to voronoi, pour l'instant ne sert a rien.
   appendForce("vote",'|', moderate(vote,"vote" ))
-
   /** illustrates how to print stuff */var tmp:BoolV=null;
   /** priority of "obliged" force */
   //force(introduceNewPriority(),"repulse",'|',part.d.repulseVor)//specific forces applied to Flies

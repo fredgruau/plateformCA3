@@ -11,7 +11,7 @@ import compiler.SpatialType._
 import dataStruc.{BranchNamed, Named}
 import sdn.MuStruct
 import progOfmacros.Comm._
-import progOfmacros.Compute.{concat3V, concat4V, concat5V}
+import progOfmacros.Compute.{concat3V, concat3Vbis, concat4V, concat4Vbis, concat5V, concat5Vbis}
 import progOfmacros.Topo.{brdin, nbccV}
 import progOfmacros.{Grad, Wrapper}
 import progOfmacros.Util.{randE2, randN12, randNext, torusify}
@@ -117,13 +117,17 @@ trait Sym extends BoolVe {
 
 /** permet de récupérer les voisin V, intUI */
 trait SymUI extends UintVe {
-  val symUI=neighborsSymUI(this)
+  val symUI: UintVe =neighborsSymUI(this)
 }
-
+/** par rapport a symui, on le calcule sans appel a une macro poil au dos */
+trait SymUIbis extends UintVe {
+  val symUIbis:UintVe=transfer(sym(transfer(this)))
+}
 /** contains addxxxx(arg) function which managas to add the functionality xxx to the argument arg */
 object Util {
   def myLn2( n:Int):Int={
-    if(n<4)2
+    if(n<2) 1
+    else if(n<4)2
     else if(n<8) 3
     else if(n<16) 4
     else -1
@@ -179,11 +183,20 @@ object Util {
     lazy val delayed = _arg;
     new AST.Delayed[(T[V,E], UI)](() => delayed) with UintVe with SymUI with Named with BranchNamed {}
   }
+
+  /** provide a boolVe with an additional fields sym */
+  def addSymUIbis(_arg: => UintVe) = {// with Compar with ComparApex with Compar3
+    lazy val delayed = _arg;
+    new AST.Delayed[(T[V,E], UI)](() => delayed) with UintVe with SymUIbis with Named with BranchNamed {}
+  }
   /**
    *
    * @param b represent a boolV offering computation of meeting points
    * @return places where growig will not cause merging of blobs.
    */
+
+
+
 
 
   /** bits has a number of $6*k$ bits , we sort them in 6 subsequence of $k$ bits */
@@ -198,7 +211,17 @@ object Util {
       case 5=>grouped.map((a:Array[BoolV])=>concat5V(a(0),a(1),a(2),a(3), a(4)))
     }
   }
-
+  def splitInto6bis(bitSequence: UintV, k:Int): Array[UintV] = {
+    /** contains the bit */
+    val bits: Array[BoolV] =(0 until 6*k).map(elt(_,bitSequence)).toArray
+    val grouped=bits.grouped(k).map(_.toArray).toArray
+    k match {
+      //we have to consider one case for each bit size, its a bit boring but still easiest, and produce a readable code
+      case 3=>grouped.map((a:Array[BoolV])=>concat3Vbis(a(0),a(1),a(2)))
+      case 4=>grouped.map((a:Array[BoolV])=>concat4Vbis(a(0),a(1),a(2),a(3)))
+      case 5=>grouped.map((a:Array[BoolV])=>concat5Vbis(a(0),a(1),a(2),a(3), a(4)))
+    }
+  }
 }
 
 /** Layer implementing a random bit */

@@ -3,7 +3,7 @@ package sdn
 import compiler.AST.{Layer, delayed, pL}
 import compiler.ASTB.True
 import compiler.ASTBfun.{addRedop, derivative, orRedop, redop, unaryToBinary2}
-import compiler.ASTLfun.{cond, e, ltSI, neighbors, neq, orR, orScanRight, reduce, uI2SIL, v}
+import compiler.ASTLfun.{cond, e, inputBool, ltSI, neighbors, neq, orR, orScanRight, reduce, uI2SIL, v}
 import compiler.ASTL.{delayedL, send, transfer, unop}
 import compiler.SpatialType.{BoolE, BoolEv, BoolV, BoolVe, IntE, IntEv, IntV, IntVe, UintV, UintVx}
 import compiler.{AST, ASTL, ASTLfun, ASTLt, B, E, Locus, Ring, SI, T, UI, V, repr}
@@ -29,14 +29,9 @@ trait vef[L<:Locus]{
 }
 
 /** contains fields of  Vagent.  not used right now,
- * since we store all of them in blob fields an qpoint fields */
+ * since we store all of them in blob fields or qpoint fields */
 trait UtilVagent extends BranchNamed{
   self:MovableAgV=>
-  //lazy   val brdE:BoolE=borderS(isV) //push everywhere possible.
-  //val laateBrdE:BoolE=delayedL(brdE)
-  //val    newbrdV:BoolV=existS(laateBrdE)
-  /** Ve edges leaving the support , we know we may take a sym so we prepare for it, to get a meaningfull name brdVe.sym*/
-  //lazy val brdVe=addSym( transfer(v(brdE)) & isVe)
 }
 
 
@@ -48,7 +43,6 @@ trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with sdntool.a
   lazy val vote= {val rand= root4naming.addRandBit().asInstanceOf[BoolV]
     cibler(bf.dense | bf.density3 & rand)}
   override def flip2next=  {
-   //println("totototototototo");    println("totototototototo")
     val f=flipAfterSync;  f ^ muis
   }
 }
@@ -59,7 +53,6 @@ abstract  class MovableAg[L <: Locus](init:String)(implicit m: repr[L]) extends 
   { override def allTriggered:UintV={
     moves.map(_.values.map(_.triggered).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
   }
-
   override def allTriggeredYes:UintV={
     moves.map(_.values.map(_.triggeredYes).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
   }
@@ -67,39 +60,16 @@ abstract  class MovableAg[L <: Locus](init:String)(implicit m: repr[L]) extends 
   override def  allFlip: UintV ={
     moves.map(_.values.map(_.move2flip(isV)).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
   }
-
     override def  allBug: UintV ={
       moves.map(_.values.map(_.bug).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
     }
-
-    /** nombre de bit pour coder une prioritéé en binaire a partir de nbit en unaire*/
-
 
   /** a random priority is needed to help finalize tournament, in case of equality c'est plus sérieux avec deux bits de random priority*/
   override val prioRand=  randUintV(nbitPrioRand).asInstanceOf[UintV]   //sans "asInstance" il gueule non compatibilité de override entre addLt e UintVx
 
   /** Movable Agent's support. It is memorized in a layer a movable agent is a mustruct, so it is  called muis. */
-  override val muis=new Layer[(L, B)](1, init) with ASTLt[L,B]  with Stratify [L,B] with carrySysInstr   {
-    override val  next: AST[(L, B)] = delayedL(flip2next.asInstanceOf[ASTLt[L,B]])   }
-  /** les moves des movable viennent directement d'une force, et ceux des bounded ? faut voir, si ca se trouve aussi.
-   *
-   * */
-  def force(priority:Int, name:String,shortName:Char, force: Force) = {
-   addForces(priority, name, shortName, force)
-    // addMoves(priority, name, shortName, force.action(this))
+  override val muis=new Layer[(L, B)](1, init) with ASTLt[L,B]  with Stratify [L,B] with carrySysInstr   {override val  next: AST[(L, B)] = delayedL(flip2next.asInstanceOf[ASTLt[L,B]])   }
+
   }
-
-  /** for the moment, priority is pure random.  formulation  casse gueule,
-   * car une variable a deux noms de reflection possible: prio et prioRand
-   * priority of the force causing the move. priority 0 is weakest
-   * prio is defined for bounded agents, because it could happen they are also submitted to mutex
-   *  they will inherit the priority from their parents, pb if there is two parents.
-   */
-  //override val prio =prioRand //pour le moment on n'a pas encore plusieurs move possible, dans pas longtemps on va programmer prio et initalflip
-
-
-  /** for movableAgent, canceling of flip is done by  directly voiding the agent's flip! */
-  //  override def cancelFlip(where: BoolV): Unit = {  flip = flip & where  }
-}
 
 

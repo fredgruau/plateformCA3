@@ -45,10 +45,10 @@ trait addBlobSummit {
   /** computes many field about the summit's shape, whether it is a perfect doubleton or singleton, wether it is a face splitting the summit in three, wether it is a tunnel*/
   val bsm =new Attributs {
     override val muis = muissssSelf
-    val meetiV = (bfs.bv.meetV | bfs.bv.nbcc0) & bfs.otherThanMuis
+    val meetiV = (bfs.bv.meetV | bfs.bv.nbcc0) & bfs.couldBeOtherThanMuis
     /** true for meeting edges which are next to a particules, and therefore likely to participate to the center */
     val meetiEselected = bfs.bv.meetEfilled & existS[V, E](muis)
-    val meetiE: BoolV = existS[E, V](meetiEselected) & bfs.otherThanMuis
+    val meetiE: BoolV = existS[E, V](meetiEselected) & bfs.couldBeOtherThanMuis
     val meetiEV = meetiE | meetiV
     /** faces splitting the summit in three */
     val nbcc3F = insideS[E, F](bfs.bv.meetEfilled)
@@ -60,15 +60,15 @@ trait addBlobSummit {
      * in order to orchestrate a switch from one split3 tripleton, to the other */
     val losangeApexes: BoolV = exist[F, V](apexV(f(loosangeIncluded)))
     /** faces with three vertice within the  summit */
-    val insideFace: BoolF = insideS[V, F](bfs.otherThanMuis)
+    val insideFace: BoolF = insideS[V, F](bfs.couldBeOtherThanMuis)
     /** number of neighbor summits */
     //val density: UintVx = bfs.density//addLt(countNeighbors(addSym(e(bfi.otherThanMuis)).sym))
     /** summits having a single neighbor */
-    val oneNeighbor = bfs.otherThanMuis & (~(bfs.density > ASTLfun.fromInt(1)) & neq(bfs.density))
+    val oneNeighbor = bfs.couldBeOtherThanMuis & (~(bfs.density > ASTLfun.fromInt(1)) & neq(bfs.density))
     /** true if the summits form a doubleton,  two connected vertice have a single neighbor */
     val isDoubleton = existS[E, V](insideS[V, E](oneNeighbor))
     /** summits having exactly two  neighbors */
-    val twoNeighbor = bfs.otherThanMuis & (~(bfs.density > ASTLfun.fromInt(2))) & neq(bfs.density) & ~oneNeighbor
+    val twoNeighbor = bfs.couldBeOtherThanMuis & (~(bfs.density > ASTLfun.fromInt(2))) & neq(bfs.density) & ~oneNeighbor
     /** true for the inside face of an isolated tripleton (the neighbors have all exactly two neighbors */
     val isTripletonF: BoolF = insideS[V, F](existS[F, V](insideFace) & twoNeighbor)
     /** true for vertices of an isolated tripleton */
@@ -92,6 +92,10 @@ trait addTunnel {
   val bfTn= new BloobVFields(muis, tunnel)
 }
 
+/**
+ *  use all the fields computed around the summit, in order to create a "ciblerFaible" force "seize" which will maitain doubleton and tripleton particles
+ *  it does not forces empty when not on target, and it allows to invade next to target.
+ *  *  */
 trait addSeize extends  Homogen with addSummit with addBlobSummit with addTunnel {
   val seize= ciblerFaible(  (bsm.isDoubleton | bsm.isTripleton | bfTn.bv.meetV|bsm.nbcc3 )& ~bsm.losangeApexes & ~sum.weakSummit)
 }

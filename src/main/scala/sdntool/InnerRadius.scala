@@ -20,20 +20,23 @@ import sdn.{CancelFlipIf, LayerS, MovableAgV, MuStruct, One}
  * @param srcProp points to source for propagation
  * @param op operator. this class is a wrapper for that operator siFieldOperatorProp,
  *  which computes all what's needed to compute for an integer layers */
-abstract class SiFieldZeroInit2(n:Int,  source: MuStruct[V, B],val srcProp:BoolVe , op:siFieldOperatorProp)extends MuStruct [V,SI] {
+abstract class SiFieldZeroInit2(n:Int,  source: MuStruct[V, B],val srcProp:BoolVe , op:siFieldOperatorProp) extends MuStruct [V,SI] {
   val targetOnSource: ASTLt[V, SI]
   val zero:SintV=fromInt(0);
   override val muis: LayerS[V, SI] =  new LayerS[V, SI](n,"0") { // new SIlayer()
-    override val next: AST[(V, SI)] =cond (exist(srcProp)|source.muis.munext,delayedL( this.pred +cond(source.muis.munext, sign(targetOnSource) ,delta))(this.mym),zero)
-  }
+    override val next: AST[(V, SI)] =cond (exist(srcProp)|source.muis.munext,delayedL( this.pred +cond(source.muis.munext, sign(targetOnSource) ,delta))(this.mym),zero)  }
 
   /** slopelt retrieves the sign of the slope, which is allways needed, delta is 0, +1 ot -1  we update with small delta:either increment or decrement */
   val (sloplt: BoolVe, delta, buginAvg, gap) = deltaCallProp(muis.pred,srcProp,op)
+  override def shoi={super.shoi;
+    shoow(sloplt: BoolVe, delta, buginAvg, gap,vortex)}
   val slopgt = neighborsSym(sloplt);  val existNearer = exist(sloplt);  val existFurther = exist(slopgt);
   val opp = -(muis)  //todo opp can be retrieved from deltaCallProp, it spared computation and factorize code
   /** spurious vortex occurs outside chip.borderF.df, so we have to and with chip.borderF.df in order to prevent false detection of vortex bug */
   val vortex: BoolF =   chip.borderF.df & andR(transfer(cacEndomorph(xorRedop[B]._1, sloplt)))
   /** same story with gap*/   val gap2=gap & chip.borderE.df
+
+
   def showMe = { shoow(sloplt);shoowText(buginAvg, List());
     //buugif( vortex) ;  buugif( gap2)
      shoow (vortex) ;  shoow( gap2)
@@ -71,10 +74,8 @@ class InnerRadius(source: MuStruct[V, B], val d:MuDist, val dgv:MuDist)
       ag.addConstraint("slov",'v',slow)
     case _ =>
   }
+  override def showMe: Unit = {super.showMe; shoow(srcProp);   shoow (sloplt2); shot(grad)  }
 
-  override def showMe: Unit = {super.showMe; shoow(srcProp)
-    shoow (sloplt2); shot(grad)
-  }
 }
 
 trait addRadius {

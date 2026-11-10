@@ -4,7 +4,7 @@ import compiler.AST.Layer
 import compiler.ASTB.{False, Uint}
 import compiler.ASTBfun.{addRedop, derivative, ltUI2, orRedop, redop}
 import compiler.ASTL.{delayedL, send, transfer, unop}
-import compiler.ASTLfun.{allOne, andLB2R, b2SIL, cond, e, eq0, f, fromInt, imply, inputBool, lt2, ltSI, neighbors, neq, orScanRight, reduce, uI2SIL, v}
+import compiler.ASTLfun.{allOne, andLB2R, b2SIL, b2UIL, cond, e, eq0, f, fromInt, imply, inputBool, lt2, ltSI, neighbors, neq, orScanRight, reduce, uI2SIL, v}
 import compiler.SpatialType.{BoolE, BoolEv, BoolF, BoolV, BoolVe, BoolVf, IntE, IntEv, IntV, IntVe, UintV, UintVx}
 import compiler.repr.nomE
 import compiler.{AST, ASTLfun, ASTLt, B, E, F, Locus, SI, T, UI, V, chip, repr}
@@ -17,7 +17,7 @@ import progOfmacros.Wrapper.{exist, inside, insideS, not, unary2Bin}
 import sdn.ForceAg.AgForced
 import sdn.Globals.root4naming
 
-import scala.collection.immutable
+import scala.collection.{immutable, mutable}
 //import sdn.Util.addLt
 
 import scala.::
@@ -187,8 +187,9 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
    //def allForces=forces
    /** makes it possible to cancel the force at run time, by pressing on the moderators, whose names includes "moderator" */
    val moder:mutable.HashMap[String,BoolV]=new mutable.HashMap[String,BoolV] () with Named with BranchNamed {}
-
-
+   override def shoi={super.shoi;showModerators;showMe
+   }
+    /** la premiere force a pour priorité 1 */
     protected def getPriority(force: Force): Int = {
      var p=0;
      for(mapForces<-forces)
@@ -199,19 +200,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
      throw new Exception("force not found:"+force)
      return -1
    }
-   /**
-    * adds a new priority and a new hastable of force after fthere
-    * @param fthere fore already added
-    * @param name name of new force
-    * @param shortName one char name
-    *  @param fnew force to be added after fthere
-    */
-   def insertForceAfter( fthere:Force, name:String, shortName:Char, fnew:Force ): Unit = {
-     val prio:Int=getPriority(fthere)
-     val ht =mutable.LinkedHashMap[String,Force]();
-     ht(shortName+name)=fnew
-     forces.insert(prio,ht)
-   }
+
 
    /**
     *
@@ -226,34 +215,48 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
 
    protected def appendForce(name:String, shortName:Char, f:Force ) = { //we may have to store set of moves, if we need add move of same priority.
      val ht =mutable.LinkedHashMap[String,Force](); forces+=ht
-     moves+= mutable.LinkedHashMap[String,MoveC](); //moves augments at same rythm
-     //moder(name)=inputBool
+     //moves augments at same rythm
+     ht(shortName+name)=f//.restrict(moder(name)) //le caractére identifiant la force est mis au début du nom, pour simplifier.
+   }
+   protected def insertForce(name:String, shortName:Char, f:Force,priority:Int ) = { //we may have to store set of moves, if we need add move of same priority.
+     val ht =mutable.LinkedHashMap[String,Force]();
+     forces.insert( priority, ht) //0 insére au tout début
+     //moves augments at same rythm
      ht(shortName+name)=f//.restrict(moder(name)) //le caractére identifiant la force est mis au début du nom, pour simplifier.
    }
 
-   protected def addForces(priority:Int, name:String, shortName:Char, f:Force ) = { //we may have to store set of moves, if we need add move of same priority.
-     val ht=forces(priority)
-     assert(!(ht.contains(shortName+name)), "force was already added");
-     moder(name)=inputBool
-     ht(shortName+name)=f.restrict(moder(name)) //le caractére identifiant la force est mis au début du nom, pour simplifier.
+   /**
+    * adds a new priority and a new hastable of force after fthere
+    * @param fthere fore already added
+    * @param name name of new force
+    * @param shortName one char name
+    *  @param fnew force to be added after fthere
+    */
+   def insertForceAfter( fthere:Force, name:String, shortName:Char, fnew:Force ): Unit = {
+     insertForce(name,shortName,fnew,getPriority(fthere))
    }
+   def insertForceBefore( fthere:Force, name:String, shortName:Char, fnew:Force ): Unit = {
+   insertForce(name,shortName,fnew,getPriority(fthere)-1)
+ }
+
    def showModerators={ for ((key, value) <- moder)   shoow(value) }
 
-   /** moves are stored in centered form, so that we can restrict them. we store one hashmap for each priority. It two moves with identical names are added, we throw an exception */
+   /** moves are stored in centered form, so that we can restrict them. we store one hashmap for each priority.
+    * It two moves with identical names are added, we throw an exception in order to consider the case more carfully when this would happen in the future*/
    val moves:ArrayBuffer[mutable.LinkedHashMap[String,MoveC]] = ArrayBuffer() //empty at the beginning
 
-   /** if move of same priority exists, signal an error */
-
-   protected def addMoves(priority:Int, name:String, shortName:Char, m: MoveC ) = { //we may have to store set of moves, if we need add move of same priority.
-     val ht=moves(priority)
-     assert(!(ht.contains(name)), "each force must have a distinct priority");
-     moves(priority)(shortName+name)=m  //le caractére identifiant le move est mis au début du nom, pour simplifie
-   }
    /** generates move from forces */
    def applyForces = {
+     def addMoves(priority:Int, name:String, shortName:Char, m: MoveC ) = { //we may have to store set of moves, if we need add move of same priority.
+       val ht=moves(priority)
+       assert(!(ht.contains(name)), "each force must have a distinct priority");
+       moves(priority)(shortName+name)=m  //le caractére identifiant le move est mis au début du nom, pour simplifie
+     }
      var priority=0
      for(mapForces<-forces)
-        {for((name,f)<-mapForces)
+        { moves+= mutable.LinkedHashMap[String,MoveC](); //on rajoute un buffer dans move
+          if(mapForces.size>1) throw new Exception("two forces of equal priority, faut gérer!")
+          for((name,f)<-mapForces)  //on parcourt les forces, et on ajoute le move crée
           addMoves(priority,name.drop(1),name(0),f.action(this.asInstanceOf[MovableAgV]))
           priority+=1
         }
@@ -274,9 +277,6 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
    if(constrs.contains(shortName+name))    throw new Exception("une contrainte du nom "+name+" exite déja, changez le nom siou plait")
    constrs(shortName+name)=c  }
 
-
-
-
    /** not the same for  movable/bound  */
    def allTriggered:UintV;
    def allBug:UintV;
@@ -295,26 +295,32 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
    var fliprioOfMove:PartialUI=null
 
    val mergedMoves= new  mutable.HashMap[String,MoveC]() with Named with BranchNamed{}
-
-   /**  */
+  /** the ith caracter of code is the code of the force that generated the move it allows to see which force is acting on each single vertice*/
+   var codeMove:List[String]=null
+   /** generates the moves, computes the flip and its priority */
    def setFliprioOfMove() = {
-     applyForces
-     /** stores all the moves in a single hashMap, with the name of the force as key, so that we can easily shoow them */
+     applyForces //produit les moves
+     //assert(moves.size>1,"faut au moins deux move, sinon pb entier codé par un bool")
+     /** stores the first letter of each move's name for all priorities, This lettre is to be displayed if move is selected
+      * there can be at  most  one positive move selected
+      * if move is blocking nothing get displayed, and  isquiscent will be true */
+     codeMove =  moves.map(_.keys.head.charAt(0).toString).toList
+     /** stores all the moves in a single hashMap, with the name of the force as key, so that we can easily shoow them if needed*/
     for (m <- moves; (k, v) <- m) mergedMoves(k.drop(1)) = v
-
      /** does a computation to be repeated specifically for yes moves */
      def processMoves(all:UintV,nbit:Int):(UintV,UintV,UintV)={
        /** bouche les trous avec un orscanright */
-       val filled=orScanRight(all)
-       (filled,unop(derivative, filled),unary2Bin(filled,nbit))
+       val filled:UintV=if(nbit==1) all else orScanRight(all) //si une seule force,  pas besoin de orscanrighter
+       val binary=if(nbit==1)filled else unary2Bin(filled,nbit) //si une seule force, pas besoin de unary2biner
+       val deriv=if(nbit==1) filled  else unop(derivative, filled)
+       (filled,deriv,binary)
      }
-     val (filledTriggered,/** all false except for highest priority move */ highestTriggered, prioDet: UintV) =    processMoves(allTriggered,moves.size)
-
+     val (filledTriggered: UintV,/** all false except for highest priority move */ highestTriggered: UintV, prioDet: UintV) =    processMoves(allTriggered,moves.size)
      yesnoHighestTriggered=highestTriggered
-     /** selectionne le flip parmis les flip des mouvement proposés */
-     val flipOfMove = neq(highestTriggered & allFlip)
+     /** the flip of the move is selectionne le flip parmis les flip des mouvement proposés */
+     val flipOfMove = if(moves.size==1) filledTriggered.asInstanceOf[BoolV]    else neq(allFlip & highestTriggered )
 
-     /** on le fait aussi pour les "yes" move */
+     /** on le fait aussi pour les "yes" move pour savoir quel est le move qui aurait pu etre fait*/
      val (yesFilledTriggered, yHT, p) = {
        /** makes a global logical or, of boolean which are true for C2moves,
         * if false then there will not be negative move
@@ -336,7 +342,6 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
    }
 
    /** applies all the constraints on the move */
-   //var  allFlipCancel: UintV = null
    var  allFlipLocalCanceled: UintV = null
    var flipAfterLocalConstr: PartialUI=null
    var  allFlipMutexCanceled: UintV = null
@@ -358,7 +363,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
      allFlipCancel.reduce(_ :: _)
    }
    def setFlipCancel()= {
-     addConstraint("rand",'r',randConstr) //on le fait la pour etre sur que randConst a bien pu etre redefini pour BoundedAg
+     addConstraint("rand",'r',randConstr) //on le fait  au dernier moment pour etre sur que randConst a bien pu etre redefini pour BoundedAg
 
      //we separate local  then  mutex, mutapex, tritex and then sextex
      // it increases movement, mutex  will be more selective, since they come after
@@ -377,29 +382,18 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
       flipAfterSextexConstr = flipAfterMutexConstr.rarefies(eq0(allFlipSextexCanceled))
      }
      else flipAfterSextexConstr=flipAfterMutexConstr
-     //val randexes:mutable.LinkedHashMap[String,PartialUI=>Constr](randConstr)
      allFlipRandCanceled=allFlipCancel(flipAfterSextexConstr, splitConstr.randexes)
      flipAfterRand=flipAfterSextexConstr.rarefies(eq0(allFlipRandCanceled))
      //former global computation.    allFlipCancel=allFlipCancel2(fliprioOfMove,constrs);   val noFlipCancel=eq0(allFlipCancel)
      val noFlipCancel=flipAfterRand.defined
      flipAfterConstr = noFlipCancel  & fliprioOfMove.defined  //the flip still valid after constraint are the one which are not canceled.
-     //we will randomly cancel only if not obliged flip
    }
-
-   //def flipAfterRandCancel=flipAfterSync & rand  // c'est le rand du trait rando.
-
-
-   /** stores the first letter of each move's name for all priorities, This lettre is to be displayed if move is selected
-    * there can be at  most  one positive move selected
-    * if move is blocking nothing get displayed, and  isquiscent will be true */
-   def codeMove:Iterable[String] = { assert(moves.size>1,"faut au moins deux move, sinon pb entier codé par un bool")
-     moves.map(_.keys.head.charAt(0).toString) }
 
    /** will show only move that trigger movement. Move that "block" movement are hidden,  */
    def showPositiveMoves={
-     shoowText(yesHighestTriggered,codeMove.toList)
-     shoowText(yesnoHighestTriggered,codeMove.toList)
-     shoowText(allBugs,codeMove.toList) //will shows the force with contradiction between empty and invade
+     shoowText(yesnoHighestTriggered,codeMove)
+     if(yesHighestTriggered !=yesnoHighestTriggered )shoowText(yesHighestTriggered,codeMove)
+     //shoowText(allBugs,codeMove) //will shows the force with contradiction between empty and invade
    }
    // /** shows also  moves that block movement */
    // def showMoves={ shoowText(highestTriggered,codeMove.toList)}
@@ -407,8 +401,8 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
    def showAllFlip={
      shoowText(fliprioOfMove.valuc, List() )
      shoow(fliprioOfMove.valuc.lt)
-     shoow(fliprioOfMove.defined, isQuiescent, flipAfterConstr,flipAfterLocalConstr.defined,
-       flipAfterMutexConstr.defined)
+     shoow(isQuiescent,flipAfterConstr,flipAfterLocalConstr.defined,   flipAfterMutexConstr.defined)//fliprioOfMove.defined, deja affiché
+
    }
    /** stores the first letter of each constraint's name. This lettre is to be displayed on vertice where constraint is active
     * there can be several active constraints*/
@@ -426,6 +420,6 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
      showPositiveMoves;
      showConstraint;
      showAllFlip;
-     showModerators //must be executed
+     //showModerators //must be executed
    }
  }

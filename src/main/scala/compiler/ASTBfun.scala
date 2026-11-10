@@ -4,10 +4,13 @@ import AST.{Call1, Fundef2, _}
 import ASTB.{Elt, Scan1, _}
 import compiler.ASTBfun.{Fundef1R, Fundef2R, Fundef3R, fundef2Bop2, halfSIsurUI, negB, p, redop}
 import compiler.ASTLfun.halve
-import compiler.SpatialType.BoolV
+import compiler.SpatialType.{BoolV, BoolVe, UintV, UintVe}
 import ASTLfun._
 import compiler.ASTBt.BB
+import compiler.ASTL.send
 import compiler.MyOpB
+import progOfLayer.Sextexrect.{weakCmpProdZero, weakCmpProdtwo}
+import sdn.Util.{addSymUI, splitInto6}
 
 /** Contains the code of logical function defined as val, to avoid reproducting the code several times, when they are used in BINOP or UNOP
  * todo function which use bool Constructors should be moved to ASTB, so that we can declare those constructors, private.
@@ -172,6 +175,8 @@ object ASTBfun {
     val xb = p[B]("xBtoSi")
     Fundef1("b2SI", Concat2(xb,False()), xb)
   }
+
+
 
   /*
     /** wrapper */
@@ -413,19 +418,8 @@ object ASTBfun {
     (halveBI[SI], halveBI[UI])
   }
 
-  /*private val (dropMsbSI, dropMsbUI) = {
-    val other2: Fundef2R[B] = {
-      val (xb, yb) = (p[B]("xb"), p[B]("yb"));
-      Fundef2("other2", xb, xb, yb)
-    }
 
-    def dropMsb[R <: I](implicit n: repr[R]): Fundef1R[R] = {
-      val x = p[R]("xdropB");
-      Fundef1("dropMsb", Scan1(x, other2, False(), Right(), initUsed = true), x)
-    };
-    (dropMsb[SI], dropMsb[UI])
-  }
-*/
+
 
   /** result in shifting bits towards the tail, entering a zero at the end of the list,
    * it would divide by two an unsigned integers. The bit size does not change*/
@@ -480,7 +474,6 @@ object ASTBfun {
   }
 
 
-
   val ltUI2: Fundef2[UI, UI, B] = {
     val (xui, yui) = (p[UI]("xminUI"), p[UI]("yminUI")); //a t-on x < y
     val difference = xui ^ yui //true for bits which differs betwen xui and yui
@@ -491,6 +484,46 @@ object ASTBfun {
     Fundef2("ltUI", new Call1[UI, B](neqUI, first1 & yui) with ASTBt[B], xui, yui) //todo ecrire des xor et des and pour les ui
   } //TODO a faire correct en utilisant ltUI.
 
+
+
+  def chooseMaxOf(prio: UintV,k:Int): BoolVe={
+    /**  contients les 6 voisins dans l'ordre clock: east,se,sw, west, nw,ne */
+    val voisins: UintVe = addSymUI(e(prio)).symUI
+    /**  récupére tout les bits de tout ces voisins, reste ensuite a  les regrouper en paquet, un par voisin*/
+    val nasI: UintV = concatR(voisins) //si k = 4, on récupére 24 bits a la suite pour 6 voisins, chacun 4 bits,
+    /* former fomulation awkward because dependant on the number of bits
+     val (n0, n1, n2, n3, n4, n5) = (elt(0, nasI), elt(1, nasI), elt(2, nasI), elt(3, nasI), elt(4, nasI), elt(5, nasI)) // aprés on les numérote
+     val (n6, n7, n8, n9, n10, n11) = (elt(6, nasI), elt(7, nasI), elt(8, nasI), elt(9, nasI), elt(10, nasI), elt(11, nasI)) //aprés on les numérote
+     val (n12, n13, n14, n15, n16, n17) = (elt(12, nasI), elt(13, nasI), elt(14, nasI), elt(15, nasI), elt(16, nasI), elt(17, nasI)) // aprés on les numérote
+     val (east, se, sw) = (concat3V(n0, n1, n2), concat3V(n3, n4, n5), concat3V(n6, n7, n8))
+     val west = concat3V(n9, n10, n11)
+     val nwest = concat3V(n12, n13, n14)
+     val neast = concat3V(n15, n16, n17)*/
+    val Array(east,se,sw, west,nwest,neast)=splitInto6(nasI, k)
+    /** Two in weakCmpProdtwo  means that if arg1 = arg2 we expand in both directions, going from a singleton to a tripleton */
+    val (northmin, nwnw, nene) = weakCmpProdtwo(nwest, neast)
+    //  shoow(northmin,nwnw,nene)
+    val (southmin, swsw, sese) = weakCmpProdtwo(sw, se)
+    val (horizMin, heast, hwest) = weakCmpProdZero(east, west) //here we cannot expand both east and west
+    val (vertmin, nn, ss) = weakCmpProdZero(northmin, southmin)
+    //shoow(nn,ss)
+    val (toto, vert, horiz) = weakCmpProdZero(vertmin, horizMin)
+
+    //shoow(vert,horiz)
+    val firstStage = Array(heast, sese, swsw, hwest, nwnw, nene) //peut y avoir plusieurs bit a 1. faudra refaire des "ET" logique
+    val south = ss & vert
+    val north = nn & vert
+    val secondStage: Array[ASTLt[V, B]] = Array(horiz, south, south, horiz, north, north)
+    /** a seulement un bits a 1 sauf pour etendre vers le haut ou  vers le bas, ou la ca marche sur deux bits. */
+    val sextexInt: List[ASTLt[V, B]] = (0 to 5).map((i: Int) => {
+      firstStage(i) & secondStage(i)
+    }).toList
+    /** represente un uint sur 6 bit qui est le code unaire d'un nombre compris entre 0 et 5, possiblement zero en cas de failure.
+     * sur les 6, un seul est vrai ou deux adjacents. on peut "l'envoyer" avec send */
+    //val success=sextexInt.reduce(_|_);show(success) //monitor if there is actual move.
+    val sextex: BoolVe = send(sextexInt)
+    sextex
+  }
 
   /** optimal implementation of comparison between two unsigned integers, using orscanright like operators, missing just the first and final xor, so as to reuse first¯1, */
   val orScan: Fundef1[UI, UI] = {

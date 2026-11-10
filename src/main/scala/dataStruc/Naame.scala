@@ -91,10 +91,10 @@ trait BranchNamed
 
             val fieldHasMap=fields.filter(_._2.isInstanceOf[HashMap[_,_]])
             if(fieldHasMap.nonEmpty)
-              printf("ya dela map")
+              printf("ya dela map:")
 
             fieldsWithName.foreach { case (name, value) =>
-              println(s"$name: $value")
+              //println(s"$name: $value")
               value match {
                 case t: Named =>
                   val nameOublieN=
@@ -170,7 +170,7 @@ trait BranchNamed
                 (fieldName, methodMirror.apply())
               } catch {
                 case e: Throwable =>
-                  println(s"Erreur pas super class, lors de l'accès au champ ou méthode $fieldName: ${e.getMessage}")
+                 // println(s"Erreur pas super class, lors de l'accès au champ ou méthode $fieldName: ${e.getMessage}")
                   (fieldName, "<inaccessible>")
               }
           }
@@ -196,7 +196,7 @@ trait BranchNamed
                     (fieldName, methodMirror.apply())
                   } catch {
                     case e: Throwable =>
-                      println(s"Erreur Super Class lors de l'accès au champ ou méthode $fieldName: ${e.getMessage}")
+                     // println(s"Erreur Super Class lors de l'accès au champ ou méthode $fieldName: ${e.getMessage}")
                       (fieldName, "<inaccessible>")
                   }
               }

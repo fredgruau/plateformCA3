@@ -70,13 +70,13 @@ abstract class Circuit[L <: Locus, R <: Ring](p: Param[_]*) extends AST.Fundef[(
 
 
     val prog2 = prog1.treeIfy();//prog2.checkInvariant
-    print("222222222222222222222222222222222222222222222222222222222222222222222222222222222\n" + prog2);
+   // print("222222222222222222222222222222222222222222222222222222222222222222222222222222222\n" + prog2);
     prog2.checkInvariant
     val prog3: DataProg[InfoType[_]] = prog2.procedurIfy();
     //  print("3333333333333333333333333333333333333333333333333333333333333333333333\n" + prog3);
     prog3.checkInvariant
     val prog4: DataProg[InfoNbit[_]] = prog3.bitIfy(List(1)); //List(1)=size of int sent to main (it is a bool).
-   print("44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444\n" + prog4 + "\n\n")
+   //print("44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444\n" + prog4 + "\n\n")
 
     val prog5: DataProg[InfoNbit[_]] = prog4.macroify();
     //    println("macroIfy55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555\n" + prog5 + "\n\n")
@@ -85,19 +85,22 @@ abstract class Circuit[L <: Locus, R <: Ring](p: Param[_]*) extends AST.Fundef[(
      //print("addParamRtoDagis255555555555555555555555555555555555555555555555555\n" + prog5bis + "\n\n")
 
     val prog5ter: DataProg[InfoNbit[_]] = prog5bis.radiusify3
-    // print("radiusify555555555555555555555555555555\n" + prog5ter)
-   prog5ter.checkInvariant
+     //print("radiusify555555555555555555555555555555\n" + prog5ter)
+
+    prog5ter.checkInvariant
     val prog6 = prog5ter.unfoldSpace(m); //ajouter les tm1s!!
     // print("\nunfoldSpace666666666666666666666666666666666666666666666666666666666666666666666666666666666666\n" + prog6 + "\n\n")
 
     val  prog7 = prog6.treeIfy(); //spatiall unfolding generates reused expression that need to be affected again
     //   print("treeIfy777777777777777777777777777777777777777777777777777777777777777777777777777777777777777\n" + prog7 + "\n\n")
      prog7.checkInvariant
+    println;
+    println("there is " + prog7.dagis.visitedL.size + " boucles, dont " + prog7.funs.size+ " automatically defined functions")
     val prog7bis = prog7.simplify(); //this will remove id which are read only once.
     // print("simplify777777777777777777777777777777777777777777777777777777777777777777777777777777777777777\n" + prog7bis + "\n\n")
     prog7bis.checkInvariant
     val prog8: DataProg[InfoNbit[_]] = prog7bis.detm1Ify() //Will also generate instruction store and remove tm1 when applied just before storing, transforming it into an integer argument.
-     //print("detm1ify 8888888888888888888888888888888888888888888888888888888888888888888888888\n" + prog8 + "\n\n")
+    // print("detm1ify 8888888888888888888888888888888888888888888888888888888888888888888888888\n" + prog8 + "\n\n")
      prog8.checkInvariant
     val prog10: DataProgLoop[InfoNbit[_]] = prog8.loopIfy()
     // print("loopify1010101010101010101010101010101010101010" + prog10)
@@ -139,15 +142,15 @@ object Circuit {
 
 
   def main(args: Array[String]): Unit = {
-
-    println("scala-library -> " + classOf[Option[_]].getProtectionDomain.getCodeSource)
     import scala.reflect.runtime.{universe => ru}
+    /*println("scala-library -> " + classOf[Option[_]].getProtectionDomain.getCodeSource)
+
     println("scala-reflect -> " + ru.getClass.getProtectionDomain.getCodeSource)
     println("java.home     -> " + sys.props("java.home"))
 
     println("java.home  = " + sys.props("java.home"))
     println("classpath  = " + sys.props("java.class.path"))
-    println("scala-lib  = " + classOf[Option[_]].getProtectionDomain.getCodeSource)
+    println("scala-lib  = " + classOf[Option[_]].getProtectionDomain.getCodeSource)*/
     try {
       val cl = getClass.getClassLoader
       println("app CL     = " + cl)

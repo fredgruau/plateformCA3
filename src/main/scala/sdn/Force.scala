@@ -7,7 +7,7 @@ import compiler.ASTLfun.{cond, e, v}
 import compiler.{AST, ASTB, ASTBfun, ASTBt, ASTLfun, ASTLt, B, E, Locus, Ring, T, V, repr}
 import compiler.SpatialType.{BoolE, BoolEv, BoolV, BoolVe, UintVx}
 import dataStruc.{BranchNamed, Named}
-import progOfmacros.Comm.neighborsSym
+import progOfmacros.Comm.{adjacentE, adjacentRing, neighborsSym}
 import progOfmacros.Wrapper.{borderS, exist}
 import progOfmacros.RedT.{clock2, shrink2min1to5}
 import progOfmacros.Wrapper
@@ -50,7 +50,7 @@ case class MoveC1 (val empty: BoolV, val push: BoolVe) extends MoveC{
   def inflechi(target:BoolV,rand:BoolV)=MoveC1(empty&(~target|rand),push& (e(rand)|neighborsSym(e(target))))
   /* convert push to a boolV, true for vertice pointed by one of the push. NB there can be several distinct push
   * to the same single vertice, it is sufficient that there is one.  */
-  val invade=exist(neighborsSym(push))
+  val invade=adjacentE(push)
   /** true if the force has an effect*/
   val triggered=empty|invade
   override val triggeredYes: BoolV = triggered
@@ -254,7 +254,7 @@ object Force{
   def repulsePropagate(zoneGt:BoolV):Force = new Force{
     override def actionV(ag: MovableAgV): MoveC = {
       //emptying applies on tripleton or doubleton, on vertice inside zoneGt having neighbor vertices outside
-        MoveC1( ag.muis & zoneGt & exist(neighborsSym(e(ag.muis & ~ zoneGt))),
+        MoveC1( ag.muis & zoneGt & adjacentRing(ag.muis & ~ zoneGt),
       //we fill by looking "most away as possible from zoneGt
       shrink2min1to5(neighborsSym(e(~zoneGt))))
     }
@@ -267,7 +267,7 @@ object Force{
   def attractPropagate(zoneLt:BoolV):Force = new Force{
     override def actionV(ag: MovableAgV): MoveC = {
       //emptying applies on tripleton or doubleton, on vertice outside zoneLt having neighbor vertices inside
-      MoveC1( ag.muis & ~ zoneLt & exist(neighborsSym(e(ag.muis &  zoneLt))),
+      MoveC1( ag.muis & ~ zoneLt & adjacentRing(ag.muis &  zoneLt),
         //we fill by looking "most towards as possible to zoneLt
         shrink2min1to5(neighborsSym(e(zoneLt))))
     }

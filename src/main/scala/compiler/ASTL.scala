@@ -76,7 +76,7 @@ object ASTL {
   }
   /** a bit more subtle than broadcast, sends a distinct field to each of T[S1,S2]
    * size of the list is equal to fanout of locus for vertex it is 6, For edge it is 2.  */
-  private[ASTL] final case class Send[S1 <: S, S2 <: S, R <: Ring](args: List[ASTLt[S1, R]])
+   final case class Send[S1 <: S, S2 <: S, R <: Ring](args: List[ASTLt[S1, R]])
                                                                   (implicit m: repr[T[S1, S2]], n: repr[R])
     extends ASTL[T[S1, S2], R]() with Neton[AST[_]]with Structural {override def equals(other: Any): Boolean = fastEq(other)
   }
@@ -121,6 +121,7 @@ object ASTL {
 
   def unop[L <: Locus, Ri <: Ring, Ro <: Ring](f: Fundef1[Ri, Ro], arg: ASTLt[L, Ri])(implicit m: repr[L], n: repr[Ro]): ASTLt[L, Ro]
   = {
+    val myf=f
    val tmp= Unop[L, Ri, Ro](f, arg, m, n)
      cache.getOrElseUpdate(tmp.asInstanceOf[ASTLg], tmp.asInstanceOf[ASTLg]).asInstanceOf[Unop[L,Ri,Ro]]
   }

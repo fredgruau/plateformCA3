@@ -826,7 +826,11 @@ object Instr {
 
   /** @param i instruction
    * @return i.asInstanceOf[Affect[_]]*/
-  def a(i: Instr): Affect[_] = i.asInstanceOf[Affect[_]]
+  def a(i: Instr): Affect[_] = {
+    if(!i.isInstanceOf[Affect[_]])
+      throw new Exception("callofcall")
+    i.asInstanceOf[Affect[_]]
+  }
 
   /** Generates a Read with a spatial type.*/
   def readLR(s: String, m: repr[(Locus, Ring)]) = new Read(s)(m) with ASTLt[Locus, Ring]
