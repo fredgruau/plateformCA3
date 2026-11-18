@@ -1,10 +1,7 @@
 public static int {{NAMEMACRO}}GateCount={{GATECOUNT}};
  public static void {{NAMEMACRO}}(PrShift p,{{PARAMETERS}}){
- {{ANCHORPARAM}}
-
+{{ANCHORPARAM}}
 {{DECLINITPARAM}}
 for (int i = 1; i < {{CALINENUMBER}}.length -1; i++) {
- {{LOOPBODY}};
-  }
-  {{PROPAGATEFIRSTBIT}} ;
-  }
+ {{LOOPBODY}};   }
+ {{PROPAGATEFIRSTBIT}} ;   }

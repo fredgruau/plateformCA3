@@ -8,9 +8,9 @@ import compiler.SpatialType.{BoolV, BoolVe, UintV, UintVe}
 import compiler.{ASTLt, B, UI, V}
 import dataStruc.BranchNamed
 import progOfmacros.Compute.{concat3V, countNeighbors}
-import progOfmacros.Wrapper.{condL, ltUI2L, neqUI2L, not}
+import progOfmacros.Wrapper.{condL, ltUI2L, neqUI2L, negL}
 import sdn.Globals.root4naming
-import sdn.Util.{addSym, addSymUI, randConstUintV, splitInto6}
+import sdn.Util.{addSym, addSymUI, randConstUintV}
 
 /** tests the lt macro, containts a bugif */
 

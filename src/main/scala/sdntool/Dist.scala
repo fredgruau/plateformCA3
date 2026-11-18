@@ -11,30 +11,34 @@ import compiler.Circuit.hexagon
 import compiler._
 import compiler.SpatialType._
 import dataStruc.{BranchNamed, Named}
-import progOfStaticAgent.Homogeneize
+import progOfStaticAgent.Homog
 import progOfmacros.Comm.{apexE, neighborsSym, neighborsSymUI}
 import progOfmacros.Grad.{deltaCall, deltaCallProp, siFieldOperator, siFieldOperatorProp, slopeDeltaDistDef}
-import progOfmacros.{Comm, Grad, Wrapper}
+import progOfmacros.{Comm, Compute, Grad, Wrapper}
 import progOfmacros.Wrapper.{borderS, exist, existS, inside, neqUI2L, shrink}
 import progOfmacros.RedT.cacEndomorph
 import sdn.Globals.root4naming
-import sdn.{CancelFlipIf, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, One, Stratify, addGcenter,  addVor, carrySysInstr}
+import sdn.{CancelFlipIf, Force, LayerS, MovableAgV, MoveC, MoveC1, MoveC2, MuStruct, One, Stratify, addGcenter, addVor, carrySysInstr}
 import sdn.Util.{addLt, addLtSI}
+
+import scala.collection.mutable
 
 /**
  *regroup all what is common when setting up a signed integer field
+ * adding the sign of target on source, if on source, else a delta which is between -1 and 1
  * @param n number of bits
  */
 abstract class SiField(n:Int,  source: MuStruct[V, B],op:siFieldOperator) extends MuStruct [V,SI] {
   val targetOnSource: ASTLt[V, SI]
   /** we introduce an inner class in order to be able to override its next field which is necessary for radius */
    override val muis: LayerS[V, SI] = new LayerS[V, SI](n,"0") { // new SIlayer()
+     //override val next: AST[(V, SI)] =delayedL(Compute.updateSI(delayedL(this.pred),delayedL(source.muis.munext),delayedL(targetOnSource),delayedL(delta)))(this.mym) //marche pas j'ai pas le temps de comprendre comme ce calcul se répéte des qu'on a une couche SI, on provide une macro.
      override val next: AST[(V, SI)] =delayedL( this.pred +cond(source.muis.munext, sign(targetOnSource) ,delta))(this.mym)
    }
    /** slopelt retrieves the sign of the slope, which is allways needed, delta is 0, +1 ot -1  we update with small delta:either increment or decrement */
    val (sloplt: BoolVe, delta, level, gap) = deltaCall(muis.pred,op)
   override def shoi={super.shoi;
-    shoow( level, gap)}
+    shoow(level, gap, sloplt,delta)}
   val slopgt = neighborsSym(sloplt);  val existNearer = exist(sloplt);  val existFurther = exist(slopgt);
   val opp = -(muis)  //todo opp can be retrieved from deltaCall
   /** spurious vortex occurs outside chip.borderF.df, so we have to and with chip.borderF.df in order to prevent false detection of vortex bug */
@@ -55,8 +59,9 @@ trait addStreched extends SiField {
   val twostreched:BoolVf=shrink(transfer(v(streched)))
   /** true if edges separate two vertice streching a third one */
   val twoStrechedSeparator: BoolE = exist(apexE(twostreched))
-  abstract override def showMe(): Unit = {
-    super.showMe; shoow(streched,twoStrechedSeparator)
+  override def shoi: Unit = {
+    super.shoi; shoow(streched,twoStrechedSeparator)
+
   }
 }
 
@@ -78,22 +83,24 @@ trait addRepulse{
     }}
 }
 trait addRepulseVor{
-  self:SiField=>
+  self:MuDist=>
+  //var hasNearer: BoolV=null //indexer par des agents pour réutiliser hasNearer, hasFurther
+
   val repulseVor: Force = new Force() {
   override def actionV(ag: MovableAgV): MoveC = {
     /** true if a nearby vertice is filled, and nearer to the source */
-    val hasNearer: BoolV = Wrapper.exist(sloplt & ag.bf.qqnEnFace)
+    val nameAg=ag.toString.takeWhile(_ != '@')
+    hasNearer.addOne(nameAg, exist(sloplt & ag.bf.qqnEnFace))
     /** true if a nearby vertice is filled, and further from  the source */
-    val hasFurther:BoolV = Wrapper.exist(slopgt & ag.bf.qqnEnFace)
+    hasFurther.addOne(nameAg,exist(slopgt & ag.bf.qqnEnFace))
     /** we will empty if there is a further, and no nearer */
-    val weWantItEmpty=hasFurther & ~hasNearer
+    val weWantItEmpty=hasFurther(nameAg) & ~hasNearer(nameAg)
     /** we empty if weWantItEmpty, and vertice was occupied
      *  we fill towards increasing value of distances, if it's empty */
-    val oui = MoveC1(ag.muis & weWantItEmpty,
-      neighborsSym(sloplt) & ag.bf.brdVeIn)
+    val oui = MoveC1(ag.muis & weWantItEmpty,   neighborsSym(sloplt) & ag.bf.brdVeIn)
     /**no emptying is imposed if weWantItEmpty, and vertice was NOT occupied
      * if vertice was occupied, we should first remove nearer if it has some nearer*/
-    val non = MoveC1(cond(ag.muis,hasNearer,weWantItEmpty), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
+    val non = MoveC1(cond(ag.muis,hasNearer(nameAg),weWantItEmpty), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
     MoveC2(oui, non)
   }}}
 
@@ -121,10 +128,13 @@ class MuDist(bitSize:Int, val source: MuStruct[V, B])
   override def showMe: Unit = {
     super.showMe; shoow(hasChanged);liiveif(hasChanged)
   };
-  // a deplacer dans un trait.
+  val hasNearer:mutable.HashMap[String,BoolV]=new mutable.HashMap[String,BoolV] () with Named with BranchNamed {}
+  val hasFurther:mutable.HashMap[String,BoolV]=new mutable.HashMap[String,BoolV] () with Named with BranchNamed {}
 
- /* override def showMe={super.showMe; shoow(testLevel)}
-  // val deefF=new ConstLayer[F, B](1, "def") //we sometimes need to restrict*/
+
+
+  /* override def showMe={super.showMe; shoow(testLevel)}
+   // val deefF=new ConstLayer[F, B](1, "def") //we sometimes need to restrict*/
 }
 
 
@@ -132,7 +142,7 @@ class MuDist(bitSize:Int, val source: MuStruct[V, B])
 /** adds  distance to particles */
 trait addDist {
   self: MuStruct[V, B] => //adds a distance to a LayerV , also limit its movement so as to avoid vortices
-  val d = new MuDist(Homogeneize.nbitD,self) with addRepulse with addRepulseVor {} ;
+  val d = new MuDist(Homog.nbitD,self) with addRepulse with addRepulseVor {} ;
 
   //show(d); les show doivent etre fait dans le main
 
@@ -142,7 +152,7 @@ trait addDist {
 /** adds distance to gcentern corrected by voronoi*/
 trait addDistVor {
   self: MovableAgV with addDist with addVor with addGcenter =>
-  val dgv = new MuDist(Homogeneize.nbitDgv,this.vor) with addRepulse  with addStreched {}  //totoal
+  val dgv = new MuDist(Homog.nbitDgv,this.vor) with addRepulse  with addStreched {}  //totoal
 
 
   //show(d); les show doivent etre fait dans le main

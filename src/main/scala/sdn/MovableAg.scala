@@ -1,5 +1,6 @@
 package sdn
 
+import compiledMacro.util
 import compiler.AST.{Layer, delayed, pL}
 import compiler.ASTB.True
 import compiler.ASTBfun.{addRedop, derivative, orRedop, redop, unaryToBinary2}
@@ -11,7 +12,7 @@ import compiler.repr.nomV
 import dataStruc.BranchNamed
 import dataStruc.DagNode.EmptyBag
 import progOfmacros.Comm.neighborsSym
-import progOfmacros.Wrapper.{borderS, exist, existS, unary2Bin, xorBin}
+import progOfmacros.Wrapper.{borderS, exist, existS, unary2Bin, xorL}
 import sdn.Force.cibler
 import sdn.Globals.root4naming
 import sdn.{Compar, ForceAg, carrySysInstr}
@@ -39,9 +40,18 @@ trait UtilVagent extends BranchNamed{
 trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with sdntool.addBlobVfields with rando {  //probably another rand
   self:MovableAg[V] =>
   override val isV: BoolV = muis
-  /** well known voting rule we put "lazy" to avoir waising a rand, if there isn't a vote*/
-  lazy val vote= {val rand= root4naming.addRandBit().asInstanceOf[BoolV]
-    cibler(bf.dense | bf.density3 & rand)}
+  /** well known voting rule we put "lazy" to avoir waising a rand, if there isn't a vote
+   * the force applies on itself! */
+//  lazy val voteold= {val rand= root4naming.addRandBit().asInstanceOf[BoolV];cibler(bf.dense )}
+ val vote=new Force {
+   override def actionV(ag:MovableAgV): MoveC=   {
+     val yes=MoveC1(bf.lightConvex & isV,  bf.brdVeIn & neighborsSym(e(bf.lightConcave)))
+     val no=MoveC1(bf.lightConcave  & isV,   bf.brdVeIn & neighborsSym(e(bf.lightConvex)))
+       MoveC2(yes,no)
+   }
+
+ }
+
   override def flip2next=  {
     val f=flipAfterSync;  f ^ muis
   }
@@ -50,7 +60,8 @@ trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with sdntool.a
 /**  code  common to Movable agents which stores a support
  * and can directly apply the move on this support in order to modify it */
 abstract  class MovableAg[L <: Locus](init:String)(implicit m: repr[L]) extends  ForceAg[L] with vef[L]
-  { override def allTriggered:UintV={
+  { /** * @return the sequence of bit showing wether each force produce or does not produce a desired yes or not move    */
+    override def allTriggered:UintV={
     moves.map(_.values.map(_.triggered).reduce(_ | _).asInstanceOf[UintV]).toList.reduce(_ :: _)
   }
   override def allTriggeredYes:UintV={

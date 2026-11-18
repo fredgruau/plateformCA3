@@ -65,7 +65,9 @@ class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/
 {  override def inputNeighbors=List(part.gc,part.d)
 
   //force(introduceNewPriority(),"vote",'v',vote())//specific forces applied to voronoi, pour l'instant ne sert a rien.
-  appendForce("vote",'|', moderate(vote,"vote" ))
+  val explore=moderate(Force.total,"explore")
+  appendForce("explore",'0', explore )
+  appendForce("vote",'V', moderate(vote,"vote" ))
   /** illustrates how to print stuff */var tmp:BoolV=null;
   /** priority of "obliged" force */
   //force(introduceNewPriority(),"repulse",'|',part.d.repulseVor)//specific forces applied to Flies
@@ -83,7 +85,11 @@ class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/
   // the slow constraints emited by radius hits the particle not the voronoi.
   // the slow constraints emitted by Mudist(voronoi) does hit the voronoi, we should check that it does not transfer to
   // the gcenter. let us display the
- override def showMe(){super.showMe; bf.bv.showMe}
+  override def showMe(){super.showMe; bf.bv.showMe}
+  override def shoi(){super.shoi;
+    val s=this.toString.takeWhile(_ != '@')
+    shoow(part.d.hasFurther(s) ,  part.d.hasNearer(s)
+  )}
 }
 
 

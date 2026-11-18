@@ -280,9 +280,10 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       }
       statistics(locusDefined, bitIsDefined)
     }
-    if(controller.partial.contains("homogeneizePartRiMuis")    && controller.partial.contains("homogeneizePartRiMuis"))
-    {val (meanAr, stdNormAr, minValAr, maxValAr)=stats(integers("homogeneizePartArTotal"))  //statistics on voronoi area
-    val (meanRi, stdNormRi, minValRi, maxValRi)=stats(integers("homogeneizePartRiMuis"))   //statistics on inner radius
+    val p=controller.partial
+    if(p.contains("homogPartRiMuis")    && controller.partial.contains("homogPartRiMuis"))
+    {val (meanAr, stdNormAr, minValAr, maxValAr)=stats(integers("homogPartArTotal"))  //statistics on voronoi area
+    val (meanRi, stdNormRi, minValRi, maxValRi)=stats(integers("homogPartRiMuis"))   //statistics on inner radius
     val efficacity=minValAr/maxValAr
     text += " Area:" +f"stdev:$stdNormAr%.2f"+" moy:"+ f"$meanAr%.1f" +  " " +minValAr+"<"+maxValAr+f"eff$efficacity%.2f"
     text+=" Ri: "+f"stdev: $stdNormRi%.2f"+" moy:"+ f"$meanRi%.1f "+minValRi+"<"+maxValRi
@@ -378,7 +379,7 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
     /** after this time, we stop the thread automatically */
       var missedUniformed=0;  var missedSigmaSmall=0;
     var nbtrial=0;  var sommeTuniform=0;  var sommeTsigmasmall=0
-    def timeout=t>nbCol*nbLine*5
+    def timeout=t>nbCol*nbLine*50
     def sigmaSmallfound=tSigmaSmall!= -1
 
     if (isThreadRunning)    return
@@ -413,7 +414,7 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
          */
             val displayEvery =   math.max(2, nbLoops)
             val goesToConverged= false && nbLoops>= 512 //we never go directly to converged, we want to follow what's going on.
-            val iterateThroughDensity= (nbLoops>= 1024 | true)//for the moment we iterate allways
+            val iterateThroughDensity= (nbLoops>= 512)//for the moment we iterate allways
 
             //itére un paquet de forward
             while (

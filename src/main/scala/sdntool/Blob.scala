@@ -45,8 +45,7 @@ class BloobV(val muis:BoolV with carrySysInstr, f:BloobVFields) extends Blob  {
   /** provides the meeting vertice  inside the blob */
   val meetVfilled=meetV&f.couldBeOtherThanMuis
   /** */
-  override  def showMe={super.showMe ; shoow(nbcc0,nbcc1,meetV); shoowText(nbCc,List())
-  }
+  //override  def showMe={super.showMe ; shoow(nbcc0,nbcc1,meetV,meetEfilled); shoowText(nbCc,List())  }
 }
 
 
@@ -98,7 +97,7 @@ trait blobConstrTrou{
 trait  blobConstrain   {
   self: MovableAgV with addBlobVfields=>
   /** meetV points cannot flip */
-  val vmeet: PartialUI => Constr =  CancelFlipIf(this,Both(),bf.bv.meetV | bf.bv.nbcc0) _
+  val vmeet: PartialUI => Constr =  CancelFlipIf(this,Both(),bf.bv.meetV | bf.bv.nbcc0) _//nbcc empeche la naissance ou disparition d'un singleton
   addConstraint("vmeet",'_',vmeet)
   /**a doubleton cannot flip both vertices*/
   val emeet = MutKeepFlipIf(this,Both(),bf.bv.meetE) _ ;  addConstraint("emeet",'=',emeet);}
@@ -128,17 +127,18 @@ class BloobVFields(val muis:BoolV with carrySysInstr, val couldBeOtherThanMuis:B
   val outsideE: BoolE =inside(transfer(~isVe))
   val rand= root4naming.addRandBit().asInstanceOf[BoolV]
   /** todo ya deux vote, un ca suffit */
-  val lightConcave=( exist(shrink3(brdVeOut)) | (exist(shrink2(brdVeOut)) & rand) ) & ~  inside(brdVeOut)
-
+  //val lightConcave=( exist(shrink3(brdVeOut)) | (exist(shrink2(brdVeOut)) & rand) ) & ~  inside(brdVeOut)
+  //val lightConcave= exist(shrink3(brdVeOut))  & ~  inside(brdVeOut)  //le deuxieme signifie qu'on est pas un trou
+  val lightConcave= exist(shrink3(qqnEnFace)) // & ~  inside(brdVeOut)  //le deuxieme signifie qu'on est pas un trou
+ // val lightConvex= ~exist(shrink2(transfer(v(insideE)))) & exist(qqnEnFace)
+  val lightConvex= ~exist(shrink2((qqnEnFace))) & exist(qqnEnFace)
   val density: UintVx = addLt(countNeighbors(addSym(e(couldBeOtherThanMuis)).sym))
   //val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit
-  val notDense = density < fromInt(3)
-  val dense= ~(density<4)
-  val density3: BoolV = ~notDense & ~dense //density = 3 todo remove
-  val thiis=this
-  /** this contains information systematically used to build a blob, so we just go ahead and create that blob as a field of a blobV field */
+ // val notDense = density < fromInt(3);  val dense= ~(density<4);  val density3: BoolV = ~notDense & ~dense //density = 3 todo remove
+  val thiis: BloobVFields =this
+  /** thiis contains information systematically used to build a blob, so we just go ahead and create that blob as a field of a blobV field */
   val bv=new BloobV(muis,thiis)
-  override def showMe={ shoow(brdV)}//shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave,dense, notDense) ; shoowText(density,List())  }
+  override def showMe={ shoow(brdVeIn)}//shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave,dense, notDense) ; shoowText(density,List())  }
 }
 
 /** endows an Agent vertex with the feature needed to a blob stored in a class "bf" (shortname) */

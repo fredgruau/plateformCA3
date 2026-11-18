@@ -70,7 +70,7 @@ abstract class Circuit[L <: Locus, R <: Ring](p: Param[_]*) extends AST.Fundef[(
 
 
     val prog2 = prog1.treeIfy();//prog2.checkInvariant
-   // print("222222222222222222222222222222222222222222222222222222222222222222222222222222222\n" + prog2);
+    print("222222222222222222222222222222222222222222222222222222222222222222222222222222222\n" + prog2);
     prog2.checkInvariant
     val prog3: DataProg[InfoType[_]] = prog2.procedurIfy();
     //  print("3333333333333333333333333333333333333333333333333333333333333333333333\n" + prog3);
@@ -97,7 +97,7 @@ abstract class Circuit[L <: Locus, R <: Ring](p: Param[_]*) extends AST.Fundef[(
     println;
     println("there is " + prog7.dagis.visitedL.size + " boucles, dont " + prog7.funs.size+ " automatically defined functions")
     val prog7bis = prog7.simplify(); //this will remove id which are read only once.
-    // print("simplify777777777777777777777777777777777777777777777777777777777777777777777777777777777777777\n" + prog7bis + "\n\n")
+    print("simplify777777777777777777777777777777777777777777777777777777777777777777777777777777777777777\n" + prog7bis + "\n\n")
     prog7bis.checkInvariant
     val prog8: DataProg[InfoNbit[_]] = prog7bis.detm1Ify() //Will also generate instruction store and remove tm1 when applied just before storing, transforming it into an integer argument.
     // print("detm1ify 8888888888888888888888888888888888888888888888888888888888888888888888888\n" + prog8 + "\n\n")

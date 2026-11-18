@@ -8,7 +8,7 @@ import compiler.SpatialType.{BoolV, BoolVe}
 import compiler.{AST, ASTLt, B, Locus, Ring, V}
 import dataStruc.DagNode.EmptyBag
 import dataStruc.{BranchNamed, Named}
-import progOfStaticAgent.Homogeneize
+import progOfStaticAgent.Homog
 import progOfmacros.Grad
 import sdntool.{MuDist, addDist}
 import progOfmacros.Wrapper.borderS

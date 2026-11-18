@@ -44,7 +44,7 @@ object Wrapper {
     new Call2(f,arg1,arg2)(repr.nomLR(m, compiler.repr.nomB)) with ASTLt[L, B] {}  }
 
 
-  def not[L<:Locus,R<:Ring](arg: ASTLt[L, R])(implicit m:repr[L],r: repr[R])={
+  def negL[L<:Locus,R<:Ring](arg: ASTLt[L, R])(implicit m:repr[L], r: repr[R])={
     val f:Fundef1[(L,R),(L,R)]=getUnopFun(neg[R], arg.locus)(m,r,r)
     new Call1[(L,R),(L,R)](f,arg)(repr.nomLR(m, r)) with ASTLt[L, R] {}
   }
@@ -66,8 +66,12 @@ object Wrapper {
     new Call1(f,arg)(repr.nomLR(m, compiler.repr.nomUI)) with ASTLt[L, UI] {}  }
 
   /** binary operators */
-  def xorBin[L<:Locus,R<:Ring](arg1:ASTLt[L, R],arg2:ASTLt[L,R])(implicit m:repr[L],q:repr[R]):ASTLt[L,R]={
+  def xorL[L<:Locus,R<:Ring](arg1:ASTLt[L, R], arg2:ASTLt[L,R])(implicit m:repr[L], q:repr[R]):ASTLt[L,R]={
     val f: Fundef2[(L, R), (L, R), (L, R)] = getBinFun(xorRedop[R]._1, arg1.locus)
+    new Call2[(L, R), (L, R), (L, R)] (f, arg1,arg2) with ASTLt[L, R] {}
+  }
+  def andL[L<:Locus,R<:Ring](arg1:ASTLt[L, R], arg2:ASTLt[L,R])(implicit m:repr[L], q:repr[R]):ASTLt[L,R]={
+    val f: Fundef2[(L, R), (L, R), (L, R)] = getBinFun(andRedop[R]._1, arg1.locus)
     new Call2[(L, R), (L, R), (L, R)] (f, arg1,arg2) with ASTLt[L, R] {}
   }
 

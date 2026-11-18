@@ -6,11 +6,11 @@ import compiler.ASTLt.ConstLayer
 import compiler.SpatialType.{BoolV, BoolVe, UintV, UintVe}
 import compiler.{ASTLt, B, UI, V}
 import dataStruc.BranchNamed
-import progOfLayer.Sextexrect.chooseMaxOf
+import progOfLayer.Sextexrect.myChooseMaxOf
 import progOfmacros.Compute.concat3V
-import progOfmacros.Wrapper.{condL, ltUI2L, neqUI2L, not}
+import progOfmacros.Wrapper.{condL, ltUI2L, neqUI2L, negL}
 import sdn.Globals.root4naming
-import sdn.Util.{addSymUI, randConstUintV, splitInto6}
+import sdn.Util.{addSymUI, randConstUintV}
 
 /** tests the lt macro, containts a bugif */
 

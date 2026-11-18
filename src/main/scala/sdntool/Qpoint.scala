@@ -9,7 +9,7 @@ import dataStruc.DagNode.EmptyBag
 import progOfmacros.Comm.{adjacentBall, adjacentRing, apexV, insideBall, neighborsSym}
 import progOfmacros.Compute.implique
 import progOfmacros.RedT.cac
-import progOfmacros.Wrapper.{exist, existS, inside, insideS, not}
+import progOfmacros.Wrapper.{andL, exist, existS, inside, insideS, negL}
 import sdn.{Attributs, CancelFlipIf, KeepFlipIf, LayerS, MovableAg, MovableAgV, MuStruct, MutApexKeepFlipIf, MutKeepFlipIf, One, SexTex, TriKeepFlipIf, carrySysInstr, rando}
 
 
@@ -55,10 +55,10 @@ trait addQpointFields {
     override val muis: BoolV with carrySysInstr = selfRef.muis
     /** true for the vertices of a qpt consiting exactly of one vertices */
     val singleton: BoolV = inside(bf.brdVeIn) //& muis
-    val nonsingleton = ~singleton & muis
+    val nonsingleton = andL(negL(singleton ), muis)
     val next2NonSingleton = adjacentRing(nonsingleton)
     /** true if both apex vertices of the edge are empty */
-    val bothApexEmpty: BoolE = not(orR(apex[V, E, B](f(muis))))
+    val bothApexEmpty: BoolE = negL(orR(apex[V, E, B](f(muis))))
     /** true for the edge inside qpt consiting exactly of two vertices */
     val doubletoon=insideS[V, E](muis)
     val doubleton: BoolE = doubletoon& bothApexEmpty
@@ -85,8 +85,7 @@ trait  QpointConstrain extends addQpointFields   {
   val sextexx= SexTex(this) _
   addConstraint("growToTwo",'x',sextexx)
   /** true for neighbors of non singleton*/
-  //  val next2NonSingleton = exist(neighborsSym(e(doubletonV | tripletonV)))
-
+  //  val next2NonSingleton = exist(neighborsSym(e(doubletonV | tripletonV))) )
   /**  cancel growth for non singleton, exept for doubleton, on appex, this needs a tournament*/
   val leqQuatre =    KeepFlipIf(this,One(false),implique(qf.next2NonSingleton, qf.isApexV)) _
   addConstraint("leqQuatre",'q',leqQuatre)

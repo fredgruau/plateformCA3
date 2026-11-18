@@ -11,11 +11,11 @@ import compiler.SpatialType._
 import dataStruc.{BranchNamed, Named}
 import sdn.MuStruct
 import progOfmacros.Comm._
-import progOfmacros.Compute.{concat3V, concat3Vbis, concat4V, concat4Vbis, concat5V, concat5Vbis}
+import progOfmacros.Compute.{concat3V, concat4V, concat5V}
 import progOfmacros.Topo.{brdin, nbccV}
 import progOfmacros.{Grad, Wrapper}
 import progOfmacros.Util.{randE2, randN12, randNext, torusify}
-import progOfmacros.Wrapper.{borderS, enlarge, existS, insideS, not, segment1, shrink}
+import progOfmacros.Wrapper.{borderS, enlarge, existS, insideS, negL, segment1, shrink}
 import sdn.Globals.{root4naming, setRoot4naming}
 
 import scala.::
@@ -48,7 +48,6 @@ class Root4naming() extends Named with BranchNamed {
 
   /** random bits  are stored in a mutable hashmap */
   val rands = new mutable.HashMap[Int, UintV]() with Named {}
-  val r= addRandBit()
    def myFalse=delayedL(rands(0).asInstanceOf[BoolV] & ~ rands(0).asInstanceOf[BoolV] ) //faut que y est du rand sinon ca merde
   /** adds a random boolean bit, which will be named */
   def addRandBit(): UintV = {
@@ -77,7 +76,7 @@ trait ComparDiff[R<:I]{
   /** true if both values are different */
   val diff:BoolE= elt(0,segmentOf1)(new repr(E()),myRing)
   /** true if both values are equal */
-  val eq:BoolE= not(diff);
+  val eq:BoolE= negL(diff);
 }
 
 /** add lt and  gt for only unsinged int, using  segmentof1 already computed in Compardiff, */
@@ -137,7 +136,11 @@ object Util {
     val tmp: Array[UintV] =Array.fill(nbits)(root4naming.addRandBit())
     tmp.reduce(_ :: _)  //all the random bits get concatenated.
   }
-
+  /** return an unsigned vertex random integer of $n$ bits */
+  def randConstUintV(nbits: Int): UintV = {//pb: quand nbits=1 ya un seul bit, ya pas de concat, et ca renvoie un boolV
+    val tmp: Array[UintV] =Array.fill(nbits)(root4naming.addConstRandBit().asInstanceOf[UintV])
+    tmp.reduce(_ :: _)  //all the random bits get concatenated.
+  }
   /**
    *
    * @return first boolV is a randombit, which is true with proba 1/3 , but it may fail.
@@ -147,11 +150,7 @@ object Util {
     val ri=randUintV(4)
     (ri<10,neq(ri))  //neq ri is true if ri is not null which happens with 7/8
   }
-  /** return an unsigned vertex random integer of $n$ bits */
-  def randConstUintV(nbits: Int): UintV = {//pb: quand nbits=1 ya un seul bit, ya pas de concat, et ca renvoie un boolV
-    val tmp: Array[UintV] =Array.fill(nbits)(root4naming.addConstRandBit().asInstanceOf[UintV])
-    tmp.reduce(_ :: _)  //all the random bits get concatenated.
-  }
+
 
   /** compared unsigned integer, on edge but also on apex edges.
    * we directly use Delayed reaction, in order to be able to add  Comparison operators
@@ -189,37 +188,18 @@ object Util {
     lazy val delayed = _arg;
     new AST.Delayed[(T[V,E], UI)](() => delayed) with UintVe with SymUIbis with Named with BranchNamed {}
   }
-  /**
-   *
-   * @param b represent a boolV offering computation of meeting points
-   * @return places where growig will not cause merging of blobs.
-   */
-
-
-
-
 
   /** bits has a number of $6*k$ bits , we sort them in 6 subsequence of $k$ bits */
   def splitInto6(bitSequence: UintV, k:Int): Array[UintV] = {
     /** contains the bit */
     val bits: Array[BoolV] =(0 until 6*k).map(elt(_,bitSequence)).toArray
     val grouped=bits.grouped(k).map(_.toArray).toArray
-    k match {
-      //we have to consider one case for each bit size, its a bit boring but still easiest, and produce a readable code
-      case 3=>grouped.map((a:Array[BoolV])=>concat3V(a(0),a(1),a(2)))
-      case 4=>grouped.map((a:Array[BoolV])=>concat4V(a(0),a(1),a(2),a(3)))
-      case 5=>grouped.map((a:Array[BoolV])=>concat5V(a(0),a(1),a(2),a(3), a(4)))
-    }
-  }
-  def splitInto6bis(bitSequence: UintV, k:Int): Array[UintV] = {
-    /** contains the bit */
-    val bits: Array[BoolV] =(0 until 6*k).map(elt(_,bitSequence)).toArray
-    val grouped=bits.grouped(k).map(_.toArray).toArray
-    k match {
-      //we have to consider one case for each bit size, its a bit boring but still easiest, and produce a readable code
-      case 3=>grouped.map((a:Array[BoolV])=>concat3Vbis(a(0),a(1),a(2)))
-      case 4=>grouped.map((a:Array[BoolV])=>concat4Vbis(a(0),a(1),a(2),a(3)))
-      case 5=>grouped.map((a:Array[BoolV])=>concat5Vbis(a(0),a(1),a(2),a(3), a(4)))
+    Predef.assert(k!=1)
+    grouped.map { a =>
+      val first: UintV = a(0) :: a(1)
+      a.drop(2).foldLeft(first) { (acc, bit) =>
+        acc :: bit
+      }
     }
   }
 }

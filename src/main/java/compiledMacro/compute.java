@@ -2,68 +2,65 @@ package compiledMacro;
  import simulator.PrShift;
  public class compute{
  
+public static int countNeighbors_1_3GateCount=20;
+ public static void countNeighbors_1_3(PrShift p,int [][] pneighbor,int [][] computecountNeighbors){
+int[] computecountNeighbors$0=computecountNeighbors[0],computecountNeighbors$1=computecountNeighbors[1],computecountNeighbors$2=computecountNeighbors[2],pneighbor$e=pneighbor[0],pneighbor$se=pneighbor[1],pneighbor$sw=pneighbor[2],pneighbor$w=pneighbor[3],pneighbor$nw=pneighbor[4],pneighbor$ne=pneighbor[5];;;;
+int auxL61=0,auxL62=0,auxL63=0,auxL64=0,auxL65=0,auxL66=0,auxL67$0=0,auxL67$1=0,auxL67$2=0,auxL67$3=0,auxL67$4=0,auxL67$5=0,r0=0,r1=0,r2=0;// initialisation
+for (int i = 1; i < pneighbor$e.length -1; i++) {
+ auxL67$0= pneighbor$e[i] ;auxL67$1= pneighbor$se[i] ;auxL67$2= pneighbor$sw[i] ;auxL67$3= pneighbor$w[i] ;
+ auxL67$4= pneighbor$nw[i] ;auxL67$5= pneighbor$ne[i] ;r0= auxL67$0 ;auxL66= r0 ;
+ r0= auxL67$4 ;auxL62= r0 ;r0= auxL67$3 ;auxL63= r0 ;
+ r0= auxL67$5 ;auxL61= r0 ;r0= auxL67$1 ;auxL65= r0 ;
+ r0= auxL67$2 ;auxL64= r0 ;computecountNeighbors$0[i]=((r0=(( auxL66  ^  auxL65 ) ^  auxL64 )) ^ (r1=(( auxL63  ^  auxL62 ) ^  auxL61 )));computecountNeighbors$1[i]=(((r2=( r1  &  r0 )) ^ (r0=(( auxL66  &  auxL65 ) | ( auxL64  & ( auxL66  |  auxL65 ))))) ^ (r1=(( auxL63  &  auxL62 ) | ( auxL61  & ( auxL63  |  auxL62 )))));
+ computecountNeighbors$2[i]=(( r2  &  r0 ) | ( r1  & ( r2  |  r0 )));   }
+ p.mirror(computecountNeighbors);p.prepareBit(computecountNeighbors) ;   }
+public static int chooseMax4_4_1GateCount=221;
+ public static void chooseMax4_4_1(PrShift p,int [][] pvois,int [][] computechooseMax4){
+int[] computechooseMax4$e=computechooseMax4[0],computechooseMax4$se=computechooseMax4[1],computechooseMax4$sw=computechooseMax4[2],computechooseMax4$w=computechooseMax4[3],computechooseMax4$nw=computechooseMax4[4],computechooseMax4$ne=computechooseMax4[5],pvois$e$0=pvois[0],pvois$e$1=pvois[1],pvois$e$2=pvois[2],pvois$e$3=pvois[3],pvois$se$0=pvois[4],pvois$se$1=pvois[5],pvois$se$2=pvois[6],pvois$se$3=pvois[7],pvois$sw$0=pvois[8],pvois$sw$1=pvois[9],pvois$sw$2=pvois[10],pvois$sw$3=pvois[11],pvois$w$0=pvois[12],pvois$w$1=pvois[13],pvois$w$2=pvois[14],pvois$w$3=pvois[15],pvois$nw$0=pvois[16],pvois$nw$1=pvois[17],pvois$nw$2=pvois[18],pvois$nw$3=pvois[19],pvois$ne$0=pvois[20],pvois$ne$1=pvois[21],pvois$ne$2=pvois[22],pvois$ne$3=pvois[23];;;;
+int auxL36=0,auxL37=0,auxL38=0,auxL39=0,auxL40$0=0,auxL40$1=0,auxL40$2=0,auxL40$3=0,auxL41$0=0,auxL41$1=0,auxL41$2=0,auxL41$3=0,auxL42=0,auxL43=0,auxL44$0=0,auxL44$1=0,auxL44$2=0,auxL44$3=0,auxL45=0,auxL46=0,auxL47=0,auxL48$0=0,auxL48$1=0,auxL48$2=0,auxL48$3=0,auxL49$0=0,auxL49$1=0,auxL49$2=0,auxL49$3=0,auxL50$0=0,auxL50$1=0,auxL50$2=0,auxL50$3=0,auxL51=0,auxL52=0,auxL53=0,auxL54$0=0,auxL54$1=0,auxL54$2=0,auxL54$3=0,auxL55$0=0,auxL55$1=0,auxL55$2=0,auxL55$3=0,auxL56=0,auxL57=0,auxL58$0=0,auxL58$1=0,auxL58$2=0,auxL58$3=0,auxL59$0=0,auxL59$1=0,auxL59$2=0,auxL59$3=0,auxL60$0=0,auxL60$1=0,auxL60$10=0,auxL60$11=0,auxL60$12=0,auxL60$13=0,auxL60$14=0,auxL60$15=0,auxL60$16=0,auxL60$17=0,auxL60$18=0,auxL60$19=0,auxL60$2=0,auxL60$20=0,auxL60$21=0,auxL60$22=0,auxL60$23=0,auxL60$3=0,auxL60$4=0,auxL60$5=0,auxL60$6=0,auxL60$7=0,auxL60$8=0,auxL60$9=0,r0=0,r1=0,r2=0,r3=0;// initialisation
+for (int i = 1; i < pvois$e$0.length -1; i++) {
+ auxL60$0= pvois$e$0[i] ;auxL60$1= pvois$e$1[i] ;auxL60$2= pvois$e$2[i] ;auxL60$3= pvois$e$3[i] ;
+ auxL60$4= pvois$se$0[i] ;auxL60$5= pvois$se$1[i] ;auxL60$6= pvois$se$2[i] ;auxL60$7= pvois$se$3[i] ;
+ auxL60$8= pvois$sw$0[i] ;auxL60$9= pvois$sw$1[i] ;auxL60$10= pvois$sw$2[i] ;auxL60$11= pvois$sw$3[i] ;
+ auxL60$12= pvois$w$0[i] ;auxL60$13= pvois$w$1[i] ;auxL60$14= pvois$w$2[i] ;auxL60$15= pvois$w$3[i] ;
+ auxL60$16= pvois$nw$0[i] ;auxL60$17= pvois$nw$1[i] ;auxL60$18= pvois$nw$2[i] ;auxL60$19= pvois$nw$3[i] ;
+ auxL60$20= pvois$ne$0[i] ;auxL60$21= pvois$ne$1[i] ;auxL60$22= pvois$ne$2[i] ;auxL60$23= pvois$ne$3[i] ;
+ r0= auxL60$15 ;r1= auxL60$14 ;r2= auxL60$12 ;r3= auxL60$13 ;
+ auxL58$0= r2 ;auxL58$1= r3 ;auxL58$2= r1 ;auxL58$3= r0 ;
+ r0= auxL60$3 ;r1= auxL60$1 ;r2= auxL60$0 ;r3= auxL60$2 ;
+ auxL59$0= r2 ;auxL59$1= r1 ;auxL59$2= r3 ;auxL59$3= r0 ;
+ r3=((r0=(r2=( auxL59$3  ^  auxL58$3 ))) &  auxL58$3 );r3=( r3  | ((~(r1= r0 ) & (r0=(r2=( r2  | ( auxL59$2  ^  auxL58$2 ))))) &  auxL58$2 ));r3=( r3  | ((~(r1= r0 ) & (r0=(r2=( r2  | ( auxL59$1  ^  auxL58$1 ))))) &  auxL58$1 ));r3=( r3  | ((~ r0  & ( r2  | ( auxL59$0  ^  auxL58$0 ))) &  auxL58$0 ));
+ auxL57= r3 ;r0=( auxL59$0  ^  auxL58$0 );r0=( r0  | ( auxL59$1  ^  auxL58$1 ));r0=( r0  | ( auxL59$2  ^  auxL58$2 ));
+ r0=( r0  | ( auxL59$3  ^  auxL58$3 ));auxL56=(~ auxL57  &  r0 );auxL40$0=(( auxL56  &  auxL59$0 ) | ((r0=~ auxL56 ) &  auxL58$0 ));auxL40$1=(( auxL56  &  auxL59$1 ) | ((r0=~ auxL56 ) &  auxL58$1 ));
+ auxL40$2=(( auxL56  &  auxL59$2 ) | ((r0=~ auxL56 ) &  auxL58$2 ));auxL40$3=(( auxL56  &  auxL59$3 ) | ((r0=~ auxL56 ) &  auxL58$3 ));r0= auxL60$22 ;r1= auxL60$21 ;
+ r2= auxL60$20 ;r3= auxL60$23 ;auxL54$0= r2 ;auxL54$1= r1 ;
+ auxL54$2= r0 ;auxL54$3= r3 ;r0= auxL60$18 ;r1= auxL60$16 ;
+ r2= auxL60$19 ;r3= auxL60$17 ;auxL55$0= r1 ;auxL55$1= r3 ;
+ auxL55$2= r0 ;auxL55$3= r2 ;r1=((r3=(r2=( auxL55$3  ^  auxL54$3 ))) &  auxL54$3 );r1=( r1  | ((~(r0= r3 ) & (r3=(r2=( r2  | ( auxL55$2  ^  auxL54$2 ))))) &  auxL54$2 ));
+ r1=( r1  | ((~(r0= r3 ) & (r3=(r2=( r2  | ( auxL55$1  ^  auxL54$1 ))))) &  auxL54$1 ));r1=( r1  | ((~ r3  & ( r2  | ( auxL55$0  ^  auxL54$0 ))) &  auxL54$0 ));auxL53= r1 ;r0=( auxL55$0  ^  auxL54$0 );
+ r0=( r0  | ( auxL55$1  ^  auxL54$1 ));r0=( r0  | ( auxL55$2  ^  auxL54$2 ));r0=( r0  | ( auxL55$3  ^  auxL54$3 ));auxL52=~ r0 ;
+ auxL51=(~ auxL53  |  auxL52 );auxL50$0=(( auxL51  &  auxL55$0 ) | ((r0=~ auxL51 ) &  auxL54$0 ));auxL50$1=(( auxL51  &  auxL55$1 ) | ((r0=~ auxL51 ) &  auxL54$1 ));auxL50$2=(( auxL51  &  auxL55$2 ) | ((r0=~ auxL51 ) &  auxL54$2 ));
+ auxL50$3=(( auxL51  &  auxL55$3 ) | ((r0=~ auxL51 ) &  auxL54$3 ));r0= auxL60$11 ;r1= auxL60$8 ;r2= auxL60$10 ;
+ r3= auxL60$9 ;auxL49$0= r1 ;auxL49$1= r3 ;auxL49$2= r2 ;
+ auxL49$3= r0 ;r0= auxL60$5 ;r1= auxL60$7 ;r2= auxL60$6 ;
+ r3= auxL60$4 ;auxL48$0= r3 ;auxL48$1= r0 ;auxL48$2= r2 ;
+ auxL48$3= r1 ;r2=((r0=(r1=( auxL49$3  ^  auxL48$3 ))) &  auxL48$3 );r2=( r2  | ((~(r3= r0 ) & (r0=(r1=( r1  | ( auxL49$2  ^  auxL48$2 ))))) &  auxL48$2 ));r2=( r2  | ((~(r3= r0 ) & (r0=(r1=( r1  | ( auxL49$1  ^  auxL48$1 ))))) &  auxL48$1 ));
+ r2=( r2  | ((~ r0  & ( r1  | ( auxL49$0  ^  auxL48$0 ))) &  auxL48$0 ));auxL47= r2 ;r0=( auxL49$0  ^  auxL48$0 );r0=( r0  | ( auxL49$1  ^  auxL48$1 ));
+ r0=( r0  | ( auxL49$2  ^  auxL48$2 ));r0=( r0  | ( auxL49$3  ^  auxL48$3 ));auxL46=~ r0 ;auxL45=(~ auxL47  |  auxL46 );
+ auxL44$0=(( auxL45  &  auxL49$0 ) | ((r0=~ auxL45 ) &  auxL48$0 ));auxL44$1=(( auxL45  &  auxL49$1 ) | ((r0=~ auxL45 ) &  auxL48$1 ));auxL44$2=(( auxL45  &  auxL49$2 ) | ((r0=~ auxL45 ) &  auxL48$2 ));auxL44$3=(( auxL45  &  auxL49$3 ) | ((r0=~ auxL45 ) &  auxL48$3 ));
+ r0=((r1=(r3=( auxL50$3  ^  auxL44$3 ))) &  auxL44$3 );r0=( r0  | ((~(r2= r1 ) & (r1=(r3=( r3  | ( auxL50$2  ^  auxL44$2 ))))) &  auxL44$2 ));r0=( r0  | ((~(r2= r1 ) & (r1=(r3=( r3  | ( auxL50$1  ^  auxL44$1 ))))) &  auxL44$1 ));r0=( r0  | ((~ r1  & ( r3  | ( auxL50$0  ^  auxL44$0 ))) &  auxL44$0 ));
+ auxL43= r0 ;r0=( auxL50$0  ^  auxL44$0 );r0=( r0  | ( auxL50$1  ^  auxL44$1 ));r0=( r0  | ( auxL50$2  ^  auxL44$2 ));
+ r0=( r0  | ( auxL50$3  ^  auxL44$3 ));auxL42=(~ auxL43  &  r0 );auxL41$0=(( auxL42  &  auxL50$0 ) | ((r0=~ auxL42 ) &  auxL44$0 ));auxL41$1=(( auxL42  &  auxL50$1 ) | ((r0=~ auxL42 ) &  auxL44$1 ));
+ auxL41$2=(( auxL42  &  auxL50$2 ) | ((r0=~ auxL42 ) &  auxL44$2 ));auxL41$3=(( auxL42  &  auxL50$3 ) | ((r0=~ auxL42 ) &  auxL44$3 ));r1=((r3=(r2=( auxL41$3  ^  auxL40$3 ))) &  auxL40$3 );r1=( r1  | ((~(r0= r3 ) & (r3=(r2=( r2  | ( auxL41$2  ^  auxL40$2 ))))) &  auxL40$2 ));
+ r1=( r1  | ((~(r0= r3 ) & (r3=(r2=( r2  | ( auxL41$1  ^  auxL40$1 ))))) &  auxL40$1 ));r1=( r1  | ((~ r3  & ( r2  | ( auxL41$0  ^  auxL40$0 ))) &  auxL40$0 ));auxL39= r1 ;r0=( auxL41$0  ^  auxL40$0 );
+ r0=( r0  | ( auxL41$1  ^  auxL40$1 ));r0=( r0  | ( auxL41$2  ^  auxL40$2 ));r0=( r0  | ( auxL41$3  ^  auxL40$3 ));auxL38=(~ auxL39  &  r0 );
+ auxL37=( auxL43  &  auxL38 );auxL36=( auxL42  &  auxL38 );computechooseMax4$e[i]=( auxL56  &  auxL39 );computechooseMax4$se[i]=(( auxL47  |  auxL46 ) &  auxL37 );
+ computechooseMax4$sw[i]=( auxL45  &  auxL37 );computechooseMax4$w[i]=( auxL57  &  auxL39 );computechooseMax4$nw[i]=( auxL51  &  auxL36 );computechooseMax4$ne[i]=(( auxL53  |  auxL52 ) &  auxL36 );   }
+ ;p.prepareBit(computechooseMax4) ;   }
 public static int implique_1_1_1GateCount=2;
  public static void implique_1_1_1(PrShift p,int [] pa,int [] pb,int [] computeimplique){
- 
 
 
 for (int i = 1; i < pa.length -1; i++) {
- computeimplique[i]=(~ pa[i]  |  pb[i] );
-  }
-  p.mirror(computeimplique);
-p.prepareBit(computeimplique)
- ;
-  }
-public static int concat3V_1_1_1_3GateCount=0;
- public static void concat3V_1_1_1_3(PrShift p,int [] pa,int [] pb,int [] pc,int [][] computeconcat3V){
- int[] computeconcat3V$0=computeconcat3V[0],computeconcat3V$1=computeconcat3V[1],computeconcat3V$2=computeconcat3V[2];
-
-
-for (int i = 1; i < pa.length -1; i++) {
- computeconcat3V$0[i]= pc[i] ;computeconcat3V$1[i]= pb[i] ;computeconcat3V$2[i]= pa[i] ;
-  }
-  p.mirror(computeconcat3V);
-p.prepareBit(computeconcat3V)
- ;
-  }
-public static int chooseMax3_3_1GateCount=165;
- public static void chooseMax3_3_1(PrShift p,int [][] pvois,int [][] computechooseMax3){
- int[] computechooseMax3$e=computechooseMax3[0],computechooseMax3$se=computechooseMax3[1],computechooseMax3$sw=computechooseMax3[2],computechooseMax3$w=computechooseMax3[3],computechooseMax3$nw=computechooseMax3[4],computechooseMax3$ne=computechooseMax3[5],pvois$e$0=pvois[0],pvois$e$1=pvois[1],pvois$e$2=pvois[2],pvois$se$0=pvois[3],pvois$se$1=pvois[4],pvois$se$2=pvois[5],pvois$sw$0=pvois[6],pvois$sw$1=pvois[7],pvois$sw$2=pvois[8],pvois$w$0=pvois[9],pvois$w$1=pvois[10],pvois$w$2=pvois[11],pvois$nw$0=pvois[12],pvois$nw$1=pvois[13],pvois$nw$2=pvois[14],pvois$ne$0=pvois[15],pvois$ne$1=pvois[16],pvois$ne$2=pvois[17];
-
-// initialisation 
- int auxL02=0,auxL03=0,auxL04=0,auxL05=0,auxL06$0=0,auxL06$1=0,auxL06$2=0,auxL07$0=0,auxL07$1=0,auxL07$2=0,auxL08=0,auxL09=0,auxL10$0=0,auxL10$1=0,auxL10$2=0,auxL11=0,auxL12=0,auxL13=0,auxL14$0=0,auxL14$1=0,auxL14$2=0,auxL15$0=0,auxL15$1=0,auxL15$2=0,auxL16$0=0,auxL16$1=0,auxL16$2=0,auxL17=0,auxL18=0,auxL19=0,auxL20$0=0,auxL20$1=0,auxL20$2=0,auxL21$0=0,auxL21$1=0,auxL21$2=0,auxL22=0,auxL23=0,auxL24$0=0,auxL24$1=0,auxL24$2=0,auxL25$0=0,auxL25$1=0,auxL25$2=0,auxL26$0=0,auxL26$1=0,auxL26$10=0,auxL26$11=0,auxL26$12=0,auxL26$13=0,auxL26$14=0,auxL26$15=0,auxL26$16=0,auxL26$17=0,auxL26$2=0,auxL26$3=0,auxL26$4=0,auxL26$5=0,auxL26$6=0,auxL26$7=0,auxL26$8=0,auxL26$9=0,r0=0,r1=0,r2=0,r3=0;
-for (int i = 1; i < pvois$e$0.length -1; i++) {
- auxL26$0= pvois$e$0[i] ;auxL26$1= pvois$e$1[i] ;auxL26$2= pvois$e$2[i] ;auxL26$3= pvois$se$0[i] ;
- auxL26$4= pvois$se$1[i] ;auxL26$5= pvois$se$2[i] ;auxL26$6= pvois$sw$0[i] ;auxL26$7= pvois$sw$1[i] ;
- auxL26$8= pvois$sw$2[i] ;auxL26$9= pvois$w$0[i] ;auxL26$10= pvois$w$1[i] ;auxL26$11= pvois$w$2[i] ;
- auxL26$12= pvois$nw$0[i] ;auxL26$13= pvois$nw$1[i] ;auxL26$14= pvois$nw$2[i] ;auxL26$15= pvois$ne$0[i] ;
- auxL26$16= pvois$ne$1[i] ;auxL26$17= pvois$ne$2[i] ;r0= auxL26$16 ;r1= auxL26$15 ;
- r2= auxL26$17 ;auxL20$0= r2 ;auxL20$1= r0 ;auxL20$2= r1 ;
- r0= auxL26$14 ;r1= auxL26$13 ;r2= auxL26$12 ;auxL21$0= r0 ;
- auxL21$1= r1 ;auxL21$2= r2 ;r0=( auxL21$0  ^  auxL20$0 );r0=( r0  | ( auxL21$1  ^  auxL20$1 ));
- r0=( r0  | ( auxL21$2  ^  auxL20$2 ));auxL18=~ r0 ;r2=((r1=(r0=( auxL21$2  ^  auxL20$2 ))) &  auxL20$2 );r2=( r2  | ((~(r3= r1 ) & (r1=(r0=( r0  | ( auxL21$1  ^  auxL20$1 ))))) &  auxL20$1 ));
- r2=( r2  | ((~ r1  & ( r0  | ( auxL21$0  ^  auxL20$0 ))) &  auxL20$0 ));auxL19= r2 ;auxL17=(~ auxL19  |  auxL18 );auxL16$0=(( auxL17  &  auxL21$0 ) | ((r0=~ auxL17 ) &  auxL20$0 ));
- auxL16$1=(( auxL17  &  auxL21$1 ) | ((r0=~ auxL17 ) &  auxL20$1 ));auxL16$2=(( auxL17  &  auxL21$2 ) | ((r0=~ auxL17 ) &  auxL20$2 ));r0= auxL26$10 ;r1= auxL26$11 ;
- r2= auxL26$9 ;auxL24$0= r1 ;auxL24$1= r0 ;auxL24$2= r2 ;
- r0= auxL26$1 ;r1= auxL26$2 ;r2= auxL26$0 ;auxL25$0= r1 ;
- auxL25$1= r0 ;auxL25$2= r2 ;r3=((r1=(r0=( auxL25$2  ^  auxL24$2 ))) &  auxL24$2 );r3=( r3  | ((~(r2= r1 ) & (r1=(r0=( r0  | ( auxL25$1  ^  auxL24$1 ))))) &  auxL24$1 ));
- r3=( r3  | ((~ r1  & ( r0  | ( auxL25$0  ^  auxL24$0 ))) &  auxL24$0 ));auxL23= r3 ;r0=( auxL25$0  ^  auxL24$0 );r0=( r0  | ( auxL25$1  ^  auxL24$1 ));
- r0=( r0  | ( auxL25$2  ^  auxL24$2 ));auxL22=(~ auxL23  &  r0 );auxL06$0=(( auxL22  &  auxL25$0 ) | ((r0=~ auxL22 ) &  auxL24$0 ));auxL06$1=(( auxL22  &  auxL25$1 ) | ((r0=~ auxL22 ) &  auxL24$1 ));
- auxL06$2=(( auxL22  &  auxL25$2 ) | ((r0=~ auxL22 ) &  auxL24$2 ));r0= auxL26$5 ;r1= auxL26$3 ;r2= auxL26$4 ;
- auxL14$0= r0 ;auxL14$1= r2 ;auxL14$2= r1 ;r0= auxL26$7 ;
- r1= auxL26$6 ;r2= auxL26$8 ;auxL15$0= r2 ;auxL15$1= r0 ;
- auxL15$2= r1 ;r0=((r2=(r1=( auxL15$2  ^  auxL14$2 ))) &  auxL14$2 );r0=( r0  | ((~(r3= r2 ) & (r2=(r1=( r1  | ( auxL15$1  ^  auxL14$1 ))))) &  auxL14$1 ));r0=( r0  | ((~ r2  & ( r1  | ( auxL15$0  ^  auxL14$0 ))) &  auxL14$0 ));
- auxL13= r0 ;r0=( auxL15$0  ^  auxL14$0 );r0=( r0  | ( auxL15$1  ^  auxL14$1 ));r0=( r0  | ( auxL15$2  ^  auxL14$2 ));
- auxL12=~ r0 ;auxL11=(~ auxL13  |  auxL12 );auxL10$0=(( auxL11  &  auxL15$0 ) | ((r0=~ auxL11 ) &  auxL14$0 ));auxL10$1=(( auxL11  &  auxL15$1 ) | ((r0=~ auxL11 ) &  auxL14$1 ));
- auxL10$2=(( auxL11  &  auxL15$2 ) | ((r0=~ auxL11 ) &  auxL14$2 ));r1=((r0=(r2=( auxL16$2  ^  auxL10$2 ))) &  auxL10$2 );r1=( r1  | ((~(r3= r0 ) & (r0=(r2=( r2  | ( auxL16$1  ^  auxL10$1 ))))) &  auxL10$1 ));r1=( r1  | ((~ r0  & ( r2  | ( auxL16$0  ^  auxL10$0 ))) &  auxL10$0 ));
- auxL09= r1 ;r0=( auxL16$0  ^  auxL10$0 );r0=( r0  | ( auxL16$1  ^  auxL10$1 ));r0=( r0  | ( auxL16$2  ^  auxL10$2 ));
- auxL08=(~ auxL09  &  r0 );auxL07$0=(( auxL08  &  auxL16$0 ) | ((r0=~ auxL08 ) &  auxL10$0 ));auxL07$1=(( auxL08  &  auxL16$1 ) | ((r0=~ auxL08 ) &  auxL10$1 ));auxL07$2=(( auxL08  &  auxL16$2 ) | ((r0=~ auxL08 ) &  auxL10$2 ));
- r1=((r0=(r2=( auxL07$2  ^  auxL06$2 ))) &  auxL06$2 );r1=( r1  | ((~(r3= r0 ) & (r0=(r2=( r2  | ( auxL07$1  ^  auxL06$1 ))))) &  auxL06$1 ));r1=( r1  | ((~ r0  & ( r2  | ( auxL07$0  ^  auxL06$0 ))) &  auxL06$0 ));auxL05= r1 ;
- r0=( auxL07$0  ^  auxL06$0 );r0=( r0  | ( auxL07$1  ^  auxL06$1 ));r0=( r0  | ( auxL07$2  ^  auxL06$2 ));auxL04=(~ auxL05  &  r0 );
- auxL03=( auxL09  &  auxL04 );auxL02=( auxL08  &  auxL04 );computechooseMax3$e[i]=( auxL22  &  auxL05 );computechooseMax3$se[i]=(( auxL13  |  auxL12 ) &  auxL03 );
- computechooseMax3$sw[i]=( auxL11  &  auxL03 );computechooseMax3$w[i]=( auxL23  &  auxL05 );computechooseMax3$nw[i]=( auxL17  &  auxL02 );computechooseMax3$ne[i]=(( auxL19  |  auxL18 ) &  auxL02 );
-  }
-  ;
-p.prepareBit(computechooseMax3)
- ;
-  }}
+ computeimplique[i]=(~ pa[i]  |  pb[i] );   }
+ p.mirror(computeimplique);p.prepareBit(computeimplique) ;   }}

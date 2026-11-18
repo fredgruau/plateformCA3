@@ -2,7 +2,7 @@ package sdn
 //toto
 import compiler.AST.Layer
 import compiler.ASTB.{False, Uint}
-import compiler.ASTBfun.{addRedop, derivative, ltUI2, orRedop, redop}
+import compiler.ASTBfun.{addRedop, derivative, ltUI2, neg, orRedop, redop}
 import compiler.ASTL.{delayedL, send, transfer, unop}
 import compiler.ASTLfun.{allOne, andLB2R, b2SIL, b2UIL, cond, e, eq0, f, fromInt, imply, inputBool, lt2, ltSI, neighbors, neq, orScanRight, reduce, uI2SIL, v}
 import compiler.SpatialType.{BoolE, BoolEv, BoolF, BoolV, BoolVe, BoolVf, IntE, IntEv, IntV, IntVe, UintV, UintVx}
@@ -13,9 +13,10 @@ import progOfCA._
 import progOfmacros.Comm.{apexE, apexV, neighborsSym}
 import progOfmacros.{Compute, Grad, Wrapper}
 import progOfmacros.Compute.implique
-import progOfmacros.Wrapper.{exist, inside, insideS, not, unary2Bin}
+import progOfmacros.Wrapper.{exist, inside, insideS, negL, unary2Bin}
 import sdn.ForceAg.AgForced
 import sdn.Globals.root4naming
+import sdn.MuStruct.allMuStruct
 
 import scala.collection.{immutable, mutable}
 //import sdn.Util.addLt
@@ -44,7 +45,7 @@ trait HasIsV{
  *  not only for BoolV Agent, but also for Ev Agents */
 val isV: BoolV
 /** can be defined on agent, delayed is needed because  isV is not known yet */
-val notIsV :BoolV= ~(delayedL(isV))
+val notIsV :BoolV= negL(delayedL(isV))
 }
 /**
 * agents are boolean muStruct udated using force
@@ -110,7 +111,7 @@ trait keepMeInsideForce {
       val nouveauToFill = nouveau & ~ag.muis
       /** if not null will create a push in order to fill nouveau which are not yet filled */
       val push=neighbors(nouveauToFill) & e(ag.muis)
-      val coveredByPush=exist(neighborsSym(push))
+      //val coveredByPush=exist(neighborsSym(push))
       /** should be true everywhere */
        val oui = MoveC1(~ag.muis & ag.muis, push)
       /** we must not empty voronoi in places where it will contain gcenters*/
@@ -158,6 +159,8 @@ abstract class DetectedAgV ( val detected: BoolV )  extends Agent[V] {
   override val muis=new Layer[(V, B)](1, "globalInv") with ASTLt[V,B]  with Stratify [V,B] with carrySysInstr   {
     override val  next = detected  }
   override val isV: BoolV = muis
+  /** detected agents are more difficult to get to be shown, because the layer is not a true layer muis gets a name starting with "ll"  */
+  override def shoi= allMuStruct.head.shoow(muis.munext)
   /** artificially reconstructed, we will be able to watch if it happens to be canceled by simult constraint */
    flipAfterConstr=muis ^ muis.next
   def showme={shoow(detected,muis,deflipSync)}
@@ -286,6 +289,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
   //variable defined when computing fliprioOfMove
    var isQuiescent:BoolV=null
    var yesnoHighestTriggered:UintV=null
+   var yesnoHighestTriggeredBis:UintV=null
    var yesPrioDet:UintV=null
    var yesHighestTriggered:UintV=null
    var allBugs:UintV=null
@@ -318,7 +322,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
      val (filledTriggered: UintV,/** all false except for highest priority move */ highestTriggered: UintV, prioDet: UintV) =    processMoves(allTriggered,moves.size)
      yesnoHighestTriggered=highestTriggered
      /** the flip of the move is selectionne le flip parmis les flip des mouvement proposés */
-     val flipOfMove = if(moves.size==1) filledTriggered.asInstanceOf[BoolV]    else neq(allFlip & highestTriggered )
+     val flipOfMove = if(moves.size==1) filledTriggered.asInstanceOf[BoolV]  else neq(allFlip & yesnoHighestTriggered )
 
      /** on le fait aussi pour les "yes" move pour savoir quel est le move qui aurait pu etre fait*/
      val (yesFilledTriggered, yHT, p) = {
@@ -346,6 +350,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
    var flipAfterLocalConstr: PartialUI=null
    var  allFlipMutexCanceled: UintV = null
    var flipAfterMutexConstr:PartialUI=null
+   var tata:UintV=null
    var  allFlipSextexCanceled: UintV = null
    var flipAfterSextexConstr:PartialUI=null
    var  allFlipRandCanceled: UintV = null
@@ -364,7 +369,6 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
    }
    def setFlipCancel()= {
      addConstraint("rand",'r',randConstr) //on le fait  au dernier moment pour etre sur que randConst a bien pu etre redefini pour BoundedAg
-
      //we separate local  then  mutex, mutapex, tritex and then sextex
      // it increases movement, mutex  will be more selective, since they come after
      // local constraints have been applied
@@ -376,7 +380,7 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
      flipAfterLocalConstr = fliprioOfMove.rarefies(eq0(allFlipLocalCanceled))
      //on regroupe les différents mutex et tritex, car ils opérent en exclusion les uns de autres. Par exemple, apexmutex n'opére pas en meme temp que mutex ni que tritex
      allFlipMutexCanceled=allFlipCancel(flipAfterLocalConstr, splitConstr.mutexes++splitConstr.mutApexes++splitConstr.tritexes)
-     flipAfterMutexConstr = flipAfterLocalConstr.rarefies(eq0(allFlipMutexCanceled))
+     flipAfterMutexConstr = flipAfterLocalConstr.rarefies(eq0(allFlipMutexCanceled)).restoreInvariant
      if(splitConstr.sextexes.nonEmpty){ //on fait un if car voronoi n'a pas de contrainte directionnelle.
        allFlipSextexCanceled=allFlipCancel(flipAfterMutexConstr, splitConstr.sextexes)
       flipAfterSextexConstr = flipAfterMutexConstr.rarefies(eq0(allFlipSextexCanceled))
@@ -392,16 +396,21 @@ abstract class ForceAg[L <: Locus] extends Agent[L] with rando
    /** will show only move that trigger movement. Move that "block" movement are hidden,  */
    def showPositiveMoves={
      shoowText(yesnoHighestTriggered,codeMove)
+
      if(yesHighestTriggered !=yesnoHighestTriggered )shoowText(yesHighestTriggered,codeMove)
-     //shoowText(allBugs,codeMove) //will shows the force with contradiction between empty and invade
+     shoowText(allBugs,codeMove) //will shows the force with contradiction between empty and invade
    }
    // /** shows also  moves that block movement */
    // def showMoves={ shoowText(highestTriggered,codeMove.toList)}
    /** we sometimes need to check the prio, wether it is quiescent or not */
    def showAllFlip={
-     shoowText(fliprioOfMove.valuc, List() )
+     shot(fliprioOfMove.valuc)
+     tata = ~(~flipAfterMutexConstr.valuc)
+     shoowText(tata,List())
      shoow(fliprioOfMove.valuc.lt)
-     shoow(isQuiescent,flipAfterConstr,flipAfterLocalConstr.defined,   flipAfterMutexConstr.defined)//fliprioOfMove.defined, deja affiché
+     shoow(isQuiescent,flipAfterConstr,fliprioOfMove.defined,flipAfterLocalConstr.defined,   flipAfterMutexConstr.defined)//fliprioOfMove.defined, deja affiché
+    // yesnoHighestTriggeredBis= ~(~yesnoHighestTriggered)
+    // shoowText(yesnoHighestTriggeredBis,List())
 
    }
    /** stores the first letter of each constraint's name. This lettre is to be displayed on vertice where constraint is active

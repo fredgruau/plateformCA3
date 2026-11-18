@@ -48,9 +48,14 @@ trait MyOpInt2[L <: Locus, R <: Ring] {
   }
 
   /** concatenation, this=lsb, that =msb */
-  def ::[U >: R <: Ring](that: ASTLt[L, R])(implicit m: repr[L], n: repr[R]): ASTLt[L, UI] =
-    concat2(that, this).asInstanceOf[ASTLt[L, UI]] //si on fait x::y  xor3::carry, a droite c'est le bit de poids fort
+  //def ::[U >: R <: Ring](that: ASTLt[L, R])(implicit m: repr[L], n: repr[R]): ASTLt[L, UI] =    concat2(that, this).asInstanceOf[ASTLt[L, UI]] //si on fait x::y  xor3::carry, a droite c'est le bit de poids fort
   //first arg is a bool, second arg is an UINT
+
+  def ::[R2 <: Ring](that: ASTLt[L, R2])(
+    implicit m: repr[L], n: repr[R]
+  ): ASTLt[L, UI] =
+    concat2[L, R](that, this)
+
 
   /** minus  must convert UI to SI which adds an extra bit. */
   def -[U >: R <: I](that: ASTLt[L, R])(implicit m: repr[L], n: repr[R]): ASTLt[L, SI] = ring match {
@@ -69,19 +74,6 @@ trait MyOpInt2[L <: Locus, R <: Ring] {
   //eq0((this ^ that))
 
 
-  /*
-   ring match {
-   case SI() => lt2[L](this.asInstanceOf[ASTLt[L, SI]], that.asInstanceOf[ASTLt[L, SI]])
-
-   case UI() =>  ltUI2(this.asInstanceOf[ASTLt[L, UI]], that.asInstanceOf[ASTLt[L, UI]])
- //  case UI() => lt2[L](uItoSIL(this.asInstanceOf[ASTLt[L, UI]]), uItoSIL(that.asInstanceOf[ASTLt[L, UI]]))
- }*/
-
-  //def <[U >: R <: SI](that: ASTLt[L, SI])(implicit m: repr[L], n: repr[SI]): ASTL[L, B] = lt2[L](this.asInstanceOf[ASTLt[L,SI]], that)
-  /*  def >[U >: R <: I](that: ASTLt[L, R])(implicit m: repr[L], n: repr[R]): ASTLt[L, B] = ring match {
-      case SI() => lt2[L,R](that.asInstanceOf[ASTLt[L, SI]], this.asInstanceOf[ASTLt[L, SI]])
-      case UI() => lt2[L,R](uItoSIL(that.asInstanceOf[ASTLt[L, UI]]), uItoSIL(this.asInstanceOf[ASTLt[L, UI]]))
-    }*/
 
   def >[U >: R <: I](that: ASTLt[L, R])(implicit m: repr[L], n: repr[R]): ASTLt[L, B] = lt2(that, this)
 }

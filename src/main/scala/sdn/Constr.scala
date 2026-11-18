@@ -5,10 +5,11 @@ import compiler.ASTL.{delayedL, transfer}
 import compiler.ASTLfun.{e, f, imply, v}
 import compiler.{ASTLfun, Locus}
 import compiler.SpatialType.{BoolE, BoolEv, BoolF, BoolV, BoolVe, BoolVf}
-import progOfLayer.Sextexrect.chooseMaxOf
+import dataStruc.{BranchNamed, Named}
+import progOfLayer.Sextexrect.myChooseMaxOf
 import progOfmacros.Comm.{apexE, apexV, insideE, neighborsSym}
-import progOfmacros.Compute.{chooseMaxOf2, chooseMaxOf3, implique}
-import progOfmacros.Wrapper.{inside, insideS}
+import progOfmacros.Compute.{chooseMaxOf, chooseMaxOfMacro, implique}
+import progOfmacros.Wrapper.{andL, inside, insideS}
 import sdn.ForceAg.{Ag, AgForced}
 import sdn.SplitHashMapTyped.Split
 import sdn.Util.{addSymUI, myLn2}
@@ -107,10 +108,11 @@ class ConstrSyncImply(override val bounding:Ag, override val bounded:BoundedAgV,
  */
 class MutKeepFlipIf(a:AgForced, i: Impact, val mutex:BoolE, val fliprio:PartialUI) extends Constr(Array(a), i,fliprio) {
   /** mutex is triggered if there is indeed two flips on each side of the mutex, and in the right state. */
-  def mutrig:BoolE =mutex &  (impact  match {
+  val mutrigFixedPart:BoolE=delayedL((impact  match {
     case Both() => insideS(fliprio.defined)
-    case One(v) =>  insideS(fliprio.defined & (if (v) ag.notIsV else (ag.isV))) // result also depend on impact
-  })
+    case One(v) =>  insideS(andL(fliprio.defined, (if (v) ag.notIsV else (ag.isV)))) // result also depend on impact
+  }))
+  def mutrig:BoolE =mutex & mutrigFixedPart
   /** flip is ok if prio is maximum with respect to the other side */
   def tmp: BoolEv =imply(v(mutrig),fliprio.valuc.lt) //todo faut mettre lt?oui, lt est vrai du coté de la plus grosse prio
   /** flip remains ok if no neighbor edge present a problem */
@@ -125,11 +127,12 @@ object MutKeepFlipIf{def apply(a:AgForced, i: Impact, mutex:BoolE)(fliprio:Parti
  */
 class MutApexKeepFlipIf(a:AgForced, i: Impact, val mutex:BoolE, fliprio:PartialUI ) extends Constr(Array(a), i,fliprio) {
   /** mutex is triggered if there is indeed two flips on each side of the mutex, and in the right state. */
+  val mutrigFixedPart:BoolE=delayedL((impact  match {
+    case Both() => inside(apexE(f(fliprio.defined)))
+    case One(v) =>  inside(apexE(f(andL(fliprio.defined , (if (v) ag.notIsV else (ag.isV))))))// result also depend on impact
+  }))
   val mutrig:BoolE ={
-    mutex &  (impact  match {
-      case Both() => inside(apexE(f(fliprio.defined)))
-      case One(v) =>  inside(apexE(f(fliprio.defined & (if (v) ag.notIsV else (ag.isV)))))// result also depend on impact
-    })}
+    mutex &  mutrigFixedPart}
   /** flip is ok if prio is smaller with respect to the other side */
   //  val chekLtIfMutrig=imply(f(mutrig),prio.ltApex) // je mettait lt au lieu de gt, cela peut créer des oscillations.
   val chekLtIfMutrig=imply(f(mutrig),fliprio.valuc.ltApex)
@@ -140,10 +143,11 @@ object MutApexKeepFlipIf{def apply(a:AgForced, i: Impact, mutex:BoolE)(fliprio:P
 
 class TriKeepFlipIf(a:AgForced, i: Impact, val tritex: BoolF, fliprio:PartialUI) extends Constr(Array(a), i,fliprio) {
   /** mutex is triggered if there is indeed two flips on each side of the mutex, and in the right state. */
-  val tritrig:BoolF =tritex &  (impact  match {  //y a moyen d'écrire un trigger générique pour mut,tri, et loc
+  val tritrigFixedPart:BoolF=delayedL((impact  match {  //y a moyen d'écrire un trigger générique pour mut,tri, et loc
     case Both() => insideS(fliprio.defined)
-    case One(v) =>  insideS(fliprio.defined& (if (v) ag.notIsV else (ag.isV))) // result also depend on impact
-  })
+    case One(v) =>  insideS(andL(fliprio.defined , (if (v) ag.notIsV else (ag.isV)))) // result also depend on impact
+  }))
+  val tritrig:BoolF =tritex &  tritrigFixedPart
   /** flip is ok if prio is minimum with respect to the other side */
   def tmp: BoolVf =imply(transfer(v(tritrig)),fliprio.valuc.lt3)
   /** flip is preserved if no neighbor edge present a problem */
@@ -156,7 +160,7 @@ object TriKeepFlipIf{def apply(a:AgForced, i: Impact, tritex: BoolF)(fliprio:Par
 
 /** will choose neighbor with higest flip priority, where FLIP IS DEFINED
  *  sexKeepFlipIf is the same constraint for any agents, so it is not defined as a class but as a class instance*/
-class SexTex(a:AgForced, fliprio:PartialUI) extends Constr(Array(a), null,fliprio){
+class SexTex(a:AgForced, fliprio:PartialUI) extends Constr(Array(a), null,fliprio) with Named with BranchNamed{
   //si j'enleve la ligne suivante,avec sexKeepFlipIfoldoldold, ca veut plus initialiser part.isV, c'est un bug du compilo
  // val  sexKeepFlipIfoldoldold: Int => Int = (fp:Int)=> 3//chooseMaxOf(fp.value, 4)
   /**if we implement sextex, qpoint fields must be available*/
@@ -166,10 +170,15 @@ class SexTex(a:AgForced, fliprio:PartialUI) extends Constr(Array(a), null,flipri
    * carefull that this constraint uses prioYesNotQuiescent so it assumes that moves have been already computed
    * if we want to endows our agent with constraints before computing moves, this will not work*/
   val vois=addSymUI(e(fliprio.restoreInvariant.value)).symUI
+  val choose: BoolVe = chooseMaxOfMacro( nbitPrio,vois)
+ // ag.shoow(choose)
 
-  val choose2: BoolVe = chooseMaxOf3(vois, nbitPrio)
+
+
+
+
   //val choose: BoolVe = chooseMaxOf(fliprio.restoreInvariant.value, nbitPrio)
-  val whereto:BoolVe= imply(e(singleton),choose2)
+  val whereto:BoolVe= imply(e(singleton),choose)
   /** where = places where flips is still valid after the constraint newFlip<-oldFlip&where
    * defined has a method, in order allow definition prior to intanciation of needed field, such as flip.  */
   override val where: BoolV = insideE(whereto)

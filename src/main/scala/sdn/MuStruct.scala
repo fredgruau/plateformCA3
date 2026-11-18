@@ -41,7 +41,9 @@ trait shoow{
     for (v <- vs) shoowText(v, List())
   }
   }
+object LDAG{
 
+}
  class LDAG{
   /** this enables to deliver compute root, which is allways the first mustruc*/
   def  particle=
@@ -66,8 +68,8 @@ abstract class LayerS[L<:Locus,R<:Ring](override val nbit: Int, override val ini
 abstract class MuStruct[L<:Locus,R<:Ring] extends  DagNode[MuStruct[_<:Locus,_<:Ring]]
   with Named with BranchNamed with hasMuisSysInstr with shoow with invDag[MuStruct[_<:Locus,_<:Ring]] {
   def shoi=muis.ring match{
-    case B() => shoow(muis)
-    case UI() | SI() =>shot(muis)
+    case B() =>allMuStruct.head.shoow(muis)
+    case UI() | SI() =>allMuStruct.head.shot(muis)
   }
   allMuStruct.append( this) //insert new created muStruct on  last position of already instanciated mu struct
   /** support of agent, implemented as a layer. we also use it to store a list  of system instructions */
@@ -117,8 +119,8 @@ object MuStruct{
     case v:Vor => //v.tmpVe=v.moves(1).head._2.asInstanceOf[MoveC2].yes.push
       //v.tmp=v.moves(1).head._2.asInstanceOf[MoveC2].yes.triggeredYes
       //v.tmp2=v.moves(1).head._2.asInstanceOf[MoveC2].yes.empty
-      v.tmp=v.bf.lightConcave
-    //  v.shoow(v.tmp)
+     // v.tmp=v.bf.lightConcave
+     v.shoow(v.bf.lightConcave,v.bf.lightConvex)
     case _ =>
   }
 

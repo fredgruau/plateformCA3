@@ -164,4 +164,26 @@ for (int i = 1; i < pngh$e.length -1; i++) {
   ;
 p.prepareBit(commneighbors)
  ;
-  }}
+  }
+public static int neighborsEv_1_1GateCount=0;
+ public static void neighborsEv_1_1(PrShift p,int [][] pnghhhh,int [][] ver){
+int[] ver$h1=ver[0],ver$h2=ver[1],ver$d1=ver[2],ver$d2=ver[3],ver$ad1=ver[4],ver$ad2=ver[5],pnghhhh$e=pnghhhh[0],pnghhhh$se=pnghhhh[1],pnghhhh$sw=pnghhhh[2],pnghhhh$w=pnghhhh[3],pnghhhh$nw=pnghhhh[4],pnghhhh$ne=pnghhhh[5];;;;
+
+for (int i = 1; i < pnghhhh$e.length -1; i++) {
+ ver$h1[i]= pnghhhh$w[i] ;ver$h2[i]=( pnghhhh$e[i]  <<  1 );ver$d1[i]= pnghhhh$nw[i] ;ver$d2[i-1]= pnghhhh$se[i] ;
+ ver$ad1[i]= pnghhhh$ne[i] ;ver$ad2[i-1]=( pnghhhh$sw[i]  >>>  1 );   }
+ ;p.prepareBit(ver) ;   }
+public static int insdBallDef_1_1GateCount=6;
+ public static void insdBallDef_1_1(PrShift p,int [] pngh,int [] res){
+
+int auxL118=0,ngh=0,tmun54=0;// initialisation
+for (int i = 1; i < pngh.length -1; i++) {
+ ngh= pngh[i] ;res[i-1]=(((( tmun54  &  ngh ) & ( ngh  >>>  1 )) & ( auxL118  >>>  1 )) &  auxL118 );tmun54=((( ngh  <<  1 ) &  auxL118 ) & ( auxL118  <<  1 ));auxL118= ngh ;   }
+ p.mirror(res);p.prepareBit(res) ;   }
+public static int adjBallDef_1_1GateCount=6;
+ public static void adjBallDef_1_1(PrShift p,int [] pngh,int [] res){
+
+int auxL117=0,ngh=0,tmun53=0;// initialisation
+for (int i = 1; i < pngh.length -1; i++) {
+ ngh= pngh[i] ;res[i-1]=(((( tmun53  |  ngh ) | ( ngh  >>>  1 )) | ( auxL117  >>>  1 )) |  auxL117 );tmun53=((( ngh  <<  1 ) |  auxL117 ) | ( auxL117  <<  1 ));auxL117= ngh ;   }
+ p.mirror(res);p.prepareBit(res) ;   }}

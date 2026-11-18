@@ -22,11 +22,11 @@ trait addCenter {
   val ctr=new Attributs {
     override val muis: BoolV with carrySysInstr = muuiis
     /** true for rhombus  apexes wrongly occupied, i.e the seed does not occupy the zlt apex, */
-    val rhombusWronglyOccupied=bsm.losangeApexes & (zon.zlt.muis | muis )  //le coté vide est celui proche de zonegt
+    val rhombusWronglyOccupied=bsmAtt.losangeApexes & (zon.zlt.muis | muis )  //le coté vide est celui proche de zonegt
     /** detect wrongly occupied on the rhombus middle edge */
     val rhombusShouldFlip=inside[F,E](apexE(f(rhombusWronglyOccupied)))
     /** true where wrongly occupied apex should be removed  */
-    val rhombusApexToRemoveFromCtr: BoolV=bsm.losangeApexes & ~zon.zlt.muis & muis & exist[F, V](apexV(f(rhombusShouldFlip)))
+    val rhombusApexToRemoveFromCtr: BoolV=bsmAtt.losangeApexes & ~zon.zlt.muis & muis & exist[F, V](apexV(f(rhombusShouldFlip)))
     val raaand:BoolV= ~(~root4naming.addRandBit().asInstanceOf[BoolV])
     val raaand2:BoolV= root4naming.addRandBit().asInstanceOf[BoolV]
     val raaand3:BoolV= root4naming.addRandBit().asInstanceOf[BoolV]
@@ -49,12 +49,12 @@ trait addCenter {
     qf.tripletonV //sans ca on trouve que le sommet contient bien un tripleton hyperstreched, mais la particule cependant n'est pas dans le tripleton.
     /** first approximation of center, includes not shadowed meetEV not blocking progression to zlt zone
      * raw doubleton and tripleton, and hyperstreched tripleton which do not need to flip orientation*/
-    val ctr1=closerToFireR(bsm.meetiEnotShadowed) & closerToZltSR(bsm.meetiEnotShadowed) |
-      closerToFireR(bsm.isLeton) |
-      (closerToFireSR(bsm.nbcc3) & // on met une proba plus faible pour éviter des instabilité car NBCC3 est "strong"
-        closerToZltSR(bsm.nbcc3) &   //nbcc3 is a subcase of meetEV, so we should also subject it to removalMeetEnotZltNextToMeetEonZlt
+    val ctr1=closerToFireR(bsmAtt.meetiEnotShadowed) & closerToZltSR(bsmAtt.meetiEnotShadowed) |
+      closerToFireR(bsmAtt.isLeton) |
+      (closerToFireSR(bsmAtt.nbcc3) & // on met une proba plus faible pour éviter des instabilité car NBCC3 est "strong"
+        closerToZltSR(bsmAtt.nbcc3) &   //nbcc3 is a subcase of meetEV, so we should also subject it to removalMeetEnotZltNextToMeetEonZlt
         ~rhombusApexToRemoveFromCtr  )
-    val ctrNoZlt=bsm.meetiEVnotShadowed |   bsm.isLeton |   (bsm.nbcc3 & ~rhombusApexToRemoveFromCtr)
+    val ctrNoZlt=bsmAtt.meetiEVnotShadowed |   bsmAtt.isLeton |   (bsmAtt.nbcc3 & ~rhombusApexToRemoveFromCtr)
 
     /** we target identifying thin support toto.meetV at the "pointe of" zlt  zon.b.nbcc1  */
     val yetCloser=zon.bzlt.nbcc1 & bfs.bv.meetV
@@ -68,7 +68,7 @@ trait addCenter {
     /** adds the possibility to directly move towards zlt, staying along the summit, randomized for symetry breaking */
     val ctr2=(ctr1bis | zon.zlt.muis  &  raaand | exploreAwayZgt)&sum.isSummit2
     /** was intended for restricting exploration of zon.zlt to agent already streching weakly in that direction, turned out to be to restrictive */
-    val weakMeetE:BoolE=dgv.streched & insideS(sum.isSummit2) & existS(bsm.meetiV)
+    val weakMeetE:BoolE=dgv.streched & insideS(sum.isSummit2) & existS(bsmAtt.meetiV)
     /** seizeCenter etait la force qui marchait bien */
     val seizeCenter=ciblerFaible(ctr2)
     override def showMe: Unit = { shoow(tinyrand,ecartelee,ctr2,rhombusApexToRemoveFromCtr,
@@ -79,7 +79,7 @@ trait addCenter {
 /** computes tripletonStreched which may still be usefull
  * */
 trait addProp{
-  self: MovableAgV with addDistVor with QpointConstrain with addZone=>
+  self: MovableAgV with addDistVor with QpointConstrain=>
   /** rename this.muis in order to be able to adress it later on. */
   val muisSelf= this.muis
   val prop=new Attributs() { //su==summitFields
@@ -93,29 +93,39 @@ trait addProp{
     val orStrechedLocal: BoolV =exist(streched) //true if localNbcc>0
     val bit1StrechedLocal: BoolV =orStrechedLocal & ~bit0StrechedLocal  //there must be a carry if bit0 is 0, but localNbcc>0
     val bitONbStreched: BoolF = border(transfer(f(bit0StrechedLocal) )) //we consider now the three vertice, and the F locus in the middle, using a xor, we can directly deduce bit 0
+
+
     val tforStrechedLocal=transfer(f(orStrechedLocal))
     val orStrechedGlobal:BoolF=exist(tforStrechedLocal) //globalNbcc>0 iff one of localNbcc >0
-    val threeOne:BoolF=inside(tforStrechedLocal) //true if tripleton has three neighbors, symetric
-    val carry= threeOne | (orStrechedGlobal & ~ bitONbStreched ) //il y a une retenu si on a le bit0 qui vaut 0, mais nbccGlobal>0, faut aussi regarder si les trois valent 1
-    val bit1NbStreched:BoolF = exist(transfer(f(bit1StrechedLocal))) | carry //le bit 1 vaut 1 si un des voisins contribue 2, ou bien si ya retenue
+    val threeNonZero:BoolF=inside(tforStrechedLocal) //true if tripleton's three neighbors, all contribute
+    val atLeastOne1:BoolF= existS(bit0StrechedLocal)
+    val atLeastOne2:BoolF= existS(bit1StrechedLocal)
+    val twoPlusOne=atLeastOne1&atLeastOne2
+    val tripletonStrechedF:BoolF=qf.tripleton &  (twoPlusOne | threeNonZero)
+    val tripletonStreched: BoolV =existS[F, V](tripletonStrechedF)
+
+    val carryF: ASTLt[F, B] = threeNonZero | (orStrechedGlobal & ~ bitONbStreched ) //il y a une retenu si on a le bit0 qui vaut 0, mais nbccGlobal>0, faut aussi regarder si les trois valent 1
+    val bit1NbStreched:BoolF = exist(transfer(f(bit1StrechedLocal))) | carryF //la somme vaut au moins 2 si un des voisins contribue 2, ou bien si ya retenue
     val adj3=bit1NbStreched & bitONbStreched
     val adj0= ~bit1NbStreched & ~bitONbStreched
-    val tripletonStreched:BoolF=qf.tripleton &(  (adj3 | adj0 /*& ~notLocalCvgcRadius*/)) //test if nbccStreched is three or zero, or two with local cvgc of radius.
 
-    /*
+
         val ebitONbStreched = border(transfer(e(bit0StrechedLocal) ))
         val teorStrechedLocal=transfer(e(orStrechedLocal))
         val eorStrechedGlobal=exist(teorStrechedLocal)
-        val twoOne=inside(teorStrechedLocal) //true if doubleton has two neighbors, symetric
+        val twoOne: BoolE =inside(teorStrechedLocal) //true if doubleton has two neighbors, symetric
         val ecarry= twoOne | (eorStrechedGlobal & ~ ebitONbStreched ) //il y a une retenu si on a le bit0 qui vaut 0, mais y a des strech warning, faut aussi regarder si les trois valent 1
         val ebit1NbStreched:BoolE = exist(transfer(e(bit1StrechedLocal))) | ecarry //le bit 1 vaut 1 si un des voisins contribue 2, ou bien si ya retenue
         val eadj2=ebit1NbStreched & ~ebitONbStreched
         val eadj0= ~ebit1NbStreched & ~ebitONbStreched
-        val doubletonStreched:BoolE=qf.doubleton & (eadj2 | eadj0) //test if nbccStreched is two or zero.
-    */
+        val eadj3=ebit1NbStreched & ebitONbStreched
+    val doubletonStreched:BoolE=qf.doubleton & (eadj2 | eadj0) //test if nbccStreched is two or zero.
+    val doubletonHyperStreched:BoolE=qf.doubleton & (eadj3) //test if nbccStreched is two or zero.
+    val doubletonUltraStreched:BoolE=qf.doubleton & ecarry& ~ebitONbStreched//test if nbccStreched is two or zero.
+
 
     override def showMe: Unit = {shoow(//brdVeSlopped,participatinSite,streched,orStrechedGlobal,bitONbStreched,bit1NbStreched,,adj0,adj3//awayFromRiGt,
-      tripletonStreched)}
+      tripletonStreched,doubletonStreched,doubletonHyperStreched,bit0StrechedLocal,bit1StrechedLocal,carryF)}
 
     /*
 

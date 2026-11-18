@@ -5,7 +5,7 @@ import compiler.ASTL.{binop, delayedL, send, transfer}
 import compiler.ASTLfun.{andR, cond, e, eq0, extend, fromInt, ltSI, reduce, sign}
 import compiler.SpatialType.{BoolE, BoolF, BoolV, BoolVe, IntE, IntEv, IntV, IntVe, SintV}
 import compiler.{AST, ASTLfun, ASTLt, B, Locus, Ring, SI, V, chip}
-import progOfStaticAgent.Homogeneize
+import progOfStaticAgent.Homog
 import progOfmacros.Comm.{insideBall, neighborsSym}
 import progOfmacros.Grad
 import progOfmacros.Grad.{deltaCallProp, siFieldOperatorProp, slopeDeltaDistDef, slopeDeltaRadiusDef, slopeGradGapDef}
@@ -50,7 +50,7 @@ abstract class SiFieldZeroInit2(n:Int,  source: MuStruct[V, B],val srcProp:BoolV
  * @param dgv
  */
 class InnerRadius(source: MuStruct[V, B], val d:MuDist, val dgv:MuDist)
-  extends SiFieldZeroInit2(Homogeneize.nbitRi,
+  extends SiFieldZeroInit2(Homog.nbitRi,
     source ,d.sloplt|neighborsSym(e(source.muis)),
     slopeDeltaRadiusDef  ) {
   val (sloplt2, grad)=Grad.slopGradGap(muis)

@@ -1,5 +1,4 @@
 package {{NAMEPACKAGE}} ;
-
 import compiledMacro.*;
 import compiler.Locus;
 import scala.collection.immutable.List;
@@ -10,36 +9,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import static simulator.Util.*;
 import scala.collection.immutable.List;
-
-public final class {{NAMECA}}CA implements CAloops2 {
-   { {{INPUTBUTTON}}
-      //buttons.put("growNButo", -1);
-    }
-        //mettre tout les bouttons.
-    public HashMap<String, Integer> getbuttons() {  return (buttons); }
-
-
-
-{{ANONYMOUSLOOP}}
+public final class {{NAMECA}}CA implements CAloops2 {  { {{INPUTBUTTON}}   }
+public HashMap<String, Integer> getbuttons() {  return (buttons); }
 public int CAmemWidth() {return {{MEMWIDTH}};}
-
-
 @Override public List<ArrayList<String>> theLoops(PrShift p, int[][] m) {
-
-
 ArrayList<String> bugs=new ArrayList<>();
 ArrayList<String> livesIf=new ArrayList<>();
 {{ANCHORNAMED}}{{ANCHORNOTNAMED}}
 {{PREPAREBITS}}
 {{LISTCALL}}
-    List<ArrayList<String>> conteneur =
-        scala.collection.immutable.List$.MODULE$.empty();
-    conteneur = conteneur.$colon$colon(livesIf);
-    conteneur = conteneur.$colon$colon(bugs);
-    return(conteneur);
-
+ List<ArrayList<String>> conteneur =   scala.collection.immutable.List$.MODULE$.empty();
+  conteneur = conteneur.$colon$colon(livesIf);
+  conteneur = conteneur.$colon$colon(bugs);
+  return(conteneur);
  }
-
+{{ANONYMOUSLOOP}}
 
 @Override public HashMap<String, List<String>> textOfFields() {HashMap<String, List<String>> map = new HashMap<>();
 {{FIELDLABEL}}  return (map); }

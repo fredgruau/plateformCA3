@@ -1,15 +1,15 @@
 package progOfmacros
 
-import compiler.{B, chip, _}
+import compiler._
 import compiler.AST._
-import compiler.SpatialType.{BoolEv, BoolVe, _}
+import compiler.SpatialType._
 import compiler.ASTBfun.{addRedop, andRedop, derivative, maxSign, maxSignRedop, minSignRedop, orRedop, p, redop, uI2SI, xorRedop}
-import compiler.ASTL.{transfer, _}
+import compiler.ASTL._
 import compiler.ASTLfun._
 import compiler.ASTLt._
 import compiler.Circuit.hexagon
 import progOfmacros.Compute._
-import progOfmacros.Wrapper.{borderS, not, segment1}
+import progOfmacros.Wrapper.{borderS, negL, segment1}
 
 /** contient des operateurs utilisant le gradient, compilé comme des macro de plusieurs centaines de gates
  * dans le module java miroir, java/compiledMacro */

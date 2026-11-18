@@ -11,7 +11,7 @@ import dataStruc.BranchNamed
 import sdn.Util.{addLt, addSym, addSymUI, oneThirdRandBit, randConstUintV, randUintV}
 import compiler.ASTLfun._
 import progOfmacros.Compute.concat3V
-import progOfmacros.Wrapper.{condL, ltUI2L, neqUI2L, not}
+import progOfmacros.Wrapper.{condL, ltUI2L, neqUI2L, negL}
 import sdn.Globals.root4naming
 /** tests the lt macro, containts a bugif */
 class   Testsextex() extends ConstLayer[V, B](1, "global")  with BranchNamed{
@@ -38,7 +38,7 @@ class   Testsextex() extends ConstLayer[V, B](1, "global")  with BranchNamed{
   */
  def sharpCmp(arg1: UintV, arg2:UintV, r:BoolV): (ASTLt[V, UI], ASTLt[V, B]) ={
   val lt=ltUI2L(arg1,arg2)
-  val eq=not(neqUI2L(arg1,arg2))
+  val eq=negL(neqUI2L(arg1,arg2))
   val ltSharp=condL(eq, r, lt)
   val min=condL(lt,arg1,arg2)
   (min,ltSharp)
@@ -70,11 +70,11 @@ class   Testsextex() extends ConstLayer[V, B](1, "global")  with BranchNamed{
 
  val (allltSharp,success)=sharpCmpOneThird(southmin,northmin)
 
- val firstStage=Array(eastltSharp,not(eastltSharp),westltSharp,not(westltSharp),northltSharp,not(northltSharp))
+ val firstStage=Array(eastltSharp,negL(eastltSharp),westltSharp,negL(westltSharp),northltSharp,negL(northltSharp))
  //val f:BoolV=false
  //val firstStage: Array[ASTLt[V, B]]=Array(f,f,f,f,northlt,~northlt)
- val secondStage: Array[ASTLt[V, B]] =Array(southltSharp,not(southltSharp))
- val thirdStage=Array(allltSharp,not(allltSharp))
+ val secondStage: Array[ASTLt[V, B]] =Array(southltSharp,negL(southltSharp))
+ val thirdStage=Array(allltSharp,negL(allltSharp))
  val sextexInt: List[ASTLt[V, B]] =(0 to 5).map((i:Int)=>{ //on traite pas encore correctement les cas d'égalité, ca va venir, un peu de patience
   val stage1=firstStage(i)  ////stage 1 a trois bits a un
   val stage2=if(i>3) stage1 else stage1 & secondStage(i/2) //stage 2 a seulement 2 bits a 1

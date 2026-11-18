@@ -7,48 +7,61 @@ import compiler.ASTLt.ConstLayer
 import compiler.SpatialType.{BoolV, BoolVe, SintV, UintV, UintVe, UintVx}
 import compiler.{ASTLt, B, UI, V}
 import dataStruc.BranchNamed
-import progOfLayer.Sextexrect.chooseMaxOf
-import progOfmacros.Compute.concat3V
-import progOfmacros.Wrapper.{condL, ltUI2L, neqUI2L, not}
+import progOfLayer.Sextexrect.{myChooseMaxOf, weakCmpProdZero, weakCmpProdtwo}
+import progOfmacros.Compute.{chooseMaxOf, concat3V}
+import progOfmacros.Wrapper.{condL, ltUI2L, negL, neqUI2L}
 import sdn.Globals.root4naming
-import sdn.Util.{addSymUI, addSymUIbis, oneThirdRandBit, randConstUintV, splitInto6}
+import sdn.Util.{addSymUI, addSymUIbis, oneThirdRandBit, randConstUintV, randUintV, splitInto6}
 
 /** tests the lt macro, containts a bugif */
 
 class   Sextexrect() extends ConstLayer[V, B](1, "global")  with BranchNamed{
  //we want a constant random to check that selected direction changes of time when two
  //or more vertices reach the minimum.
-  val prioRand = randConstUintV(3) //rand1::rand2
-  val choose=chooseMaxOf(prioRand,3)
- show(prioRand,choose)
+  //val prioRand = randConstUintV(3) //rand1::rand2
+ val prioRand = randUintV(3) //rand1::rand2
+ val prioRand2= ~(~prioRand)
+  val k=3
+ showt(prioRand)
+ val voisins =addSymUI(e(prioRand)).symUI
+ val voisins2 =addSymUI(e(prioRand)).symUI
+ val nasI: UintV = concatR(voisins) //si k = 4, on récupére 24 bits a la suite pour 6 voisins, chacun 4 bits,
+ val nasI2: UintV = concatR(voisins2) //si k = 4, on récupére 24 bits a la suite pour 6 voisins, chacun 4 bits,
+ val Array(east2,se2,sw2, west2,nwest2,neast2)=splitInto6(nasI2, 3)
 
- /*
-  //val toto=addLt(prioRand) //pourquoi c'était la ca?
-  val voisins: UintVe =addSymUI(e(prioRand)).symUI  // symUI est un boolVe qui  va contenir les voisins
- val nasI: UintV =  concatR(voisins) //on récupére 18 bits a la suite pour 6 voisins, chacun 3 bits,
+
  val (n0, n1, n2, n3, n4, n5) = (elt(0, nasI), elt(1, nasI), elt(2, nasI), elt(3, nasI), elt(4, nasI), elt(5, nasI)) // aprés on les numérote
  val (n6, n7, n8, n9, n10, n11) =(elt(6, nasI),elt(7, nasI),elt(8, nasI),elt(9, nasI),elt(10, nasI),elt(11, nasI))  //aprés on les numérote
  val(n12, n13, n14, n15, n16, n17)=(elt(12, nasI),elt(13, nasI),elt(14, nasI),elt(15, nasI),elt(16, nasI),elt(17, nasI)) // aprés on les numérote
-  val (east,se,sw)=(concat3V(n0, n1, n2),concat3V(n3, n4, n5),concat3V(n6, n7, n8))
- val (west,nw,ne)=(concat3V(n9,n10,n11),concat3V(n12,n13,n14),concat3V(n15,n16,n17))
- /** Two here means that if arg1 = arg2 we expand in both directions, going from a singleton to a tripleton */
- val (northmin,nwnw,nene)=weakCmpProdtwo(nw,ne)
- val (southmin,swsw,sese)=weakCmpProdtwo(sw,se)
- val (horizMin,heast,hwest)=weakCmpProdZero(east,west)
- val (vertmin,nn,ss)=weakCmpProdZero(northmin,southmin)
- val  vertltsharp=sharpCmpNoMin(vertmin,horizMin,root4naming.addRandBit().asInstanceOf[BoolV])
- val firstStage=Array(heast,sese,swsw,hwest,nwnw,nene) //peut y avoir plusieurs bit a 1. faudra refaire des "ET" logique
- val south = ss & vertltsharp
- val north = nn & vertltsharp
- val secondStage: Array[ASTLt[V, B]] =Array(~vertltsharp,south,south, ~vertltsharp,north,north)
- /** a seulement un bits a 1 sauf pour etendre vers le haut ou  vers le bas, ou la ca marche sur deux bits.*/
- val sextexInt: List[ASTLt[V, B]] =(0 to 5).map((i:Int)=>{ firstStage(i)  & secondStage(i)}).toList
+ val (east,se,sw)=(concat3V(n0, n1, n2),concat3V(n3, n4, n5),concat3V(n6, n7, n8))
+ val (west,nwest,neast)=(concat3V(n9,n10,n11),concat3V(n12,n13,n14),concat3V(n15,n16,n17))
+
+ showt(east,east2,se,se2,sw,sw2, west,west2,nwest,nwest2,neast,neast2)
+ /** Two in weakCmpProdtwo  means that if arg1 = arg2 we expand in both directions, going from a singleton to a tripleton */
+ val (northmin, nwnw, nene) = weakCmpProdtwo(nwest, neast)
+
+ val (southmin, swsw, sese) = weakCmpProdtwo(sw, se)
+ val (horizMin, heast, hwest) = weakCmpProdZero(east, west) //here we cannot expand both east and west
+ val (vertmin, nn, ss) = weakCmpProdZero(northmin, southmin)
+
+ val (toto, vert, horiz) = weakCmpProdZero(vertmin, horizMin)
+ // a.shoow(east,se,sw, west,nwest,neast, northmin,southmin, vertmin,toto)
+ //shoow(vert,horiz)
+ val firstStage = Array(heast, sese, swsw, hwest, nwnw, nene) //peut y avoir plusieurs bit a 1. faudra refaire des "ET" logique
+ val south = ss & vert
+ val north = nn & vert
+ val secondStage: Array[ASTLt[V, B]] = Array(horiz, south, south, horiz, north, north)
+ /** a seulement un bits a 1 sauf pour etendre vers le haut ou  vers le bas, ou la ca marche sur deux bits. */
+ val sextexInt: List[ASTLt[V, B]] = (0 to 5).map((i: Int) => {
+  firstStage(i) & secondStage(i)
+ }).toList
  /** represente un uint sur 6 bit qui est le code unaire d'un nombre compris entre 0 et 5, possiblement zero en cas de failure.
-   sur les 6, un seul est vrai ou deux adjacents. on peut "l'envoyer" avec send   */
-    //val success=sextexInt.reduce(_|_);show(success) //monitor if there is actual move.
- val sextex:BoolVe = send(sextexInt)
- show(voisins,nasI,prioRand,east,se,sw,west,nw,ne)
- show(sextex, southmin)//,eqeSe)*/
+  * sur les 6, un seul est vrai ou deux adjacents. on peut "l'envoyer" avec send */
+ //val success=sextexInt.reduce(_|_);show(success) //monitor if there is actual move.
+ val sextex: BoolVe = send(sextexInt)
+ sextex
+
+ show(sextex)
 } //root classe compilable
 
 object Sextexrect {
@@ -56,16 +69,6 @@ object Sextexrect {
   //val lt = ltUI2L(arg1, arg2)
   val lt=binop(ltUI2,arg1,arg2)
   //val eq = not(neqUI2L(arg1, arg2))
-  val eq = ~binop(neqUI2,arg1, arg2)
-  val le = lt | eq
-  val ge = ~lt | eq
-  val max = cond(ge, arg1, arg2)
-  (max, ge, le)
- }
-
- /** version of weakCmp that do not make calls, so that it can be included */
- def weakCmpProdtwo2(arg1: UintV, arg2: UintV): (ASTLt[V, UI], ASTLt[V, B], ASTLt[V, B]) = {
-  val lt=binop(ltUI2,arg1,arg2)
   val eq = ~binop(neqUI2,arg1, arg2)
   val le = lt | eq
   val ge = ~lt | eq
@@ -81,19 +84,11 @@ object Sextexrect {
   val max = cond(gt, arg1, arg2)
   (max, gt, lt)
  }
- /** version of weakCmpProdZero that do not make calls, so that it can be included */
- def weakCmpProdZero2(arg1: UintV, arg2: UintV): (ASTLt[V, UI], ASTLt[V, B], ASTLt[V, B]) = {
-  val lt =  binop(ltUI2,arg1,arg2)
-  val eq = ~binop(neqUI2,arg1, arg2)
-  val gt = ~lt & ~eq
-  val max = cond(gt, arg1, arg2)
-  (max, gt, lt)
- }
 
  /** here we need only the result, we are not interested in getting the minimum, using a random bit we manage to allways split. */
  private def sharpCmpNoMin(arg1: UintV, arg2: UintV, r: BoolV): ASTLt[V, B] = {
   val lt = ltUI2L(arg1, arg2)
-  val eq = not(neqUI2L(arg1, arg2))
+  val eq = negL(neqUI2L(arg1, arg2))
   val ltSharp = condL(eq, r, lt)
   ltSharp
  }
@@ -133,20 +128,13 @@ object Sextexrect {
   * @param prio  priority
   * @param k number of bits. for exemple two  bits of priority plus two random bits, make four bits
   * @return  indicates one among the six possible direction. the chosen direction is the one with max priority
+  *   in fact, we define it as a macro, in the compute group.
   */
- def chooseMaxOf(prio: UintV,k:Int): BoolVe={
+ def myChooseMaxOf(prio: UintV, k:Int): BoolVe={
  /**  contients les 6 voisins dans l'ordre clock: east,se,sw, west, nw,ne */
  val voisins: UintVe = addSymUI(e(prio)).symUI //addSymUI(e(prio)).symUI
   /**  récupére tout les bits de tout ces voisins, reste ensuite a  les regrouper en paquet, un par voisin*/
  val nasI: UintV = concatR(voisins) //si k = 4, on récupére 24 bits a la suite pour 6 voisins, chacun 4 bits,
-/* former fomulation awkward because dependant on the number of bits
- val (n0, n1, n2, n3, n4, n5) = (elt(0, nasI), elt(1, nasI), elt(2, nasI), elt(3, nasI), elt(4, nasI), elt(5, nasI)) // aprés on les numérote
- val (n6, n7, n8, n9, n10, n11) = (elt(6, nasI), elt(7, nasI), elt(8, nasI), elt(9, nasI), elt(10, nasI), elt(11, nasI)) //aprés on les numérote
- val (n12, n13, n14, n15, n16, n17) = (elt(12, nasI), elt(13, nasI), elt(14, nasI), elt(15, nasI), elt(16, nasI), elt(17, nasI)) // aprés on les numérote
- val (east, se, sw) = (concat3V(n0, n1, n2), concat3V(n3, n4, n5), concat3V(n6, n7, n8))
- val west = concat3V(n9, n10, n11)
- val nwest = concat3V(n12, n13, n14)
- val neast = concat3V(n15, n16, n17)*/
  val Array(east,se,sw, west,nwest,neast)=splitInto6(nasI, k)
  /** Two in weakCmpProdtwo  means that if arg1 = arg2 we expand in both directions, going from a singleton to a tripleton */
  val (northmin, nwnw, nene) = weakCmpProdtwo(nwest, neast)

@@ -12,22 +12,22 @@ import sdn.Globals.root4naming
 import sdn.MuStruct.{printMustruct, setFlipSynced, setFliprioOfMoveAndFlipAfterConstr, showMustruct, showTrucPourDebugger}
 import sdn.Util.{addLt, addSym}
 import sdn._
-object Homogeneize{
+object Homog{
   /** bit size for integer encoding distance to particle*/   val nbitD=4
   /** bit size for integer encoding distance to gcenter and voronoi*/   val nbitDgv=4
   /** bit size for integer encoding innerRadius*/   val nbitRi=4
 }
 /**illustrate the working of repulsion combined with exploration  */
-class Homogeneize() extends LDAG with Named with BranchNamed
+class Homog() extends LDAG with Named with BranchNamed
 {
   //builds the hierarchy of agents
-  //val part=new Homogen()
-  val part=new Flies()
+  val part=new HomogenStat()
+  //val part=new Fliesd()
   //iterate through the hierarchy,  to apply forces, constraints, and sync, should be moved to LDAG?
   setFliprioOfMoveAndFlipAfterConstr();
   setFlipSynced()
   //part.shoow(part.gc.flipAfterSync,part.gc.flipAfterConstr)
-  //showTrucPourDebugger
+ showTrucPourDebugger
 /*  part.shoow(part.rand)
   part.shoow(part.vor.muis) //triggers evaluation
   part.shoow(part.gc.alreadyThere,part.gc.muis)
@@ -71,13 +71,13 @@ class Flies  extends Qpoint{
   appendForce("explore",'0', explore )
 }
 
+class Fliesd extends Flies with addDist with addGcenter
 /**adds distance, gabriel center, voronoi distance to voronoi, and then finally repulsive force from voronoi*/
 class Homogen() extends Flies with addDist with addGcenter // with keepOutsideForce
   with addVor with addDistVor
 {  /** seed should not overlap gCenters */
   val  avoidGc= CancelFlipIf(this,One(false), gc.detected  ) _
   addConstraint("avoidgc",'g',avoidGc)
-
   appendForce("repulse",'|',dgv.repulse)
 }
 

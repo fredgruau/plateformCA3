@@ -71,7 +71,8 @@ case class MoveC2(val yes:MoveC1,val no:MoveC1) extends MoveC{
 
   def restrict(cond:BoolV)=MoveC2(yes.restrict(cond),no.restrict(cond))
   override val triggered = yes.triggered | no.triggered
-  val bug= yes.triggered & no.triggered | yes.bug | no.bug
+  //val bug= yes.triggered & no.triggered // | yes.bug | no.bug
+  val bug= yes.triggered &    no.triggered  | yes.bug | no.bug
   override val triggeredYes: BoolV = yes.triggered
   /** bugif for a given priority, one move specifies flip, and another move spécifies not flip */
   def move2flip(isV:BoolV):BoolV=yes.move2flip(isV) & ~ no.move2flip(isV)

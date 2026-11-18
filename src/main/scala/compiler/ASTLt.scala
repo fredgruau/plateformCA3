@@ -85,8 +85,12 @@ trait ASTLt[L <: Locus, R <: Ring] extends AST[(L, R)] with MyAstlBoolOp[L, R] w
    *         transformation is applied on the whole tree, so subtree verifying usedTwice will
    *         form an independant family */
   override def setReadNodeRemoveDelayed(usedTwice: AstPred, idRepr: Map[AST[_], String]): ASTLt[L, R] = {
-    val newD: ASTLt[L, R] = if (usedTwice(this)) new Read[(L, R)](idRepr(this))(mym) with ASTLt[L, R]
-    else this match {
+
+    val newD: ASTLt[L, R] = if (usedTwice(this)) {
+      if(!idRepr.contains(this))
+        throw new Exception("idrepr")
+      new Read[(L, R)]( idRepr(this))(mym) with ASTLt[L, R]
+    } else this match {
       case a: ASTL[L, R] =>
         a.propagateASTL((d: ASTLt[L, R]) => d.setReadNodeRemoveDelayed(usedTwice, idRepr))
       case _ => this.asInstanceOf[AST[_]] match {
@@ -144,7 +148,9 @@ trait ASTLt[L <: Locus, R <: Ring] extends AST[(L, R)] with MyAstlBoolOp[L, R] w
         f.asInstanceOf[Fundef3[Any, Any, Any, (L, R)]],
         g(a.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]], g(a2.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]],
         g(a3.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]])(m) with ASTLt[L, R]
-      case Call4(f, a, a2, a3, a4) => new Call4(
+      case Call4(f, a, a2, a3, a4) =>
+        val u=0
+        new Call4(
         f.asInstanceOf[Fundef4[Any, Any, Any,Any, (L, R)]],
         g(a.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]], g(a2.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]],
         g(a3.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]], g(a4.asInstanceOf[AST[(L, R)]]).asInstanceOf[AST[Any]])(m) with ASTLt[L, R]
@@ -172,6 +178,10 @@ trait ASTLt[L <: Locus, R <: Ring] extends AST[(L, R)] with MyAstlBoolOp[L, R] w
       case Param(s) => newTSymb(s).nb
       case Read(s) => newTSymb(s).nb
       case t: Layer[_] => t.nbit
+     // case Call4  =>   throw new Exception("newNbitAST")
+      case _ =>
+        throw new Exception("newNbitAST")
+
     }
 
   /**

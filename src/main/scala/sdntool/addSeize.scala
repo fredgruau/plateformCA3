@@ -3,7 +3,7 @@ package sdntool
 import compiler.ASTL.ASTLg
 import compiler.ASTLfun.{e, f, neq}
 import compiler.SpatialType.{BoolE, BoolF, BoolV, BoolVe}
-import compiler.{ASTLfun, E, F, V}
+import compiler.{ASTLfun, ASTLt, B, E, F, V}
 import progOfStaticAgent.Homogen
 import progOfmacros.Comm.{apexV, neighborsSym}
 import progOfmacros.Wrapper.{exist, existS, insideS}
@@ -31,6 +31,8 @@ trait addSummit{
       // shoow(particuleAuVoisinageRealSummit,notReallySummit,weakSummit)
     }
   }
+
+
 }
 /**
  * Calcule une zone remarquable inclue dans summit, de 1,2, ou 3 vertex, appelée centre, qu'on pense que c'est la zone
@@ -43,7 +45,7 @@ trait addBlobSummit {
   /** computes blob fields of summit2 itself */
   val bfs = new BloobVFields(muis, ~(~sum.isSummit2))
   /** computes many field about the summit's shape, whether it is a perfect doubleton or singleton, wether it is a face splitting the summit in three, wether it is a tunnel*/
-  val bsm =new Attributs {
+  val bsmAtt =new Attributs {
     override val muis = muissssSelf
     val meetiV = (bfs.bv.meetV | bfs.bv.nbcc0) & bfs.couldBeOtherThanMuis
     /** true for meeting edges which are next to a particules, and therefore likely to participate to the center */
@@ -51,9 +53,9 @@ trait addBlobSummit {
     val meetiE: BoolV = existS[E, V](meetiEselected) & bfs.couldBeOtherThanMuis
     val meetiEV = meetiE | meetiV
     /** faces splitting the summit in three */
-    val nbcc3F = insideS[E, F](bfs.bv.meetEfilled)
+    val nbcc3F: ASTLt[F, B] = insideS[E, F](bfs.bv.meetEfilled)
     /** summits part of a face splitting the summit in three */
-    val nbcc3 = existS[F, V](nbcc3F)
+    val nbcc3: BoolV = existS[F, V](nbcc3F)
     /** true if there are two competing splitting-in-3 face */
     val loosangeIncluded: BoolE = insideS[F, E](nbcc3F)
     /** if there is a rhombus, then we compute the apex so as to be able to remove them
@@ -80,7 +82,9 @@ trait addBlobSummit {
     /** we may consider only meeting point not shadowed by a split-in-3 face */
     val meetiEVnotShadowed = meetiEV & ~shadowedNbcc3;  val meetiEnotShadowed = meetiE & ~shadowedNbcc3
     // def showMore:Unit=shoow(nbcc3,isDoubleton,isTripleton,meetiE,meetiV,meetiEV,loosangeIncluded)
-    override def showMe: Unit = {shoow( losangeApexes)}
+    override def showMe: Unit = {shoow( losangeApexes,isLeton,loosangeIncluded,nbcc3,shadowedNbcc3,meetiEVnotShadowed)
+      bfs.showMe
+    }
   }
 }
 /** we now computes the blob field of summit deprived of particles */
@@ -96,6 +100,10 @@ trait addTunnel {
  *  use all the fields computed around the summit, in order to create a "ciblerFaible" force "seize" which will maitain doubleton and tripleton particles
  *  it does not forces empty when not on target, and it allows to invade next to target.
  *  *  */
-trait addSeize extends  Homogen with addSummit with addBlobSummit with addTunnel {
-  val seize= ciblerFaible(  (bsm.isDoubleton | bsm.isTripleton | bfTn.bv.meetV|bsm.nbcc3 )& ~bsm.losangeApexes & ~sum.weakSummit)
+trait addSeize extends  Homogen with addSummit with addBlobSummit with addTunnel with addProp {
+  val toto= ~ (~bfTn.bv.meetV)
+  val seize= ciblerFaible(  (bsmAtt.isDoubleton | bsmAtt.isTripleton | bfTn.bv.meetV | prop.tripletonStreched /*bsmAtt.nbcc3*/ )& /*~bsmAtt.losangeApexes & */~sum.weakSummit)
+  override def shoi={super.shoi;sum.showMe;bsmAtt.showMe;bfTn.showMe;shoow(toto); prop.showMe
+    //shoow(bsm.losangeApexes,bsm.isDoubleton , bsm.isTripleton ,bfTn.bv.meetV,bsm.nbcc3)
+  }
 }

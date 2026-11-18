@@ -158,10 +158,9 @@ trait ProduceJava[U <: InfoNbit[_]] {
           }
           res
         }
-
         //we anchor data parameters, result parameters, and constant def layers.
         val anchor = (anchorParam(shortSigIn, paramD) ::: anchorParam(shortSigOut, paramR) ::: anchorParam(layerNames, layerNames.flatMap(s => tSymbVar(s).locus.deploy(s)))).reverse.mkString(",")
-        if (anchor.size > 0) "int[] " + anchor + ";" else "" //we may not need to anchor anything.
+        if (anchor.size > 0) "int[] " + anchor + ";;;;" else "" //we may not need to anchor anything.
       },
       "PROPAGATEFIRSTBIT" -> {
         val callsToPropagate: Seq[String] = paramD.map((s: String) => "p.prepareBit(" + s + ")") //for the moment we do the propagation on all data parameters
@@ -181,7 +180,7 @@ trait ProduceJava[U <: InfoNbit[_]] {
           "p.prepareBit(" + s + ")"
         })
         //callsToMirror.mkString(";") + ";\n"
-       callsToMirror.mkString(";") + ";\n" + callsToPrepareBit.mkString(";") + "\n" //on rajoute systematique des preparebit sur les field produit
+       callsToMirror.mkString(";") + ";" + callsToPrepareBit.mkString(";")  //on rajoute systematique des preparebit sur les field produit
       },
       "CALINENUMBER" -> (paramD ::: paramR)(0), //There must be at least one param,we need to read it so as to know the length which is the number of CA lines.
       "DECLINITPARAM" -> {
@@ -198,13 +197,11 @@ trait ProduceJava[U <: InfoNbit[_]] {
           val intReg = (standaloneRegister ++ coalesced.keys).filter(noHashtag(_)) //should be declared todo gestion plus precise des dieses
           // val intReg = (standaloneRegister ++ coalesced.keys).filter(noDollarNorHashtag(_)) //should be declared todo gestion plus precise des dieses
           val boolReg: Iterable[String] = intReg.flatMap((s: String) => deployInt2(s, tSymbVarSafe(s))) //intReg which have a single component are not deployed
-
           boolReg.toList.sorted.map((s: String) => if (isDelayed(s) || true) s + "=0" else s).mkString(",") //todo preciser keski est delayed
         }
-
         val dip = declInitParam;
         if (dip.size > 0)
-          "// initialisation \n int " + dip + ";" else ""
+          "int " + dip + ";" + "// initialisation"  else ""
       },
       "LOOPBODY" -> {
         /* val t = totalCode
@@ -473,8 +470,9 @@ trait ProduceJava[U <: InfoNbit[_]] {
     val theCalls = dagis.visitedL.reverse.asInstanceOf[List[CallProc]] //compiled calls
     var theCallCode: List[String] = List()
     for (call <- theCalls) { //rewrite the calls, by regrouping parameters
-
-if (!call.exps(0).isInstanceOf[Read[_]])
+if (call.exps.size==0)
+  print("shiot")
+else if (!call.exps(0).isInstanceOf[Read[_]])
   { //traitement de la valeur booléene "input"
     val  fieldName=call.names(0)
     val instrofInput="buttons.get(\""+fieldName +"\"),"
@@ -663,7 +661,7 @@ if (!call.exps(0).isInstanceOf[Read[_]])
         callCode += "// " + gateCountOfCall + " gate"
         totalGateCount += gateCountOfCall
       }
-      if (!callCode.equals(lastCallCode) && !call.locus.equals("show"))
+      if (!callCode.equals(lastCallCode) && !call.locus.equals("show") && ! call.procName.startsWith("show")) //les instructions show ne font rien, autant les enlever pour simplifier le code
         theCallCode = callCode :: theCallCode //in case of copy or memo of integer, several times the same call code will be generated
       lastCallCode = callCode //in which  case we keep only the first one by ignoring the following
     }}
