@@ -6,10 +6,11 @@ import compiler.{AST, ASTL, ASTLt, B, Locus, Ring, V, repr}
 import dataStruc.DagNode
 import dataStruc.DagNode.Singleton
 import progOfStaticAgent.Homogen
+import progOfmacros.Comm.neighborsSym
 import progOfmacros.Compute.countNeighbors
 import sdn.ForceAg.{Ag, AgForced}
 import sdn.Util.{addLt, addSym}
-import sdntool.{BlobVe, addDist, blobConstrTrou, blobConstrain}
+import sdntool.{BlobVe, addBlobVfields, addDist, blobConstrTrou, blobConstrain}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -36,7 +37,7 @@ abstract class BoundedAgV(init:String, val bounding: Ag, val follows:Force )
 
   /** si le bounded agent bouge avec sa force de plus haute priorité, c'est une force obligée, donc faut pas randomiser dans ce cas précis */
 
-  override def showMe(): Unit = {super.showMe; bf.showMe;  }
+  //override def showMe(): Unit = {super.showMe; bf.showMe;  }
 }
 
 
@@ -61,9 +62,19 @@ trait addGcenter{
 
 /** voronoi is our first instance of partially  bounded agents, so we define it here, it is our first bounded agent. */
 class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/ )
-  extends BoundedAgV("globalInv", part.gc, part.gc.keepMeInside ) with MovableAgV with sdntool.addBlobVfields with blobConstrain with blobConstrTrou
+  extends BoundedAgV("globalInv", part.gc, part.gc.keepMeInside ) with MovableAgV
+    with blobConstrain
+    with blobConstrTrou //évite de créer des trous
 {  override def inputNeighbors=List(part.gc,part.d)
-
+  val  avoidPart= CancelFlipIf(this,One(false), part.isV  ) _
+  addConstraint("avoidpart",'p',avoidPart)
+  val vote=new Force {
+    override def actionV(ag:MovableAgV): MoveC=   {
+      val yes=MoveC1(bf.lightConvex & isV,  bf.brdVeIn & neighborsSym(e(bf.lightConcave)))
+      val no=MoveC1(bf.lightConcave  & isV,   bf.brdVeIn & neighborsSym(e(bf.lightConvex)))
+      MoveC2(yes,no)
+    }
+  }
   //force(introduceNewPriority(),"vote",'v',vote())//specific forces applied to voronoi, pour l'instant ne sert a rien.
   val explore=moderate(Force.total,"explore")
   appendForce("explore",'0', explore )
@@ -85,11 +96,12 @@ class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/
   // the slow constraints emited by radius hits the particle not the voronoi.
   // the slow constraints emitted by Mudist(voronoi) does hit the voronoi, we should check that it does not transfer to
   // the gcenter. let us display the
-  override def showMe(){super.showMe; bf.bv.showMe}
+  override def showMe(){super.showMe; // bf.showMe
+  }
   override def shoi(){super.shoi;
     val s=this.toString.takeWhile(_ != '@')
-    shoow(part.d.hasFurther(s) ,  part.d.hasNearer(s)
-  )}
+    shoow(part.d.hasFurther(s) ,  part.d.hasNearer(s)  );//bf.showMe
+  }
 }
 
 

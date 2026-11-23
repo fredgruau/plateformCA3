@@ -344,7 +344,7 @@ object AST {
 
     /** @param v field that should be false everywere unless a bug appears */
     def bugif(v: AST[_]) = sysInstr ::= CallProc("bug", List(), List(v))
-            def liveif(v: AST[_]) = sysInstr ::= CallProc("live", List(), List(v))
+      def liveif(v: AST[_]) = sysInstr ::= CallProc("live", List(), List(v))
      // def iffpushed(v: String) :BoolV = {  sysInstr ::= CallProc("pushed", List(v), List())  }
       /** @return all the user system call, plus the memorized call which is automatically added
      *          must be launched after seting names */

@@ -4,7 +4,7 @@ import compiler.ASTBfun.{addRedop, redop}
 import compiler.ASTL.{anticlock, delayedL, sym, transfer}
 import compiler.ASTLfun.{apex, cond, e, f, imply, orR, reduce}
 import compiler.SpatialType.{BoolE, BoolF, BoolV, BoolVe, BoolVf, UintV}
-import compiler.{AST, ASTBfun, ASTLfun, B, E, F, Locus, Ring, UI, V}
+import compiler.{AST, ASTBfun, ASTLfun, ASTLt, B, E, F, Locus, Ring, UI, V, chip}
 import dataStruc.DagNode.EmptyBag
 import progOfmacros.Comm.{adjacentBall, adjacentRing, apexV, insideBall, neighborsSym}
 import progOfmacros.Compute.implique
@@ -14,7 +14,7 @@ import sdn.{Attributs, CancelFlipIf, KeepFlipIf, LayerS, MovableAg, MovableAgV, 
 
 
 /** basic quasiparticle with blob and quasipoint constraints */
-class Qpoint extends MovableAg[V]("global") with MovableAgV  with addBlobVfields with blobConstrain with addQpointFields with QpointConstrain
+class Qpoint extends MovableAg[V]("global") with MovableAgV   with blobConstrain with addQpointFields with QpointConstrain
   with EmptyBag[sdn.MuStruct[_<: Locus,_<:Ring]]{
   /**
    *
@@ -122,6 +122,7 @@ class Leader(source: Qpoint) extends MuStruct [V,B] {
   val sourceNext = source.muis.next.asInstanceOf[BoolV]
   /** true if leader is no longer on the support of its source */
   val sourceOfLeaserHasMoved = source.isV & ~sourceNext & delayedL(muis.pred)
+
   /** extends sourceHasMoved to the adjacent Vertices */
   val sourceMovedWide = adjacentBall(sourceOfLeaserHasMoved)
 
@@ -134,6 +135,12 @@ class Leader(source: Qpoint) extends MuStruct [V,B] {
     /** we have to consider sym to finally retrieve the new leader. */
     override val next: AST[(V, B)] = delayedL(cond(sourceMovedWide,elected3,this.pred))(this.mym)
   }
+  val hasChanged: ASTLt[V, B] =  (muis.pred ^ delayedL( muis.munext)) & chip.borderV.df
+  override def shoi: Unit = {
+    super.shoi; shoow(hasChanged);
+    liiveif(hasChanged)
+  };
+
   shoow(electedNeigbor1)
   //shoow(electedNeigbor2,electedNeigbor1,sourceMovedWide,neighborSourceNext,elected3)
 }

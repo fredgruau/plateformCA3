@@ -190,7 +190,7 @@ object SexTex{ def apply(a:AgForced)(fliprio:PartialUI): SexTex=new SexTex(a,fli
 object SplitHashMapTyped {
   /** Résultat fortement typé. */
   //q leqQuatre diseapearSingle diseapearDouble diseaperTripletaon _vmeet =hmeet  ;videplein sloW
-  val localsInitials="qs_vwgu"
+  val localsInitials="qs_vwgup"
   val mutexesInitials="d;=n"
   val mutapexInitials="a"
   val tritexInitials="t"

@@ -2,7 +2,7 @@
 <machine arch="christal" nbLine="12" nbCol="14"/>
     //default CA size and architecture
     <display iter="CAsize" CAheight="780" CAwidth="820" nbCol="2"/>
-    <simul selectedSpeed="4" darkness="35" density="2" randomRoot="4" paramStat="0" isPlaying="true"/>
+    <simul selectedSpeed="6" darkness="35" density="9" randomRoot="2" paramStat="0" isPlaying="true"/>
     <sizes>
         <size t0="0" nbCol="60" nbLine="40"/>
     </sizes>

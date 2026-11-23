@@ -37,21 +37,14 @@ trait UtilVagent extends BranchNamed{
 
 
 /** defines the methods in vef[V], adds UtilVagent, which mixin some further usefull field, rando is used to get a random bit, for vote*/
-trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with sdntool.addBlobVfields with rando {  //probably another rand
+trait MovableAgV extends MovableAg[V] with vef[V] with UtilVagent with sdntool.addBlobVfields with rando {  //on a besoin de brdvein dans addblobVfield, pour exercer la force totale sur n'importe quel movagleAgentV
   self:MovableAg[V] =>
   override val isV: BoolV = muis
   /** well known voting rule we put "lazy" to avoir waising a rand, if there isn't a vote
    * the force applies on itself! */
 //  lazy val voteold= {val rand= root4naming.addRandBit().asInstanceOf[BoolV];cibler(bf.dense )}
- val vote=new Force {
-   override def actionV(ag:MovableAgV): MoveC=   {
-     val yes=MoveC1(bf.lightConvex & isV,  bf.brdVeIn & neighborsSym(e(bf.lightConcave)))
-     val no=MoveC1(bf.lightConcave  & isV,   bf.brdVeIn & neighborsSym(e(bf.lightConvex)))
-       MoveC2(yes,no)
-   }
 
- }
-
+ override def shoi={super.shoi; bf.showMe}
   override def flip2next=  {
     val f=flipAfterSync;  f ^ muis
   }

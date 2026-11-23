@@ -8,10 +8,10 @@ import progOfmacros.Comm.{apexE, neighborsSym}
 import progOfmacros.Compute.countNeighbors
 import progOfmacros.RedT.cac
 import progOfmacros.Topo.{nbccV, nbccVe}
-import progOfmacros.Wrapper.{borderS, exist, existS, inside, insideS, shrink, shrink2, shrink3}
+import progOfmacros.Wrapper.{borderS, exist, existS, inside, insideS, shrink, shrink2, shrink3, shrink4}
 import sdn.Globals.root4naming
 import sdn.Util.{addLt, addSym}
-import sdn.{Agent, Attributs,  Both, CancelFlipIf, Constr, MovableAgV, MutKeepFlipIf, PartialUI,  carrySysInstr}
+import sdn.{Agent, Attributs, Both, CancelFlipIf, Constr, MovableAgV, MutKeepFlipIf, PartialUI, carrySysInstr}
 
 /** defines what's neccessary to obtain a blob: the meeting points meetE, and meetV, and also the number of connected component nbcc*/
 abstract class Blob extends Attributs {  val meetV:BoolV; val meetE:BoolE; val nbCc:UintV
@@ -125,12 +125,14 @@ class BloobVFields(val muis:BoolV with carrySysInstr, val couldBeOtherThanMuis:B
   /** true for inner edges */
   val insideE: BoolE =inside(transfer(isVe))
   val outsideE: BoolE =inside(transfer(~isVe))
+  /** true if both apex are in VE */
+  val insideRhombusE = inside(apexE(f(couldBeOtherThanMuis)))
   val rand= root4naming.addRandBit().asInstanceOf[BoolV]
   /** todo ya deux vote, un ca suffit */
-  //val lightConcave=( exist(shrink3(brdVeOut)) | (exist(shrink2(brdVeOut)) & rand) ) & ~  inside(brdVeOut)
-  //val lightConcave= exist(shrink3(brdVeOut))  & ~  inside(brdVeOut)  //le deuxieme signifie qu'on est pas un trou
-  val lightConcave= exist(shrink3(qqnEnFace)) // & ~  inside(brdVeOut)  //le deuxieme signifie qu'on est pas un trou
- // val lightConvex= ~exist(shrink2(transfer(v(insideE)))) & exist(qqnEnFace)
+   val lightConcave= exist(shrink3(qqnEnFace))
+  val concaveconvex= couldBeOtherThanMuis & exist(shrink2(qqnEnFace))
+  val strongConcave= exist(shrink4(qqnEnFace)) //
+  // val lightConvex= ~exist(shrink2(transfer(v(insideE)))) & exist(qqnEnFace)
   val lightConvex= ~exist(shrink2((qqnEnFace))) & exist(qqnEnFace)
   val density: UintVx = addLt(countNeighbors(addSym(e(couldBeOtherThanMuis)).sym))
   //val raand:BoolV= ~ (~root4naming.addRandBit().asInstanceOf[BoolV] )//random bit
@@ -138,7 +140,8 @@ class BloobVFields(val muis:BoolV with carrySysInstr, val couldBeOtherThanMuis:B
   val thiis: BloobVFields =this
   /** thiis contains information systematically used to build a blob, so we just go ahead and create that blob as a field of a blobV field */
   val bv=new BloobV(muis,thiis)
-  override def showMe={ shoow(brdVeIn)}//shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave,dense, notDense) ; shoowText(density,List())  }
+  override def showMe={ //shoow(brdVeIn,lightConcave,concaveconvex,strongConcave);//bv.showMe
+  }//shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave,dense, notDense) ; shoowText(density,List())  }
 }
 
 /** endows an Agent vertex with the feature needed to a blob stored in a class "bf" (shortname) */

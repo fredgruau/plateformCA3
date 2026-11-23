@@ -120,7 +120,7 @@ object MuStruct{
       //v.tmp=v.moves(1).head._2.asInstanceOf[MoveC2].yes.triggeredYes
       //v.tmp2=v.moves(1).head._2.asInstanceOf[MoveC2].yes.empty
      // v.tmp=v.bf.lightConcave
-     v.shoow(v.bf.lightConcave,v.bf.lightConvex)
+     //v.shoow(v.bf.lightConcave,v.bf.lightConvex)
     case _ =>
   }
 

@@ -17,7 +17,7 @@ class Obsolete {
 
 /** using toto, adds somme zlt info, and randomness in order to compute an accurate center, also able to penetrate */
 trait addCenter {
-  self: Qpoint with addDistVor with addSummit  with addBlobSummit with addZone => //on utilise prop.tripletonstreched
+  self: Qpoint with addDistVor with addSummit  with addBlobSummitAndMore with addZone => //on utilise prop.tripletonstreched
   val muuiis:BoolV with carrySysInstr =self.muis
   val ctr=new Attributs {
     override val muis: BoolV with carrySysInstr = muuiis
@@ -79,7 +79,7 @@ trait addCenter {
 /** computes tripletonStreched which may still be usefull
  * */
 trait addProp{
-  self: MovableAgV with addDistVor with QpointConstrain=>
+  self: MovableAgV with addDistVor with QpointConstrain with addBlobVfields=>
   /** rename this.muis in order to be able to adress it later on. */
   val muisSelf= this.muis
   val prop=new Attributs() { //su==summitFields
@@ -101,7 +101,7 @@ trait addProp{
     val atLeastOne1:BoolF= existS(bit0StrechedLocal)
     val atLeastOne2:BoolF= existS(bit1StrechedLocal)
     val twoPlusOne=atLeastOne1&atLeastOne2
-    val tripletonStrechedF:BoolF=qf.tripleton &  (twoPlusOne | threeNonZero)
+    val tripletonStrechedF:BoolF=qf.tripleton &  (twoPlusOne | threeNonZero) //up to three neigbors
     val tripletonStreched: BoolV =existS[F, V](tripletonStrechedF)
 
     val carryF: ASTLt[F, B] = threeNonZero | (orStrechedGlobal & ~ bitONbStreched ) //il y a une retenu si on a le bit0 qui vaut 0, mais nbccGlobal>0, faut aussi regarder si les trois valent 1
@@ -120,12 +120,12 @@ trait addProp{
         val eadj0= ~ebit1NbStreched & ~ebitONbStreched
         val eadj3=ebit1NbStreched & ebitONbStreched
     val doubletonStreched:BoolE=qf.doubleton & (eadj2 | eadj0) //test if nbccStreched is two or zero.
-    val doubletonHyperStreched:BoolE=qf.doubleton & (eadj3) //test if nbccStreched is two or zero.
-    val doubletonUltraStreched:BoolE=qf.doubleton & ecarry& ~ebitONbStreched//test if nbccStreched is two or zero.
+    val doubletonHyperStreched=existS[E,V] (qf.doubleton & (eadj3)) //pertinent
+    val doubletonUltraStreched=existS[E,V] (qf.doubleton & ecarry& ~ebitONbStreched)//not pertinent.
 
 
     override def showMe: Unit = {shoow(//brdVeSlopped,participatinSite,streched,orStrechedGlobal,bitONbStreched,bit1NbStreched,,adj0,adj3//awayFromRiGt,
-      tripletonStreched,doubletonStreched,doubletonHyperStreched,bit0StrechedLocal,bit1StrechedLocal,carryF)}
+      tripletonStreched,doubletonStreched,doubletonHyperStreched,doubletonUltraStreched,bit0StrechedLocal,bit1StrechedLocal,carryF,ecarry)}
 
     /*
 

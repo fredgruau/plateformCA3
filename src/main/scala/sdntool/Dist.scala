@@ -99,8 +99,9 @@ trait addRepulseVor{
      *  we fill towards increasing value of distances, if it's empty */
     val oui = MoveC1(ag.muis & weWantItEmpty,   neighborsSym(sloplt) & ag.bf.brdVeIn)
     /**no emptying is imposed if weWantItEmpty, and vertice was NOT occupied
-     * if vertice was occupied, we should first remove nearer if it has some nearer*/
-    val non = MoveC1(cond(ag.muis,hasNearer(nameAg),weWantItEmpty), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
+     * if vertice was occupied, we should first remove nearer if it has some nearer */
+   val non = MoveC1(cond(ag.muis,hasNearer(nameAg),weWantItEmpty), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
+    //val non = MoveC1(cond(ag.muis,hasNearer(nameAg),root4naming.myFalse), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
     MoveC2(oui, non)
   }}}
 
@@ -126,8 +127,14 @@ class MuDist(bitSize:Int, val source: MuStruct[V, B])
   val hasChanged: ASTLt[V, B] = ( ~(muis.pred == delayedL( muis.munext)))&chip.borderV.df
 
   override def showMe: Unit = {
-    super.showMe; shoow(hasChanged);liiveif(hasChanged)
+    super.showMe; shoow(hasChanged);
+    liiveif(hasChanged)
   };
+  override def shoi: Unit = {
+    super.shoi; shoow(hasChanged);
+   // liiveif(hasChanged)
+  };
+
   val hasNearer:mutable.HashMap[String,BoolV]=new mutable.HashMap[String,BoolV] () with Named with BranchNamed {}
   val hasFurther:mutable.HashMap[String,BoolV]=new mutable.HashMap[String,BoolV] () with Named with BranchNamed {}
 

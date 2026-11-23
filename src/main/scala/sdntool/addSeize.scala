@@ -1,14 +1,15 @@
 package sdntool
 
-import compiler.ASTL.ASTLg
+import compiler.ASTL.{ASTLg, transfer}
 import compiler.ASTLfun.{e, f, neq}
 import compiler.SpatialType.{BoolE, BoolF, BoolV, BoolVe}
 import compiler.{ASTLfun, ASTLt, B, E, F, V}
 import progOfStaticAgent.Homogen
-import progOfmacros.Comm.{apexV, neighborsSym}
-import progOfmacros.Wrapper.{exist, existS, insideS}
-import sdn.Force.ciblerFaible
-import sdn.{Attributs, MovableAgV, carrySysInstr}
+import progOfmacros.Comm.{adjacentRing, apexE, apexV, neighborsSym}
+import progOfmacros.Compute
+import progOfmacros.Wrapper.{border, borderS, exist, existS, insideS}
+import sdn.Force.{cibler, ciblerFaible}
+import sdn.{Attributs, Force, MovableAgV, carrySysInstr}
 
 trait addSummit{
   self: MovableAgV  with addDistVor =>
@@ -39,8 +40,8 @@ trait addSummit{
  * a envahir par la qseed, pour se trouver impeccablement au centre du voronoi, dans le cas de cellule de Voronoi pas trop allongée
  * fait des calculs assez compliqué pour occuper le sommet le mieux possible par rapport
  * a sa forme spécifique , ces calculs résultent d'une étude à la main */
-trait addBlobSummit {
-  self: Qpoint with addSummit    => //on utilise prop.tripletonstreched
+trait addBlobSummitAndMore {
+  self: Qpoint with addSummit with addBlobSummitAndMore   => //on utilise prop.tripletonstreched
   val muissssSelf = this.muis
   /** computes blob fields of summit2 itself */
   val bfs = new BloobVFields(muis, ~(~sum.isSummit2))
@@ -53,7 +54,7 @@ trait addBlobSummit {
     val meetiE: BoolV = existS[E, V](meetiEselected) & bfs.couldBeOtherThanMuis
     val meetiEV = meetiE | meetiV
     /** faces splitting the summit in three */
-    val nbcc3F: ASTLt[F, B] = insideS[E, F](bfs.bv.meetEfilled)
+    val nbcc3F: BoolF= insideS[E, F](bfs.bv.meetEfilled)
     /** summits part of a face splitting the summit in three */
     val nbcc3: BoolV = existS[F, V](nbcc3F)
     /** true if there are two competing splitting-in-3 face */
@@ -61,6 +62,21 @@ trait addBlobSummit {
     /** if there is a rhombus, then we compute the apex so as to be able to remove them
      * in order to orchestrate a switch from one split3 tripleton, to the other */
     val losangeApexes: BoolV = exist[F, V](apexV(f(loosangeIncluded)))
+
+    /** calcul des info pour la force qui pousse dans le "coude" true at the border betwenn thickness 2, and thickness one*/
+
+    val finDeDepassement:BoolE=border(apexE(f(bfs.concaveconvex)))&bfs.insideE & bf.insideE & bfs.insideRhombusE
+    /** apexes which should change in order to act the depassement */
+    val depasseZone:BoolV=exist(apexV(f(finDeDepassement)))
+    val depassOui=depasseZone&bfs.concaveconvex
+    val depassNon=depasseZone& ~bfs.concaveconvex
+
+    val finDeDepassement3:BoolE=border(apexE(f(bfs.strongConcave)))&bfs.insideE & bf.insideE & bfs.insideRhombusE & loosangeIncluded
+    /** apexes which should change in order to act the depassement */
+    val depasseZone3:BoolV=exist(apexV(f(finDeDepassement3)))
+    val depassOui3=depasseZone3&bfs.strongConcave
+    val depassNon3=depasseZone3& ~bfs.strongConcave
+
     /** faces with three vertice within the  summit */
     val insideFace: BoolF = insideS[V, F](bfs.couldBeOtherThanMuis)
     /** number of neighbor summits */
@@ -82,14 +98,14 @@ trait addBlobSummit {
     /** we may consider only meeting point not shadowed by a split-in-3 face */
     val meetiEVnotShadowed = meetiEV & ~shadowedNbcc3;  val meetiEnotShadowed = meetiE & ~shadowedNbcc3
     // def showMore:Unit=shoow(nbcc3,isDoubleton,isTripleton,meetiE,meetiV,meetiEV,loosangeIncluded)
-    override def showMe: Unit = {shoow( losangeApexes,isLeton,loosangeIncluded,nbcc3,shadowedNbcc3,meetiEVnotShadowed)
+    override def showMe: Unit = {shoow( losangeApexes,isLeton,loosangeIncluded,nbcc3,shadowedNbcc3,meetiEVnotShadowed,finDeDepassement,depassOui,depassNon)
       bfs.showMe
     }
   }
 }
 /** we now computes the blob field of summit deprived of particles */
 trait addTunnel {
-  self: MovableAgV with addSummit with addBlobSummit =>
+  self: MovableAgV with addSummit with addBlobSummitAndMore =>
   /** for elongated summit, forming a tunnel of thickness 2, we want to maintain the particle into dividing the tunnel */
   val tunnel=sum.isSummit2 & ~ muis
   /** bfTh.bv.meetV true if  emptying particle would cause particle to stop dividing a "tunnel summit"*/
@@ -100,10 +116,21 @@ trait addTunnel {
  *  use all the fields computed around the summit, in order to create a "ciblerFaible" force "seize" which will maitain doubleton and tripleton particles
  *  it does not forces empty when not on target, and it allows to invade next to target.
  *  *  */
-trait addSeize extends  Homogen with addSummit with addBlobSummit with addTunnel with addProp {
-  val toto= ~ (~bfTn.bv.meetV)
-  val seize= ciblerFaible(  (bsmAtt.isDoubleton | bsmAtt.isTripleton | bfTn.bv.meetV | prop.tripletonStreched /*bsmAtt.nbcc3*/ )& /*~bsmAtt.losangeApexes & */~sum.weakSummit)
-  override def shoi={super.shoi;sum.showMe;bsmAtt.showMe;bfTn.showMe;shoow(toto); prop.showMe
+trait addSeize extends  Homogen with addSummit with addBlobSummitAndMore with addTunnel with addProp with addRadius with addRect with addZone {
+  //val zltNear=existS[V,E](zon.zlt.muis)
+  val losangeApexesQuelconque=bsmAtt.losangeApexes& ~ zon.zlt.muis
+  val cibleTripleton= bfTn.bv.meetV | prop.tripletonStreched | bsmAtt.nbcc3
+  val cibleZonisee=cibleTripleton & (Compute.implique(~zon.zlt.muis, ~adjacentRing(cibleTripleton & zon.zlt.muis)))
+
+  val seize= ciblerFaible(  ( bsmAtt.isLeton | bfTn.bv.meetV | /*prop.tripletonStreched |*/ bsmAtt.nbcc3 )& ~bsmAtt.losangeApexes & ~sum.weakSummit)
+ // val seizeOld= closerFaible(  ( bsmAtt.isLeton | bfTn.bv.meetV )/* */ & ~bsmAtt.losangeApexes & ~sum.weakSummit|  prop.tripletonStreched)
+ val depasser1= Force.empty(bsmAtt.depassNon& ~zon.zlt.muis) | Force.fill(bsmAtt.depassOui& ~zon.zlt.muis)
+  val depasser3= Force.empty(bsmAtt.depassOui3) | Force.fill(bsmAtt.depassNon3)
+  val zltEnface: BoolVe =neighborsSym(e(zon.zlt.muis))
+  val keepUltraPair= Force.notfill(e(prop.doubletonHyperStreched) /*& ~ zltEnface*/)
+val depasser=depasser1 | depasser3
+
+  override def shoi={super.shoi;sum.showMe;bsmAtt.showMe;bfTn.showMe; prop.showMe
     //shoow(bsm.losangeApexes,bsm.isDoubleton , bsm.isTripleton ,bfTn.bv.meetV,bsm.nbcc3)
   }
 }

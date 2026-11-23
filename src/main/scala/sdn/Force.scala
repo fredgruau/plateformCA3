@@ -311,9 +311,24 @@ object Force{
   }
   def empty(where:BoolV)=new Force {
     override def actionV(ag: MovableAgV): MoveC = {
-      val oui=MoveC1( /*ag.muis  &*/ where, e(root4naming.myFalse))
-      val non=MoveC1(root4naming.myFalse,neighborsSym(e(where)))
-     oui//MoveC2(oui, non)
+      val oui=MoveC1(  where & ag.isV, e(root4naming.myFalse))
+      val non= MoveC1(root4naming.myFalse, neighborsSym(e(where))&ag.bf.brdVeIn)
+         MoveC2(oui,non)
+    }
+  }
+  def fill(where:BoolV)=new Force {
+    override def actionV(ag: MovableAgV): MoveC = {
+      val oui=MoveC1(root4naming.myFalse, neighborsSym(e(where))&ag.bf.brdVeIn)
+      val non=MoveC1(  where, e(root4naming.myFalse))
+      MoveC2(oui,non)
+    }
+  }
+ //where specifies place towards whcih the particle should not invade.
+  def notfill(where:BoolVe)=new Force {
+    override def actionV(ag: MovableAgV): MoveC = {
+      val oui=MoveC1(root4naming.myFalse, e(root4naming.myFalse) )
+      val non=MoveC1( root4naming.myFalse,   where&ag.bf.brdVeIn)
+      MoveC2(oui,non)
     }
   }
   /** we designed a random move that does not break the quasipoint property,

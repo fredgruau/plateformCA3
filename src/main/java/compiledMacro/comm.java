@@ -186,4 +186,38 @@ public static int adjBallDef_1_1GateCount=6;
 int auxL117=0,ngh=0,tmun53=0;// initialisation
 for (int i = 1; i < pngh.length -1; i++) {
  ngh= pngh[i] ;res[i-1]=(((( tmun53  |  ngh ) | ( ngh  >>>  1 )) | ( auxL117  >>>  1 )) |  auxL117 );tmun53=((( ngh  <<  1 ) |  auxL117 ) | ( auxL117  <<  1 ));auxL117= ngh ;   }
- p.mirror(res);p.prepareBit(res) ;   }}
+ p.mirror(res);p.prepareBit(res) ;   }
+public static int apexEtoVui_5_5GateCount=0;
+ public static void apexEtoVui_5_5(PrShift p,int [][] pdistantEdgeef,int [][] apexEf){
+int[] apexEf$h1$0=apexEf[0],apexEf$h1$1=apexEf[1],apexEf$h1$2=apexEf[2],apexEf$h1$3=apexEf[3],apexEf$h1$4=apexEf[4],apexEf$h2$0=apexEf[5],apexEf$h2$1=apexEf[6],apexEf$h2$2=apexEf[7],apexEf$h2$3=apexEf[8],apexEf$h2$4=apexEf[9],apexEf$d1$0=apexEf[10],apexEf$d1$1=apexEf[11],apexEf$d1$2=apexEf[12],apexEf$d1$3=apexEf[13],apexEf$d1$4=apexEf[14],apexEf$d2$0=apexEf[15],apexEf$d2$1=apexEf[16],apexEf$d2$2=apexEf[17],apexEf$d2$3=apexEf[18],apexEf$d2$4=apexEf[19],apexEf$ad1$0=apexEf[20],apexEf$ad1$1=apexEf[21],apexEf$ad1$2=apexEf[22],apexEf$ad1$3=apexEf[23],apexEf$ad1$4=apexEf[24],apexEf$ad2$0=apexEf[25],apexEf$ad2$1=apexEf[26],apexEf$ad2$2=apexEf[27],apexEf$ad2$3=apexEf[28],apexEf$ad2$4=apexEf[29],pdistantEdgeef$es$0=pdistantEdgeef[0],pdistantEdgeef$es$1=pdistantEdgeef[1],pdistantEdgeef$es$2=pdistantEdgeef[2],pdistantEdgeef$es$3=pdistantEdgeef[3],pdistantEdgeef$es$4=pdistantEdgeef[4],pdistantEdgeef$s$0=pdistantEdgeef[5],pdistantEdgeef$s$1=pdistantEdgeef[6],pdistantEdgeef$s$2=pdistantEdgeef[7],pdistantEdgeef$s$3=pdistantEdgeef[8],pdistantEdgeef$s$4=pdistantEdgeef[9],pdistantEdgeef$ws$0=pdistantEdgeef[10],pdistantEdgeef$ws$1=pdistantEdgeef[11],pdistantEdgeef$ws$2=pdistantEdgeef[12],pdistantEdgeef$ws$3=pdistantEdgeef[13],pdistantEdgeef$ws$4=pdistantEdgeef[14],pdistantEdgeef$wn$0=pdistantEdgeef[15],pdistantEdgeef$wn$1=pdistantEdgeef[16],pdistantEdgeef$wn$2=pdistantEdgeef[17],pdistantEdgeef$wn$3=pdistantEdgeef[18],pdistantEdgeef$wn$4=pdistantEdgeef[19],pdistantEdgeef$n$0=pdistantEdgeef[20],pdistantEdgeef$n$1=pdistantEdgeef[21],pdistantEdgeef$n$2=pdistantEdgeef[22],pdistantEdgeef$n$3=pdistantEdgeef[23],pdistantEdgeef$n$4=pdistantEdgeef[24],pdistantEdgeef$en$0=pdistantEdgeef[25],pdistantEdgeef$en$1=pdistantEdgeef[26],pdistantEdgeef$en$2=pdistantEdgeef[27],pdistantEdgeef$en$3=pdistantEdgeef[28],pdistantEdgeef$en$4=pdistantEdgeef[29];;;;
+int tmun05$0=0,tmun05$1=0,tmun05$2=0,tmun05$3=0,tmun05$4=0,tmun06$0=0,tmun06$1=0,tmun06$2=0,tmun06$3=0,tmun06$4=0;// initialisation
+for (int i = 1; i < pdistantEdgeef$es$0.length -1; i++) {
+ apexEf$h1$0[i]=( tmun05$0  <<  1 );apexEf$h1$1[i]=( tmun05$1  <<  1 );apexEf$h1$2[i]=( tmun05$2  <<  1 );apexEf$h1$3[i]=( tmun05$3  <<  1 );
+ apexEf$h1$4[i]=( tmun05$4  <<  1 );tmun05$0= pdistantEdgeef$s$0[i] ;tmun05$1= pdistantEdgeef$s$1[i] ;tmun05$2= pdistantEdgeef$s$2[i] ;
+ tmun05$3= pdistantEdgeef$s$3[i] ;tmun05$4= pdistantEdgeef$s$4[i] ;apexEf$h2$0[i-1]= pdistantEdgeef$n$0[i] ;apexEf$h2$1[i-1]= pdistantEdgeef$n$1[i] ;
+ apexEf$h2$2[i-1]= pdistantEdgeef$n$2[i] ;apexEf$h2$3[i-1]= pdistantEdgeef$n$3[i] ;apexEf$h2$4[i-1]= pdistantEdgeef$n$4[i] ;apexEf$d1$0[i]=( pdistantEdgeef$ws$0[i]  <<  1 );
+ apexEf$d1$1[i]=( pdistantEdgeef$ws$1[i]  <<  1 );apexEf$d1$2[i]=( pdistantEdgeef$ws$2[i]  <<  1 );apexEf$d1$3[i]=( pdistantEdgeef$ws$3[i]  <<  1 );apexEf$d1$4[i]=( pdistantEdgeef$ws$4[i]  <<  1 );
+ apexEf$d2$0[i-1]=( pdistantEdgeef$en$0[i]  >>>  1 );apexEf$d2$1[i-1]=( pdistantEdgeef$en$1[i]  >>>  1 );apexEf$d2$2[i-1]=( pdistantEdgeef$en$2[i]  >>>  1 );apexEf$d2$3[i-1]=( pdistantEdgeef$en$3[i]  >>>  1 );
+ apexEf$d2$4[i-1]=( pdistantEdgeef$en$4[i]  >>>  1 );apexEf$ad1$0[i-1]= pdistantEdgeef$wn$0[i] ;apexEf$ad1$1[i-1]= pdistantEdgeef$wn$1[i] ;apexEf$ad1$2[i-1]= pdistantEdgeef$wn$2[i] ;
+ apexEf$ad1$3[i-1]= pdistantEdgeef$wn$3[i] ;apexEf$ad1$4[i-1]= pdistantEdgeef$wn$4[i] ;apexEf$ad2$0[i-1]=( tmun06$0  >>>  1 );apexEf$ad2$1[i-1]=( tmun06$1  >>>  1 );
+ apexEf$ad2$2[i-1]=( tmun06$2  >>>  1 );apexEf$ad2$3[i-1]=( tmun06$3  >>>  1 );apexEf$ad2$4[i-1]=( tmun06$4  >>>  1 );tmun06$0= pdistantEdgeef$es$0[i] ;
+ tmun06$1= pdistantEdgeef$es$1[i] ;tmun06$2= pdistantEdgeef$es$2[i] ;tmun06$3= pdistantEdgeef$es$3[i] ;tmun06$4= pdistantEdgeef$es$4[i] ;   }
+ ;p.prepareBit(apexEf) ;   }
+public static int neighborsUI_5_5GateCount=0;
+ public static void neighborsUI_5_5(PrShift p,int [][] pngh,int [][] ver){
+int[] ver$e$0=ver[0],ver$e$1=ver[1],ver$e$2=ver[2],ver$e$3=ver[3],ver$e$4=ver[4],ver$se$0=ver[5],ver$se$1=ver[6],ver$se$2=ver[7],ver$se$3=ver[8],ver$se$4=ver[9],ver$sw$0=ver[10],ver$sw$1=ver[11],ver$sw$2=ver[12],ver$sw$3=ver[13],ver$sw$4=ver[14],ver$w$0=ver[15],ver$w$1=ver[16],ver$w$2=ver[17],ver$w$3=ver[18],ver$w$4=ver[19],ver$nw$0=ver[20],ver$nw$1=ver[21],ver$nw$2=ver[22],ver$nw$3=ver[23],ver$nw$4=ver[24],ver$ne$0=ver[25],ver$ne$1=ver[26],ver$ne$2=ver[27],ver$ne$3=ver[28],ver$ne$4=ver[29],pngh$e$0=pngh[0],pngh$e$1=pngh[1],pngh$e$2=pngh[2],pngh$e$3=pngh[3],pngh$e$4=pngh[4],pngh$se$0=pngh[5],pngh$se$1=pngh[6],pngh$se$2=pngh[7],pngh$se$3=pngh[8],pngh$se$4=pngh[9],pngh$sw$0=pngh[10],pngh$sw$1=pngh[11],pngh$sw$2=pngh[12],pngh$sw$3=pngh[13],pngh$sw$4=pngh[14],pngh$w$0=pngh[15],pngh$w$1=pngh[16],pngh$w$2=pngh[17],pngh$w$3=pngh[18],pngh$w$4=pngh[19],pngh$nw$0=pngh[20],pngh$nw$1=pngh[21],pngh$nw$2=pngh[22],pngh$nw$3=pngh[23],pngh$nw$4=pngh[24],pngh$ne$0=pngh[25],pngh$ne$1=pngh[26],pngh$ne$2=pngh[27],pngh$ne$3=pngh[28],pngh$ne$4=pngh[29];;;;
+int tmun47$0=0,tmun47$1=0,tmun47$2=0,tmun47$3=0,tmun47$4=0,tmun48$0=0,tmun48$1=0,tmun48$2=0,tmun48$3=0,tmun48$4=0,tmun49$0=0,tmun49$1=0,tmun49$2=0,tmun49$3=0,tmun49$4=0;// initialisation
+for (int i = 1; i < pngh$e$0.length -1; i++) {
+ ver$e$0[i]=( pngh$w$0[i]  <<  1 );ver$e$1[i]=( pngh$w$1[i]  <<  1 );ver$e$2[i]=( pngh$w$2[i]  <<  1 );ver$e$3[i]=( pngh$w$3[i]  <<  1 );
+ ver$e$4[i]=( pngh$w$4[i]  <<  1 );ver$se$0[i-1]= pngh$nw$0[i] ;ver$se$1[i-1]= pngh$nw$1[i] ;ver$se$2[i-1]= pngh$nw$2[i] ;
+ ver$se$3[i-1]= pngh$nw$3[i] ;ver$se$4[i-1]= pngh$nw$4[i] ;ver$sw$0[i-1]=( pngh$ne$0[i]  >>>  1 );ver$sw$1[i-1]=( pngh$ne$1[i]  >>>  1 );
+ ver$sw$2[i-1]=( pngh$ne$2[i]  >>>  1 );ver$sw$3[i-1]=( pngh$ne$3[i]  >>>  1 );ver$sw$4[i-1]=( pngh$ne$4[i]  >>>  1 );ver$w$0[i-1]=( tmun47$0  >>>  1 );
+ ver$w$1[i-1]=( tmun47$1  >>>  1 );ver$w$2[i-1]=( tmun47$2  >>>  1 );ver$w$3[i-1]=( tmun47$3  >>>  1 );ver$w$4[i-1]=( tmun47$4  >>>  1 );
+ tmun47$0= pngh$e$0[i] ;tmun47$1= pngh$e$1[i] ;tmun47$2= pngh$e$2[i] ;tmun47$3= pngh$e$3[i] ;
+ tmun47$4= pngh$e$4[i] ;ver$nw$0[i]= tmun48$0 ;ver$nw$1[i]= tmun48$1 ;ver$nw$2[i]= tmun48$2 ;
+ ver$nw$3[i]= tmun48$3 ;ver$nw$4[i]= tmun48$4 ;tmun48$0= pngh$se$0[i] ;tmun48$1= pngh$se$1[i] ;
+ tmun48$2= pngh$se$2[i] ;tmun48$3= pngh$se$3[i] ;tmun48$4= pngh$se$4[i] ;ver$ne$0[i]=( tmun49$0  <<  1 );
+ ver$ne$1[i]=( tmun49$1  <<  1 );ver$ne$2[i]=( tmun49$2  <<  1 );ver$ne$3[i]=( tmun49$3  <<  1 );ver$ne$4[i]=( tmun49$4  <<  1 );
+ tmun49$0= pngh$sw$0[i] ;tmun49$1= pngh$sw$1[i] ;tmun49$2= pngh$sw$2[i] ;tmun49$3= pngh$sw$3[i] ;
+ tmun49$4= pngh$sw$4[i] ;   }
+ ;p.prepareBit(ver) ;   }}

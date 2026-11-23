@@ -37,4 +37,11 @@ for (int i = 1; i < ppVF$dop.length -1; i++) {
   ;
 p.prepareBit(reddxorbfvR)
  ;
-  }}
+  }
+public static int ef_1_1GateCount=3;
+ public static void ef_1_1(PrShift p,int [][] ppFE,int [][] reddxorbefR){
+int[] reddxorbefR$h=reddxorbefR[0],reddxorbefR$d=reddxorbefR[1],reddxorbefR$ad=reddxorbefR[2],ppFE$h1=ppFE[0],ppFE$h2=ppFE[1],ppFE$d1=ppFE[2],ppFE$d2=ppFE[3],ppFE$ad1=ppFE[4],ppFE$ad2=ppFE[5];;;;
+
+for (int i = 1; i < ppFE$h1.length -1; i++) {
+ reddxorbefR$h[i]=( ppFE$h1[i]  ^  ppFE$h2[i] );reddxorbefR$d[i]=( ppFE$d1[i]  ^  ppFE$d2[i] );reddxorbefR$ad[i]=( ppFE$ad1[i]  ^  ppFE$ad2[i] );   }
+ ;p.prepareBit(reddxorbefR) ;   }}

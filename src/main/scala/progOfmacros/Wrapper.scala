@@ -143,6 +143,8 @@ object Wrapper {
   def shrink1(arg:BoolVe):BoolVf=shrink[V,E,F,B](arg)
   def shrink2(arg:BoolVe):BoolVe=shrink[V,F,E,B](shrink[V,E,F,B](arg))
   def shrink3(arg:BoolVe):BoolVf= shrink[V,E,F,B](shrink2(arg))
+  def shrink4(arg:BoolVe):BoolVe= shrink[V,F,E,B](shrink3(arg))
+  def shrink5(arg:BoolVe):BoolVf= shrink[V,E,F,B](shrink4(arg))
 
   /** adds vertices iff continuous number of neighbors >= 3 to obtain a smoother surface */
   def smoothen(x:BoolV)={

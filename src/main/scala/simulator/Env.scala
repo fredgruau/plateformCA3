@@ -20,7 +20,7 @@ import scala.collection.{immutable, mutable}
 import scala.swing._
 import scala.util.Random
 object Env{
- val timeTresholdRiuniformized=100
+  val timeTresholdRiuniformized=100
   val pauseDuration=20
 }
 /**
@@ -283,17 +283,19 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     val p=controller.partial
     if(p.contains("homogPartRiMuis")    && controller.partial.contains("homogPartRiMuis"))
     {val (meanAr, stdNormAr, minValAr, maxValAr)=stats(integers("homogPartArTotal"))  //statistics on voronoi area
-    val (meanRi, stdNormRi, minValRi, maxValRi)=stats(integers("homogPartRiMuis"))   //statistics on inner radius
-    val efficacity=minValAr/maxValAr
-    text += " Area:" +f"stdev:$stdNormAr%.2f"+" moy:"+ f"$meanAr%.1f" +  " " +minValAr+"<"+maxValAr+f"eff$efficacity%.2f"
-    text+=" Ri: "+f"stdev: $stdNormRi%.2f"+" moy:"+ f"$meanRi%.1f "+minValRi+"<"+maxValRi
-      if(stdNormAr<0.2 && tSigmaSmall<0 /*&& stdNormRi <0.2 */&& t>50)    tSigmaSmall=t;
-    uniformized=(minValRi==maxValRi)
-    if (uniformized)       currentInnerRadius = minValRi
-     lastStatText = text
-    uniformized}else
-      false
-      }
+      val (meanRi, stdNormRi, minValRi, maxValRi)=stats(integers("homogPartRiMuis"))   //statistics on inner radius
+      val efficacity=minValAr/maxValAr
+      text += " Area:" +f"stdev:$stdNormAr%.2f"+" moy:"+ f"$meanAr%.1f" +  " " +minValAr+"<"+maxValAr+f"eff$efficacity%.2f"
+      text+=" Ri: "+f"stdev: $stdNormRi%.2f"+" moy:"+ f"$meanRi%.1f "+minValRi+"<"+maxValRi
+      if(stdNormAr<0.2 && tSigmaSmall<0 && t>50)    tSigmaSmall=t;
+      uniformized=(minValRi==maxValRi)
+      if (uniformized)       currentInnerRadius = minValRi
+      lastStatText = text
+    //  println("tsigma"+ tSigmaSmall)
+      uniformized}
+    else
+      throw new Exception ("ya pas de partial pour calculer les stat")
+  }
 
   def computeStatisticsOld():Boolean = {
     var text=""
@@ -302,7 +304,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
     for (valueDefined: String <- controller.partial.keys) { //process fiedls to be displayed, one by one we do all the stat
       medium.resetColorTextVoronoi(controller.displayedLocus)
       val leaderMuis=controller.partial(valueDefined)  //gets the booV where partial value is defined
-       val namesState = lastSegment(valueDefined) //gets the name associated
+      val namesState = lastSegment(valueDefined) //gets the name associated
       val locusDefined: Locus = controller.locusOfDisplayedOrDirectInitField(leaderMuis)
       val locusValue : Locus = controller.locusOfDisplayedOrDirectInitField(valueDefined)
       assert(locusValue==locusDefined)  //tout les deux des boolV
@@ -324,7 +326,7 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
       }
       /** computes the text associated to an int32 on each voronoi */
       val integers: List[Int] =statistics(locusDefined, bitIsDefined)
-     //println(integers)
+      //println(integers)
       if(integers.nonEmpty)
       {
         val (mean, stdNorm, minVal, maxVal)=stats(integers)
@@ -338,16 +340,16 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
         }
 
         else if(namesState.startsWith("Muis")) //il s'agit du rayon  de la case voronoi
-      //  if(lastSegment(leaderMuis)=="Meet") { //global assesmentt
+          //  if(lastSegment(leaderMuis)=="Meet") { //global assesmentt
           //uniformized=(stdNorm *10 < 2 && stdNorm > 0.01  )
         { text+=" Ri: "+f"stdev$stdNorm%.2f"+" moy:"+ f"$mean%.1f"+minVal+"<"+maxVal
           uniformized=(minVal==maxVal)
         }
         if (uniformized)
           currentInnerRadius = minVal
-       //a present je calcule deux courbes: small, smallp2
-       //val (s,sp2)=smallp2(integers)        smalls=s::smalls        smallp2s=sp2::smallp2s        val first=smalls.take(50)        val moy=first.sum/first.size.toDouble
-       // System.out.println( f"$s%.2f"+"   "+f"$moy%.2f")
+        //a present je calcule deux courbes: small, smallp2
+        //val (s,sp2)=smallp2(integers)        smalls=s::smalls        smallp2s=sp2::smallp2s        val first=smalls.take(50)        val moy=first.sum/first.size.toDouble
+        // System.out.println( f"$s%.2f"+"   "+f"$moy%.2f")
       }
       lastStatText = text// //    caPannel.updateStat(text) //on veut deux décimale sur standard deviation
 
@@ -365,10 +367,10 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
   }
 
 
-def densityMax(nbCol: Int, nbLine: Int): Int = {
+  def densityMax(nbCol: Int, nbLine: Int): Int = {
     // même calcul de numLineUsed / numColUsed...
     val r=Math.min( nbLine, nbCol)/3
-    r*(r+1)+2
+    r*(r+1)+4
   }
 
 
@@ -377,9 +379,9 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
   /** contains a thread which iterates the CA, while not asked to pause */
   def play(fwd: Boolean): Unit = synchronized {
     /** after this time, we stop the thread automatically */
-      var missedUniformed=0;  var missedSigmaSmall=0;
+    var missedUniformed=0;  var missedSigmaSmall=0;
     var nbtrial=0;  var sommeTuniform=0;  var sommeTsigmasmall=0
-    def timeout=t>nbCol*nbLine*50
+    def timeout=t>nbCol*nbLine*10
     def sigmaSmallfound=tSigmaSmall!= -1
 
     if (isThreadRunning)    return
@@ -387,15 +389,22 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
     threadRunning = true
     val thread = new Thread {
       var timeSinceNonalive = 0
+
+      val nonAliveThreshold = timeTresholdRiuniformized
+      def nonAliveThresholdReached: Boolean = timeSinceNonalive >= nonAliveThreshold
+      var nbConverged=0
       var timeWhileRiuniformized=0
-      def innerRadiusUniformized= timeWhileRiuniformized >= timeTresholdRiuniformized
-      def enoughRelaxing: Boolean = (sigmaSmallfound  && innerRadiusUniformized  ) | timeout
+      def innerRadiusUniformized= (timeWhileRiuniformized >= timeTresholdRiuniformized) ||
+        (nonAliveThresholdReached && timeWhileRiuniformized >0)  //si ca a convergé, il suffit que ri soit uniformisé un seul instant
+      def taskCompleted: Boolean = sigmaSmallfound && innerRadiusUniformized
+      def enoughRelaxing: Boolean = taskCompleted || timeout
       override def run(): Unit = {
         bugFound = false
         noneAlive = false
         var iterationsSinceDisplay = 0
         var convergenceSansRiUniformized = false
         var riUniformized = false
+        var nonAlive=false
         try {
           tSigmaSmall= -1
           while ( //itére sur les densité
@@ -405,7 +414,7 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
               ((density <= densityMax(nbCol, nbLine) && fwd) || !fwd) &&
               (lastlastInnerRadius!=0 || density< (nbCol*nbLine)/20) //on peut avoir le radius qui vaut 0 a cause d'un modulo, ici, on veut le rayon O pour de vrai, pas modulo
           ) {
-2
+            2
             var nbIter = 0
             val nbLoops = math.pow(2, controller.speedSlider.value)
             /*
@@ -414,50 +423,63 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
          */
             val displayEvery =   math.max(2, nbLoops)
             val goesToConverged= false && nbLoops>= 512 //we never go directly to converged, we want to follow what's going on.
-            val iterateThroughDensity= (nbLoops>= 512)//for the moment we iterate allways
+            val iterateThroughDensity= (nbLoops>= 512 | true)//for the moment we iterate allways
 
             //itére un paquet de forward
-            while (
+            while (!nonAliveThresholdReached &&
               !stopRequested &&
-                !bugFound &&
-                !convergenceSansRiUniformized &&
-                !enoughRelaxing &&
-                (nbIter < nbLoops || goesToConverged)
+              !bugFound &&
+              !convergenceSansRiUniformized &&
+              !enoughRelaxing &&
+              (nbIter < nbLoops || goesToConverged)
             ) {
-              if (fwd) { riUniformized = forward()
+              if (fwd) {
+                val(r,na)= forward()
+                riUniformized=r; nonAlive=na
                 if (noneAlive)   timeSinceNonalive += 1
                 else     timeSinceNonalive = 0
+               // println("timesincenotalive",timeSinceNonalive)
                 if(riUniformized) timeWhileRiuniformized+=1
                 else timeWhileRiuniformized=0
                 if(timeWhileRiuniformized >= timeTresholdRiuniformized && tUniform== -1 )
                 { tUniform=t-timeWhileRiuniformized
                 }
+            //    println("tuniform:"+tUniform)
               } else { backward(1)   }
               nbIter += 1
+              //println("nbiter:"+nbIter)
+              //println("t:"+t)
               iterationsSinceDisplay += 1
             }
             if (iterationsSinceDisplay >= displayEvery) {repaint(); sleep(pauseDuration); iterationsSinceDisplay = 0   } //Affichage beaucoup moins fréquent.
-            if ( fwd &&  enoughRelaxing &&  !bugFound && !stopRequested )
+            if (fwd && (enoughRelaxing || nonAliveThresholdReached) && !bugFound && !stopRequested)
             { if ( iterateThroughDensity) {
-                val convergenceIteration = t - timeTresholdRiuniformized
-                ConvergenceLogger.append( nbLine,  nbCol,   density, tUniform /*convergenceIteration*/, currentInnerRadius, controller.randomRoot, tSigmaSmall)
+              ConvergenceLogger.append(
+                nbLine, nbCol, density, tUniform, currentInnerRadius,
+                controller.randomRoot, tSigmaSmall, nonAliveThresholdReached
+              )
               lastlastInnerRadius=lastInnerRadius
-               lastInnerRadius=currentInnerRadius
+              lastInnerRadius=currentInnerRadius
 
               nbtrial +=1
-              if(tUniform== -1) missedUniformed+=1 else sommeTuniform+= tUniform-timeTresholdRiuniformized
+              if(nonAliveThresholdReached) nbConverged+=1
+             // if(tUniform== -1) missedUniformed+=1 else  sommeTuniform += tUniform
+              if(riUniformized)  sommeTuniform += (t-timeWhileRiuniformized) else missedUniformed+=1
               if(tSigmaSmall== -1) missedSigmaSmall+=1 else sommeTsigmasmall+=tSigmaSmall
-            println("density" + density +" tUniformMoy:" +  sommeTuniform/(1+nbtrial-missedUniformed) + " missedUniform:"+missedUniformed+ " tSigmasmallMoy:" +  sommeTsigmasmall/(1+nbtrial-missedSigmaSmall) + " missedSigmalsmall:"+missedSigmaSmall              )
-                density += unitIncrease
-                //controller.randomRoot+=1
-                repaint();  sleep (pauseDuration)
-                noneAlive = false; timeSinceNonalive = 0;    timeWhileRiuniformized=0
-                init()
-              } else {
-                convergenceSansRiUniformized = true
-                println( "STOP: convergence sans RI uniformisé, ou bien parcequ'on veut voir" +  "density=" + density +   " t=" + t
-                )
-              }
+             val tmoy= if(nbtrial-missedUniformed ==0) -1 else sommeTuniform/(nbtrial-missedUniformed)
+              println("density" + density +" tUniform:" + tUniform +" moytuniform " +  tmoy  +
+                " missedUniform:"+missedUniformed+ " tSigmasmallMoy:" +  sommeTsigmasmall/(1+nbtrial-missedSigmaSmall) +
+                " missedSigmalsmall:"+missedSigmaSmall     + " nbConverged: "    + nbConverged     )
+              density += unitIncrease
+              //controller.randomRoot+=1
+              repaint();  sleep (pauseDuration)
+              noneAlive = false; timeSinceNonalive = 0;    timeWhileRiuniformized=0
+              init()
+            } else {
+              convergenceSansRiUniformized = true
+              println( "STOP: convergence sans RI uniformisé, ou bien parcequ'on veut voir" +  "density=" + density +   " t=" + t
+              )
+            }
             }
           }
 
@@ -483,7 +505,7 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
    * @return returns true if radius uniformized
    *
    */
-  def forward(): Boolean = caLock.synchronized {
+  def forward(): (Boolean ,Boolean)= caLock.synchronized {
     //  controller.progCA.anchorFieldInMem(mem) //todo a refaire seulement si meme change (quand on display ou qu'on display plus)
     val conteneur = controller.progCA.theLoops(medium.propagate4Shift, mem) //we retrieve wether there was a bug
     bugs=conteneur.get(0).asScala
@@ -502,7 +524,7 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
       controller.checkNewLocus(lociBug) //marche meme si y a plusieurs bug différent détecté en meme temps.
       val i=0
     }
-    /*if (isalives.isEmpty) {  //we set the locus of bugs
+    if (isalives.isEmpty) {  //we set the locus of bugs
       for(notliveName<-isalives) {
         val  locusLive=controller.progCA.fieldLocus.asScala(notliveName)
         lociLive=lociLive+locusLive // pas sur qu'on doive pas plutot stoquer cela dans env
@@ -511,10 +533,10 @@ def densityMax(nbCol: Int, nbLine: Int): Int = {
       }
       controller.checkNewLocus(lociBug) ; controller.checkNewLocus(lociLive) //marche meme si y a plusieurs bug différent détecté en meme temps.
       val i=0
-    }*/
-   // iterationLabel.text = s"t=$t density=$density" //todo je fais cela ou alors?
-   cache.push(deepCopyArray( mem))
-    uniformizedRi
+    }
+    // iterationLabel.text = s"t=$t density=$density" //todo je fais cela ou alors?
+    cache.push(deepCopyArray( mem))
+    (uniformizedRi,noneAlive)
   }
 
   /** @param nbIter number of iteration steps
@@ -621,7 +643,7 @@ import java.io.{File, FileWriter, PrintWriter}
 object ConvergenceLogger {
 
   private val file =
-    new File("results/convergence.csv")
+    new File("results/convergence_status.csv")
   println("CSV = " + file.getAbsolutePath)
 
   def fmt(value: Any): String =
@@ -634,7 +656,8 @@ object ConvergenceLogger {
               iterations: Int,
               innerRadius: Int,
               randomRoot: Int,
-              tSmallSigma:Int
+              tSmallSigma: Int,
+              converged: Boolean
             ): Unit = synchronized {
 
     // crée le répertoire results s'il n'existe pas
@@ -652,11 +675,11 @@ object ConvergenceLogger {
 
       if (writeHeader)
         out.println(
-          "nbLine,nbCol,density,tUniform,innerRadius,RandomRoot,tSmallSigma"
+          "nbLine,nbCol,density,tUniform,innerRadius,RandomRoot,tSmallSigma,converged"
         )
 
       out.println(
-        s"$nbLine,$nbCol,$density,${fmt(iterations)},$innerRadius, $randomRoot, ${fmt(tSmallSigma)}"
+        s"$nbLine,$nbCol,$density,${fmt(iterations)},$innerRadius, $randomRoot, ${fmt(tSmallSigma)},$converged"
       )
 
     } finally {

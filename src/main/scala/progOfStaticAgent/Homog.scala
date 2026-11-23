@@ -84,7 +84,13 @@ class Homogen() extends Flies with addDist with addGcenter // with keepOutsideFo
 class HomogenCvg  extends Homogen   with addSeize //with addRadius
 {
   val mySeize= moderate(seize,"seize") ;
+// val myDepasser= moderate(depasser3,"depasser")
+ val myKeepUltraPair =moderate(keepUltraPair,"keepUltraPair")
   insertForceAfter(explore,"seize",'y',mySeize )
+  insertForceAfter(explore,"ultraPair",'y',  myKeepUltraPair )
+
+  //insertForceAfter(explore,"depasser",'z',myDepasser) //depasser compromet uniformization ri
+
   /** on peut pas détruire en meme temps deux elements sur un bord du tunnel wide, le tunnel cesserai d'etre séparé en deux.
    * withLimitingPrio(getPriority(seize)+1) assure que cette contrainte s'exerce  juste pour les force de priorité inférieure ou egal a la priorité de size
    */
