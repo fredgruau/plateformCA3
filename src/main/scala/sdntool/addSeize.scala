@@ -1,13 +1,13 @@
 package sdntool
 
 import compiler.ASTL.{ASTLg, transfer}
-import compiler.ASTLfun.{e, f, neq}
-import compiler.SpatialType.{BoolE, BoolF, BoolV, BoolVe}
+import compiler.ASTLfun.{e, f, neq, v}
+import compiler.SpatialType.{BoolE, BoolF, BoolV, BoolVe, BoolVf}
 import compiler.{ASTLfun, ASTLt, B, E, F, V}
 import progOfStaticAgent.Homogen
-import progOfmacros.Comm.{adjacentRing, apexE, apexV, neighborsSym}
+import progOfmacros.Comm.{adjacentRing, apexE, apexV, neighborsSym, symEv, symVe}
 import progOfmacros.Compute
-import progOfmacros.Wrapper.{border, borderS, exist, existS, insideS}
+import progOfmacros.Wrapper.{border, borderS, exist, existS, inside, insideS, shrink}
 import sdn.Force.{cibler, ciblerFaible}
 import sdn.{Attributs, Force, MovableAgV, carrySysInstr}
 
@@ -62,8 +62,7 @@ trait addBlobSummitAndMore {
     /** if there is a rhombus, then we compute the apex so as to be able to remove them
      * in order to orchestrate a switch from one split3 tripleton, to the other */
     val losangeApexes: BoolV = exist[F, V](apexV(f(loosangeIncluded)))
-
-    /** calcul des info pour la force qui pousse dans le "coude" true at the border betwenn thickness 2, and thickness one*/
+      /** calcul des info pour la force qui pousse dans le "coude" true at the border betwenn thickness 2, and thickness one*/
 
     val finDeDepassement:BoolE=border(apexE(f(bfs.concaveconvex)))&bfs.insideE & bf.insideE & bfs.insideRhombusE
     /** apexes which should change in order to act the depassement */
@@ -96,9 +95,10 @@ trait addBlobSummitAndMore {
     /** split-in-3 tripleton are predominant over Vmeeting points and Emeeting points. */
     val shadowedNbcc3 = exist[E, V](neighborsSym(e(nbcc3)))| nbcc3
     /** we may consider only meeting point not shadowed by a split-in-3 face */
-    val meetiEVnotShadowed = meetiEV & ~shadowedNbcc3;  val meetiEnotShadowed = meetiE & ~shadowedNbcc3
+    val meetiEVnotShadowed = meetiEV & ~shadowedNbcc3;
+    val meetiEnotShadowed = meetiE & ~shadowedNbcc3
     // def showMore:Unit=shoow(nbcc3,isDoubleton,isTripleton,meetiE,meetiV,meetiEV,loosangeIncluded)
-    override def showMe: Unit = {shoow( losangeApexes,isLeton,loosangeIncluded,nbcc3,shadowedNbcc3,meetiEVnotShadowed,finDeDepassement,depassOui,depassNon)
+    override def showMe: Unit = {shoow( losangeApexes,isLeton,loosangeIncluded,nbcc3,shadowedNbcc3,meetiEnotShadowed,meetiE,meetiV,finDeDepassement,depassOui,depassNon)
       bfs.showMe
     }
   }
@@ -118,19 +118,35 @@ trait addTunnel {
  *  *  */
 trait addSeize extends  Homogen with addSummit with addBlobSummitAndMore with addTunnel with addProp with addRadius with addRect with addZone {
   //val zltNear=existS[V,E](zon.zlt.muis)
-  val losangeApexesQuelconque=bsmAtt.losangeApexes& ~ zon.zlt.muis
-  val cibleTripleton= bfTn.bv.meetV | prop.tripletonStreched | bsmAtt.nbcc3
-  val cibleZonisee=cibleTripleton & (Compute.implique(~zon.zlt.muis, ~adjacentRing(cibleTripleton & zon.zlt.muis)))
-
-  val seize= ciblerFaible(  ( bsmAtt.isLeton | bfTn.bv.meetV | /*prop.tripletonStreched |*/ bsmAtt.nbcc3 )& ~bsmAtt.losangeApexes & ~sum.weakSummit)
+  //val losangeApexesQuelconque=bsmAtt.losangeApexes& ~ zon.zlt.muis
+  val rhombusWronglyOccupied: ASTLt[V, B] =bsmAtt.losangeApexes & (zon.zlt.muis | muis )  //le coté vide est celui proche de zonegt
+  /** detect wrongly occupied on the rhombus middle edge */
+  val rhombusShouldFlip=inside[F,E](apexE(f(rhombusWronglyOccupied)))
+  /** true where wrongly occupied apex should be removed  */
+  val rhombusApexToRemoveFromCtr: BoolV=bsmAtt.losangeApexes & ~zon.zlt.muis & muis & exist[F, V](apexV(f(rhombusShouldFlip)))
+  val summitStreched:BoolE=dgv.streched & insideS(sum.isSummit2) & bf.insideE//& existS(bsmAtt.meetiV)
+  val twostreched:BoolVf=shrink(transfer(v(summitStreched)))
+  /** true if edges separate two vertice streching a third one */
+  val twoStrechedSeparator: BoolE = exist(apexE(twostreched))
+  val touchingZlt=existize(zon.zlt.muis)
+  val outBorderZlt=touchingZlt& ~zon.zlt.muis
+  val brokenSumV=bfTn.bv.meetV & ~rhombusApexToRemoveFromCtr & ~sum.weakSummit //& ~ bsmAtt.nbcc3  & ~ prop.tripletonStreched si on decommente ca crée une instabilité
+  val brokenSummit=ciblerFaible(brokenSumV   )
+  val seize= ciblerFaible(  (  /*bfTn.bv.meetV |*/ /*prop.tripletonStreched |*/ (bsmAtt.isLeton |bsmAtt.nbcc3 | prop.tripletonStreched)& ~outBorderZlt /*| bsmAtt.meetiEnotShadowed part.bbtn fait le boulot*/ )&
+    ~rhombusApexToRemoveFromCtr & ~sum.weakSummit )
  // val seizeOld= closerFaible(  ( bsmAtt.isLeton | bfTn.bv.meetV )/* */ & ~bsmAtt.losangeApexes & ~sum.weakSummit|  prop.tripletonStreched)
- val depasser1= Force.empty(bsmAtt.depassNon& ~zon.zlt.muis) | Force.fill(bsmAtt.depassOui& ~zon.zlt.muis)
-  val depasser3= Force.empty(bsmAtt.depassOui3) | Force.fill(bsmAtt.depassNon3)
-  val zltEnface: BoolVe =neighborsSym(e(zon.zlt.muis))
-  val keepUltraPair= Force.notfill(e(prop.doubletonHyperStreched) /*& ~ zltEnface*/)
-val depasser=depasser1 | depasser3
+ val depasser1= Force.empty(bsmAtt.depassNon& ~zon.zlt.muis) | Force.fill(bsmAtt.depassOui& ~zon.zlt.muis) //permet d'occuper les coude en priorité
+  val depasser3= Force.empty(bsmAtt.depassOui3) | Force.fill(bsmAtt.depassNon3) //evite les oscillation autour de losangeApexes
+  val depasser=depasser1 | depasser3 // combine les deux "depasser" dont la sructrure se ressemble
+
+  val sumSymetric= (qf.singleton) & //il s'agit d'une seul vertex
+    ~bfs.bv.nbcc0  & //le sommet n'est pas réduit a un seul (ca semble inutile)
+    ~exist[E,V](bfs.qqnEnFace ^ symVe(bfs.qqnEnFace)) //la config locale de sommet est symmetrique.
+  val keepV=((prop.doubletonHyperStreched | sumSymetric) & ~touchingZlt) //hyper streched implies doubletonTwoStreched.
+  val keep=Force.notfill(e(keepV))
 
   override def shoi={super.shoi;sum.showMe;bsmAtt.showMe;bfTn.showMe; prop.showMe
+    shoow(rhombusWronglyOccupied,summitStreched,twoStrechedSeparator,sumSymetric,brokenSumV,touchingZlt)
     //shoow(bsm.losangeApexes,bsm.isDoubleton , bsm.isTripleton ,bfTn.bv.meetV,bsm.nbcc3)
   }
 }

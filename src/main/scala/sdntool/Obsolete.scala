@@ -38,7 +38,7 @@ trait addCenter {
     /** true if should be removed for allowing go closer to fire particle site, not sitting on zlt zone, but next to another particle on zlt zone,
      * should be removed from support, in order to allow progression towards zlt zone.
      * this removal, however, is subjected to randomization so that this progression happens at different pace, allowing  symetry breaking */
-    def awayFromFire(initialCtr:BoolV)=initialCtr & ~zon.zlt.muis & exist[E,V](neighborsSym(e(initialCtr & zon.zlt.muis)))
+    def awayFromFire(initialCtr:BoolV)=initialCtr & (~zon.zlt.muis & exist[E,V](neighborsSym(e(initialCtr & zon.zlt.muis))))
     /** symetric case for zgt, true if should be removed to get closer to zlt */
     def awayFromZlt(initialCtr:BoolV)=initialCtr & zon.zgt.muis & exist[E,V](neighborsSym(e(initialCtr & ~zon.zgt.muis)))
     /** same but randomised */
@@ -86,46 +86,50 @@ trait addProp{
     override val muis: ASTLg with carrySysInstr = muisSelf
     //true if border is adjacent to a strictly decreasing distance
     val brdVeSlopped: ASTLt[T[V, E], B] =bf.brdVeIn & dgv.sloplt  //to consider a sloplt greater than 1
-    //on calcule les composante connexe de BrdVeSlopped
-    val participatinSite:BoolVf=shrink(bf.brdVeIn) //place to consider when computing the number of streched link
-    val streched: BoolVf =  participatinSite & cac(ASTBfun.delta, brdVeSlopped) //computes one extremity for each connected component
-    val bit0StrechedLocal: BoolV=border(streched) //bit0 of localNbcc for each of the three vertice of a tripleton
-    val orStrechedLocal: BoolV =exist(streched) //true if localNbcc>0
-    val bit1StrechedLocal: BoolV =orStrechedLocal & ~bit0StrechedLocal  //there must be a carry if bit0 is 0, but localNbcc>0
-    val bitONbStreched: BoolF = border(transfer(f(bit0StrechedLocal) )) //we consider now the three vertice, and the F locus in the middle, using a xor, we can directly deduce bit 0
+    //on calcule les composante connexe de BrdVeSlopped pour un tripleton
+    val participatinSite:BoolVf=shrink(bf.brdVeIn) //mask of the places to consider when computing the number of streched link, those are the convex BoolVF point on the frontier
+    val extremities: BoolVf =  participatinSite & cac(ASTBfun.delta, brdVeSlopped) //computes one extremity for each connected component using a delta operator, we use the fact that they cannot occur on concavities
+    //adjacent to a particle vertex there can be only one or two extremities
+    val bit0LocalNbcc: BoolV=border(extremities) //bit0 of localNbcc for each of the three vertice of a tripleton, it is simply the xor of the extremities
+    val orLocalNbcc: BoolV =exist(extremities) //true if localNbcc>0
+
+    val bit1LocalNbcc: BoolV =orLocalNbcc & ~bit0LocalNbcc  //we infer that there must be a carry if bit0 is 0, but localNbcc>0
+    val bitONbcc: BoolF = border(transfer(f(bit0LocalNbcc) )) //we consider now the three vertice, and the F locus in the middle, using a xor, we can directly deduce bit 0
+
+    //on calcule les composante connexe de BrdVeSlopped pour un tripleton
+    val tfOrLocal=transfer(f(orLocalNbcc))
+    val orNbcc:BoolF=exist(tfOrLocal) //globalNbcc>0 iff one of localNbcc >0
+    val threeNonZero:BoolF=inside(tfOrLocal) //true if tripleton's three neighbors, all contribute
+    val atLeastOne1:BoolF= existS(bit0LocalNbcc)
+    val atLeastOne2:BoolF= existS(bit1LocalNbcc)
+    val one1andOne2=atLeastOne1&atLeastOne2
+    val nbcc3:BoolF=qf.tripleton &  (one1andOne2 | threeNonZero) //nbcc is three if three 1, or one 1 and one 2
+    val tripletonStreched: BoolV =existS[F, V](nbcc3)  //tripletonstreched true if nbcc=3 on central face
+
+    val carryF: ASTLt[F, B] = threeNonZero | (orNbcc & ~ bitONbcc ) //il y a une retenu si on a le bit0 qui vaut 0, mais nbccGlobal>0, faut aussi regarder si les trois valent 1
+    val bit1NbStreched:BoolF = exist(transfer(f(bit1LocalNbcc))) | carryF //la somme vaut au moins 2 si un des voisins contribue 2, ou bien si ya retenue
+    val adj3=bit1NbStreched & bitONbcc
+    val adj0= ~bit1NbStreched & ~bitONbcc
+
+    //on calcule les composante connexe de BrdVeSlopped pour un doubleton
+// bit0LocalNbcc is still usable.
+    val ebitONbcc: BoolE = border(transfer(e(bit0LocalNbcc) ))  //we consider now the two vertice, and the E locus in the middle, using a xor, we can directly deduce bit 0
+    val teOrLocal=transfer(e(orLocalNbcc))
+        val eOrNbcc=exist(teOrLocal) //globalNbcc>0 iff one of localNbcc >0
+        val twoNonZero: BoolE =inside(teOrLocal) //true if doubleton two neighbors all contribute
+        val nbccGe2= twoNonZero | (eOrNbcc & ~ ebitONbcc ) //il y a une retenu si on a le bit0 qui vaut 0, et au moins une contribution, ou bien si y a deux contribution.
 
 
-    val tforStrechedLocal=transfer(f(orStrechedLocal))
-    val orStrechedGlobal:BoolF=exist(tforStrechedLocal) //globalNbcc>0 iff one of localNbcc >0
-    val threeNonZero:BoolF=inside(tforStrechedLocal) //true if tripleton's three neighbors, all contribute
-    val atLeastOne1:BoolF= existS(bit0StrechedLocal)
-    val atLeastOne2:BoolF= existS(bit1StrechedLocal)
-    val twoPlusOne=atLeastOne1&atLeastOne2
-    val tripletonStrechedF:BoolF=qf.tripleton &  (twoPlusOne | threeNonZero) //up to three neigbors
-    val tripletonStreched: BoolV =existS[F, V](tripletonStrechedF)
+    val ebit1Nbcc:BoolE = exist(transfer(e(bit1LocalNbcc))) | nbccGe2 //le bit 1 vaut 1 si un des voisins contribue 2, ou bien si ya retenue
+        val eadj2=ebit1Nbcc & ~ebitONbcc;    val eadj0= ~ebit1Nbcc & ~ebitONbcc;      val eadj3=ebit1Nbcc & ebitONbcc
+   val doubletonStreched:BoolE=qf.doubleton & (eadj2 | eadj0) //test if nbccStreched is two or zero.
+    val doubletonHyperStreched=existS[E,V] (qf.doubleton & (eadj3)) //doubleton is called hyperstreched if nbcc is 3 on central edge
+    val doubletonTwoStreched=existS[E,V] (qf.doubleton & nbccGe2 // //doubleton is called hyperstreched if nbcc is 3 on central edge
 
-    val carryF: ASTLt[F, B] = threeNonZero | (orStrechedGlobal & ~ bitONbStreched ) //il y a une retenu si on a le bit0 qui vaut 0, mais nbccGlobal>0, faut aussi regarder si les trois valent 1
-    val bit1NbStreched:BoolF = exist(transfer(f(bit1StrechedLocal))) | carryF //la somme vaut au moins 2 si un des voisins contribue 2, ou bien si ya retenue
-    val adj3=bit1NbStreched & bitONbStreched
-    val adj0= ~bit1NbStreched & ~bitONbStreched
-
-
-        val ebitONbStreched = border(transfer(e(bit0StrechedLocal) ))
-        val teorStrechedLocal=transfer(e(orStrechedLocal))
-        val eorStrechedGlobal=exist(teorStrechedLocal)
-        val twoOne: BoolE =inside(teorStrechedLocal) //true if doubleton has two neighbors, symetric
-        val ecarry= twoOne | (eorStrechedGlobal & ~ ebitONbStreched ) //il y a une retenu si on a le bit0 qui vaut 0, mais y a des strech warning, faut aussi regarder si les trois valent 1
-        val ebit1NbStreched:BoolE = exist(transfer(e(bit1StrechedLocal))) | ecarry //le bit 1 vaut 1 si un des voisins contribue 2, ou bien si ya retenue
-        val eadj2=ebit1NbStreched & ~ebitONbStreched
-        val eadj0= ~ebit1NbStreched & ~ebitONbStreched
-        val eadj3=ebit1NbStreched & ebitONbStreched
-    val doubletonStreched:BoolE=qf.doubleton & (eadj2 | eadj0) //test if nbccStreched is two or zero.
-    val doubletonHyperStreched=existS[E,V] (qf.doubleton & (eadj3)) //pertinent
-    val doubletonUltraStreched=existS[E,V] (qf.doubleton & ecarry& ~ebitONbStreched)//not pertinent.
-
+    val doubletonStrechedNew=existS[E,V] (qf.doubleton & (nbccGe2| eadj3))
 
     override def showMe: Unit = {shoow(//brdVeSlopped,participatinSite,streched,orStrechedGlobal,bitONbStreched,bit1NbStreched,,adj0,adj3//awayFromRiGt,
-      tripletonStreched,doubletonStreched,doubletonHyperStreched,doubletonUltraStreched,bit0StrechedLocal,bit1StrechedLocal,carryF,ecarry)}
+      tripletonStreched,doubletonHyperStreched,bit0LocalNbcc,bit1LocalNbcc,carryF,nbccGe2,ebitONbcc)}
 
     /*
 

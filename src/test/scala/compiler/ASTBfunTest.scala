@@ -163,6 +163,17 @@ class ASTBfunTest extends FunSuite {
     }
   }
 
+  test("unaryTonBbinary3") {
+    for(i<-4 to 7){
+      val entree:List[Boolean]=extendDirect(List.fill(i)(true),7)
+      val env2=emptyEnv+("entree"->entree)
+      val entreeAsExp:Uint =new Read[UI]("entree")with ASTBt[UI]
+      print(i + ":  ")
+      println(eval(new Call1(unaryToBinary3,entreeAsExp)        ,env2))
+    }
+  }
+
+
 
 
   val quatre = Intof[SI](4);

@@ -9,7 +9,7 @@ import progOfmacros.Wrapper.{exist, inside}
 /** contains communication primitives using rotations and symmetries
  *  initially most code are indeed macros, but then we add code that uses those macro
  *  such as adjacentRing, adjacentBall which uses neighborsSym
- *  we do not definie macros for those, in order to avoid generating too much java*/
+ *  we do not necessarily define macros for those, in order to avoid generating too much java*/
 object Comm {
   //faudra lui trouver un meilleur nom
   val neighborsDefEv: Fundef1[(T[V,E], B), (T[E,V], B)] = {
@@ -136,6 +136,8 @@ object Comm {
   def symEv(ev: BoolEv): BoolEv = new Call1[(T[E, V], B),(T[E, V], B)](symEvDef, ev) with BoolEv
   val symEfDef: Fundef1[(T[E, F], B), (T[E, F], B)] = {val ev = pL[T[E, F], B]("ev");  Fundef1("comm.symev", sym(ev) ,ev)  }
   def symEf(ev: BoolEf): BoolEf = new Call1[(T[E, F], B),(T[E, F], B)](symEfDef, ev) with BoolEf
+  val symVeDef: Fundef1[(T[V, E], B), (T[V, E], B)] = {val ve = pL[T[V, E], B]("ve");  Fundef1("comm.symve", sym(ve) ,ve)  }
+  def symVe(ev: BoolVe): BoolVe = new Call1[(T[V, E], B),(T[V, E], B)](symVeDef, ev) with BoolVe
 
   def apexVnoMacro(ef: BoolEf): BoolVf = transfer(sym(transfer(ef))) //pour tester le calcul du rayon avec une non augmentation
 

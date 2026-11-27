@@ -83,6 +83,7 @@ class Vor(part:MovableAgV with addDist with addGcenter /*with keepOutsideForce*/
   /** priority of "obliged" force */
   //force(introduceNewPriority(),"repulse",'|',part.d.repulseVor)//specific forces applied to Flies
   appendForce("repulse",'|', moderate(part.d.repulseVor,"repulse" ))
+  appendForce("repulbis",'I', moderate(part.d.repulseVorWeaker,"repulbis" ))
 
   /** donotcover part turns out not to be necessary; indeed, particle will not overlap gcenter,
    * and that alone is sufficient to ensure that part very rarely overlap voronoi

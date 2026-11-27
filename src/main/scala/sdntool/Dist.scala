@@ -101,9 +101,30 @@ trait addRepulseVor{
     /**no emptying is imposed if weWantItEmpty, and vertice was NOT occupied
      * if vertice was occupied, we should first remove nearer if it has some nearer */
    val non = MoveC1(cond(ag.muis,hasNearer(nameAg),weWantItEmpty), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
-    //val non = MoveC1(cond(ag.muis,hasNearer(nameAg),root4naming.myFalse), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
+    //val non = MoveC1(cond(ag.muis,hasNearer(nameAg),root4naming.myFalse), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //a l'air de marcher superbien.
     MoveC2(oui, non)
-  }}}
+  }}
+
+  val repulseVorWeaker: Force = new Force() {
+    override def actionV(ag: MovableAgV): MoveC = {
+      /** true if a nearby vertice is filled, and nearer to the source */
+      val nameAg=ag.toString.takeWhile(_ != '@')
+      hasNearer.addOne(nameAg, exist(sloplt & ag.bf.qqnEnFace))
+      /** true if a nearby vertice is filled, and further from  the source */
+      hasFurther.addOne(nameAg,exist(slopgt & ag.bf.qqnEnFace))
+      /** we will empty if there is a further, and no nearer */
+      val weWantItEmpty=hasFurther(nameAg) & ~hasNearer(nameAg)
+      /** we empty if weWantItEmpty, and vertice was occupied
+       *  we fill towards increasing value of distances, if it's empty */
+      val oui = MoveC1(ag.muis & weWantItEmpty,   neighborsSym(sloplt) & ag.bf.brdVeIn)
+      /**no emptying is imposed if weWantItEmpty, and vertice was NOT occupied
+       * if vertice was occupied, we should first remove nearer if it has some nearer */
+      //val non = MoveC1(cond(ag.muis,hasNearer(nameAg),weWantItEmpty), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //falseVe
+      val non = MoveC1(cond(ag.muis,hasNearer(nameAg),root4naming.myFalse), e(root4naming.myFalse)/*sloplt & ag.bf.brdVeIn*/  ) //a l'air de marcher superbien.
+      MoveC2(oui, non)
+    }}
+
+}
 
 
 /**

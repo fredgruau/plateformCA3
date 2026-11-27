@@ -441,8 +441,8 @@ class Env(arch: String, nbLine: Int, nbCol: Int, val controller: Controller, ini
                // println("timesincenotalive",timeSinceNonalive)
                 if(riUniformized) timeWhileRiuniformized+=1
                 else timeWhileRiuniformized=0
-                if(timeWhileRiuniformized >= timeTresholdRiuniformized && tUniform== -1 )
-                { tUniform=t-timeWhileRiuniformized
+               if( innerRadiusUniformized && tUniform== -1 )
+                { tUniform=t-timeWhileRiuniformized  //ri est considéré comme unniformisé si ca a convergé, meme si c'est pas resté suffisement longtemps uniformisé, car si ca a converté ca vas resté uniformisé
                 }
             //    println("tuniform:"+tUniform)
               } else { backward(1)   }

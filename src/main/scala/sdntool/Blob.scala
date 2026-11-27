@@ -20,7 +20,7 @@ abstract class Blob extends Attributs {  val meetV:BoolV; val meetE:BoolE; val n
   /** regroup all meeting points and so, all gabriel centers */
   val meet= ~ (~ delayedL(meetV | meetE2)) //double négation nécessaire pour nommer, car on ne peut pas nommer un delayedL.
   //val meetFilled= ~ (~ delayedL(meetV | meetE2)) //double négation nécessaire pour nommer.
-  override def showMe=shoow(meet)//;shoowText(nbCc,List())
+  override def showMe={}//shoow(meet)//;shoowText(nbCc,List())
 }
 
 
@@ -45,7 +45,8 @@ class BloobV(val muis:BoolV with carrySysInstr, f:BloobVFields) extends Blob  {
   /** provides the meeting vertice  inside the blob */
   val meetVfilled=meetV&f.couldBeOtherThanMuis
   /** */
-  //override  def showMe={super.showMe ; shoow(nbcc0,nbcc1,meetV,meetEfilled); shoowText(nbCc,List())  }
+ override  def showMe={super.showMe ; shoow(meetV,meetE,meetEfilled);// shoowText(nbCc,List())nbcc0,nbcc1,
+ }
 }
 
 
@@ -140,7 +141,9 @@ class BloobVFields(val muis:BoolV with carrySysInstr, val couldBeOtherThanMuis:B
   val thiis: BloobVFields =this
   /** thiis contains information systematically used to build a blob, so we just go ahead and create that blob as a field of a blobV field */
   val bv=new BloobV(muis,thiis)
-  override def showMe={ //shoow(brdVeIn,lightConcave,concaveconvex,strongConcave);//bv.showMe
+  override def showMe={ bv.showMe; shoow(brdVeIn)  //si on affiche pas brdvein, ca merde grave.
+
+    //shoow(brdVeIn,lightConcave,concaveconvex,strongConcave);//bv.showMe
   }//shoow(brdE,brdV,brdVeIn,brdVeOut,lightConcave,dense, notDense) ; shoowText(density,List())  }
 }
 

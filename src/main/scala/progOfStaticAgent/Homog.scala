@@ -1,5 +1,5 @@
 package progOfStaticAgent
-import sdntool.{Leader, Qpoint, QpointConstrain, addArea, addDist, addDistVor, addInsideBall, addLeader, addQpointFields, addRadius, addRect, addSeize, addZone, addZoneGt, addZoneLt, blobConstrain}
+import sdntool.{Leader, Qpoint, QpointConstrain, addArea, addCenter, addDist, addDistVor, addInsideBall, addLeader, addQpointFields, addRadius, addRect, addSeize, addZone, addZoneGt, addZoneLt, blobConstrain}
 import compiler.ASTL.{ASTLg, anticlock, broadcast, clock, delayedL, sym, transfer}
 import compiler.ASTLfun.{cond, e, fromInt, imply, v}
 import compiler.SpatialType.{BoolV, BoolVe, BoolVf, UintV, UintVx}
@@ -81,21 +81,18 @@ class Homogen() extends Flies with addDist with addGcenter // with keepOutsideFo
   appendForce("repulse",'|',dgv.repulse)
 }
 
-class HomogenCvg  extends Homogen   with addSeize //with addRadius
+
+class HomogenCvg  extends Homogen   with addSeize //with addCenter//with addRadius
 {
-  val mySeize= moderate(seize,"seize") ;
-// val myDepasser= moderate(depasser3,"depasser")
- val myKeepUltraPair =moderate(keepUltraPair,"keepUltraPair")
-  insertForceAfter(explore,"seize",'y',mySeize )
-  insertForceAfter(explore,"ultraPair",'y',  myKeepUltraPair )
-
-  //insertForceAfter(explore,"depasser",'z',myDepasser) //depasser compromet uniformization ri
-
-  /** on peut pas détruire en meme temps deux elements sur un bord du tunnel wide, le tunnel cesserai d'etre séparé en deux.
-   * withLimitingPrio(getPriority(seize)+1) assure que cette contrainte s'exerce  juste pour les force de priorité inférieure ou egal a la priorité de size
+  val mySeize= moderate(seize,"seize") ;insertForceAfter(explore,"seize",'y',mySeize )
+  //  la soummission d'octobe : val mySeize= moderate(ctr.seizeCenter,"seize") ;
+  val myBrokenSUmmit=moderate(brokenSummit,"broken"); ;insertForceAfter(explore,"broken",'k',myBrokenSUmmit )
+ val myKeep =moderate(keep,"keep");insertForceAfter(explore,"keep",'w',  myKeep)
+  val myDepasser= moderate(depasser1,"depasser") ; insertForceAfter(explore,"depasser",'z',myDepasser) //depasser compromet uniformization ri
+  /** le mutex keep tunnel wide evite de  détruire en meme temps deux elements sur un bord du tunnel wide, le tunnel cesserai d'etre séparé en deux.
+   * withLimitingPrio(getPriority(seize)+1) assure que cette contrainte s'exerce  juste pour les force de priorité inférieure ou egal a la priorité de seize
    */
-  val keepTunnelWide = (MutKeepFlipIf(this,One(false),dgv.twoStrechedSeparator) _ ).withLimitingPrio(getPriority(mySeize)+1) ; addConstraint("nmeet",'n',keepTunnelWide);
-
+  val keepTunnelWide = (MutKeepFlipIf(this,One(false),twoStrechedSeparator) _ ).withLimitingPrio(getPriority(mySeize)+1) ; addConstraint("nmeet",'n',keepTunnelWide);
 
   // particles is allowed to overlap voronoi, it may be the key for ensuring uniformization but that remains to be investigated.
 }

@@ -42,7 +42,7 @@ abstract class MoveC extends Named with BranchNamed {
 case class MoveC1 (val empty: BoolV, val push: BoolVe) extends MoveC{
   def | (that: MoveC):MoveC = that match{
     case mc1:MoveC1=>MoveC1(empty|mc1.empty,push|mc1.push)
-    case mc2:MoveC2=> mc2 | this
+    case mc2:MoveC2=> mc2 | this  //on inverse
   }
   /* adds a condition to the move*/
   def restrict(cond:BoolV)= MoveC1(empty & cond,push & e(cond))
